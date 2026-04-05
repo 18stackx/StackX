@@ -2,68 +2,82 @@
 <html>
 <head>
   <title>StackX</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body{
       margin:0;
-      font-family: Arial;
+      font-family: 'Segoe UI', sans-serif;
       background:#0b0f1a;
       color:white;
     }
 
+    /* HEADER */
     .header{
       text-align:center;
-      padding:15px;
+      padding:25px 10px;
       background:#111827;
     }
 
     .header img{
-      width:50px;
-      border-radius:10px;
+      width:60px;
+      border-radius:12px;
     }
 
+    .header h2{
+      margin:5px 0 0;
+    }
+
+    .header p{
+      margin:0;
+      font-size:12px;
+      color:#9ca3af;
+    }
+
+    /* LOGIN AREA */
     .container{
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:70vh;
+      padding:20px;
+      margin-top:20px;
     }
 
     .login-box{
-      background:#1f2937;
-      padding:20px;
-      border-radius:12px;
-      width:280px;
-      text-align:center;
+      width:100%;
     }
 
     input{
-      width:90%;
-      padding:10px;
+      width:100%;
+      padding:14px;
       margin:10px 0;
       border:none;
-      border-radius:8px;
+      border-radius:10px;
+      font-size:14px;
     }
 
     button{
       width:100%;
-      padding:10px;
+      padding:14px;
       margin-top:10px;
       border:none;
-      border-radius:8px;
-      background:#22c55e;
-      color:white;
+      border-radius:10px;
       font-weight:bold;
+      font-size:14px;
       cursor:pointer;
     }
 
-    .google{
-      background:#4285F4;
+    .login-btn{
+      background:#22c55e;
+      color:white;
     }
 
+    .google-btn{
+      background:#4285F4;
+      color:white;
+    }
+
+    /* FOOTER */
     .footer{
       text-align:center;
-      padding:15px;
+      padding:20px;
       font-size:12px;
       color:#9ca3af;
     }
@@ -79,60 +93,63 @@
   <p>Play Smart. Win Big.</p>
 </div>
 
-<!-- LOGIN BOX -->
+<!-- LOGIN -->
 <div class="container">
   <div class="login-box">
-
-    <h3>Login</h3>
 
     <input type="text" placeholder="User ID">
     <input type="password" placeholder="Password">
 
-    <button onclick="manualLogin()">Login</button>
+    <button class="login-btn" onclick="manualLogin()">Login</button>
 
-    <button class="google" id="googleBtn">Login with Google</button>
+    <button class="google-btn" id="googleBtn">Login with Google</button>
 
   </div>
 </div>
 
 <!-- FOOTER -->
 <div class="footer">
-  StackX is a fantasy gaming platform where users can create teams,
-  compete with others and win exciting rewards.
+  StackX is a fantasy gaming platform where users create teams,
+  compete and win exciting rewards 🔥
 </div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+<!-- FIREBASE (MODERN) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
-  authDomain: "stackx-9f92e.firebaseapp.com",
-  projectId: "stackx-9f92e"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
+    authDomain: "stackx-9f92e.firebaseapp.com",
+    projectId: "stackx-9f92e"
+  };
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
 
-// GOOGLE LOGIN FIX
-document.getElementById("googleBtn").addEventListener("click", function(){
-  const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithRedirect(provider);
-});
+  // GOOGLE LOGIN
+  document.getElementById("googleBtn").addEventListener("click", async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      alert("Login Success: " + result.user.email);
+      window.location.href = "home.html";
+    } catch (error) {
+      alert(error.message);
+    }
+  });
 
-// USER DETECT
-auth.onAuthStateChanged(function(user){
-  if(user){
-    alert("Logged in as " + user.email);
-    window.location.href = "home.html"; // next page
+  // AUTO LOGIN CHECK
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      console.log("Already logged in:", user.email);
+    }
+  });
+
+  // MANUAL LOGIN (dummy)
+  window.manualLogin = function(){
+    alert("Manual login (demo)");
   }
-});
-
-// MANUAL LOGIN (temporary)
-function manualLogin(){
-  alert("Manual login (demo)");
-}
 </script>
 
 </body>
