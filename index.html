@@ -36,6 +36,7 @@
       padding:8px 14px;
       border-radius:8px;
       color:white;
+      cursor:pointer;
     }
 
     .hero{
@@ -61,6 +62,7 @@
       border-radius:6px;
       background:#374151;
       color:white;
+      cursor:pointer;
     }
 
     .team{
@@ -90,7 +92,7 @@
     </div>
   </div>
 
-  <button class="btn" onclick="login()" id="loginBtn">Login</button>
+  <button class="btn" id="loginBtn">Login</button>
 </div>
 
 <!-- HERO -->
@@ -101,19 +103,16 @@
 
 <div class="container">
 
-  <!-- MATCH -->
   <div class="card">
     <h3>RCB vs CSK</h3>
     <p style="color:red;">LIVE</p>
   </div>
 
-  <!-- PLAYERS -->
   <div class="card">
     <h3>Select Team</h3>
     <div id="players" class="players"></div>
   </div>
 
-  <!-- TEAM -->
   <div class="card">
     <h3>Your Team</h3>
     <div class="team">
@@ -122,7 +121,6 @@
     <button class="btn" onclick="submitTeam()">Submit Team</button>
   </div>
 
-  <!-- LEADERBOARD -->
   <div class="card">
     <h3>Leaderboard</h3>
     <div id="leaderboard">
@@ -133,7 +131,7 @@
 
 </div>
 
-<!-- Firebase -->
+<!-- Firebase scripts -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
 
@@ -141,22 +139,19 @@
 const firebaseConfig = {
   apiKey: "AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
   authDomain: "stackx-9f92e.firebaseapp.com",
-  projectId: "stackx-9f92e",
-  storageBucket: "stackx-9f92e.firebasestorage.app",
-  messagingSenderId: "463571776687",
-  appId: "1:463571776687:web:16e07abfd0900b8bfc505a"
+  projectId: "stackx-9f92e"
 };
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-// LOGIN
-function login(){
+// LOGIN BUTTON CLICK
+document.getElementById("loginBtn").addEventListener("click", function(){
   const provider = new firebase.auth.GoogleAuthProvider();
   auth.signInWithRedirect(provider);
-}
+});
 
-// USER DETECT (FIXED)
+// USER DETECT (IMPORTANT)
 auth.onAuthStateChanged(function(user){
   if(user){
     document.getElementById("loginBtn").innerText = user.email;
