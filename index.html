@@ -6,76 +6,66 @@
   <style>
     body{
       margin:0;
-      font-family: 'Segoe UI', sans-serif;
+      font-family: Arial;
       background:#0b0f1a;
       color:white;
     }
 
     .header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      padding:12px 15px;
+      text-align:center;
+      padding:15px;
       background:#111827;
     }
 
-    .logo{
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-
-    .logo img{
-      width:40px;
-      border-radius:8px;
-    }
-
-    .btn{
-      background:#22c55e;
-      border:none;
-      padding:8px 14px;
-      border-radius:8px;
-      color:white;
-      cursor:pointer;
-    }
-
-    .hero{
-      background:url("https://wallpapercave.com/wp/wp9535412.jpg") center/cover;
-      padding:40px 20px;
+    .header img{
+      width:50px;
+      border-radius:10px;
     }
 
     .container{
-      padding:15px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:70vh;
     }
 
-    .card{
+    .login-box{
       background:#1f2937;
-      padding:15px;
+      padding:20px;
       border-radius:12px;
-      margin-bottom:15px;
+      width:280px;
+      text-align:center;
     }
 
-    .players button{
-      margin:5px;
-      padding:8px;
+    input{
+      width:90%;
+      padding:10px;
+      margin:10px 0;
       border:none;
-      border-radius:6px;
-      background:#374151;
+      border-radius:8px;
+    }
+
+    button{
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+      border:none;
+      border-radius:8px;
+      background:#22c55e;
       color:white;
+      font-weight:bold;
       cursor:pointer;
     }
 
-    .team{
-      background:#111827;
-      padding:10px;
-      border-radius:10px;
+    .google{
+      background:#4285F4;
     }
 
-    .box{
-      background:#111827;
-      padding:10px;
-      margin:8px 0;
-      border-radius:10px;
+    .footer{
+      text-align:center;
+      padding:15px;
+      font-size:12px;
+      color:#9ca3af;
     }
   </style>
 </head>
@@ -84,54 +74,34 @@
 
 <!-- HEADER -->
 <div class="header">
-  <div class="logo">
-    <img src="logo.png">
-    <div>
-      <div>StackX</div>
-      <small>Play Smart. Win Big.</small>
-    </div>
-  </div>
-
-  <button class="btn" id="loginBtn">Login</button>
+  <img src="logo.png">
+  <h2>StackX</h2>
+  <p>Play Smart. Win Big.</p>
 </div>
 
-<!-- HERO -->
-<div class="hero">
-  <h1>Play Smart. Win Big.</h1>
-  <p>Create your fantasy team & win rewards 🔥</p>
-</div>
-
+<!-- LOGIN BOX -->
 <div class="container">
+  <div class="login-box">
 
-  <div class="card">
-    <h3>RCB vs CSK</h3>
-    <p style="color:red;">LIVE</p>
+    <h3>Login</h3>
+
+    <input type="text" placeholder="User ID">
+    <input type="password" placeholder="Password">
+
+    <button onclick="manualLogin()">Login</button>
+
+    <button class="google" id="googleBtn">Login with Google</button>
+
   </div>
-
-  <div class="card">
-    <h3>Select Team</h3>
-    <div id="players" class="players"></div>
-  </div>
-
-  <div class="card">
-    <h3>Your Team</h3>
-    <div class="team">
-      <ul id="team"></ul>
-    </div>
-    <button class="btn" onclick="submitTeam()">Submit Team</button>
-  </div>
-
-  <div class="card">
-    <h3>Leaderboard</h3>
-    <div id="leaderboard">
-      <div class="box">Abhi - 120 pts</div>
-      <div class="box">Rahul - 98 pts</div>
-    </div>
-  </div>
-
 </div>
 
-<!-- Firebase scripts -->
+<!-- FOOTER -->
+<div class="footer">
+  StackX is a fantasy gaming platform where users can create teams,
+  compete with others and win exciting rewards.
+</div>
+
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
 
@@ -145,51 +115,23 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-// LOGIN BUTTON CLICK
-document.getElementById("loginBtn").addEventListener("click", function(){
+// GOOGLE LOGIN FIX
+document.getElementById("googleBtn").addEventListener("click", function(){
   const provider = new firebase.auth.GoogleAuthProvider();
   auth.signInWithRedirect(provider);
 });
 
-// USER DETECT (IMPORTANT)
+// USER DETECT
 auth.onAuthStateChanged(function(user){
   if(user){
-    document.getElementById("loginBtn").innerText = user.email;
+    alert("Logged in as " + user.email);
+    window.location.href = "home.html"; // next page
   }
 });
 
-// PLAYERS
-let team = [];
-const players = ["Virat","Rohit","Dhoni","Gill","Hardik","KL Rahul","Sky"];
-
-players.forEach(p=>{
-  let btn = document.createElement("button");
-  btn.innerText = p;
-  btn.onclick = ()=>addPlayer(p);
-  document.getElementById("players").appendChild(btn);
-});
-
-function addPlayer(name){
-  if(team.includes(name)){
-    alert("Already selected");
-    return;
-  }
-  if(team.length < 11){
-    team.push(name);
-    showTeam();
-  }
-}
-
-function showTeam(){
-  let html = "";
-  team.forEach(p=>{
-    html += "<li>"+p+"</li>";
-  });
-  document.getElementById("team").innerHTML = html;
-}
-
-function submitTeam(){
-  alert("Team Submitted 🔥");
+// MANUAL LOGIN (temporary)
+function manualLogin(){
+  alert("Manual login (demo)");
 }
 </script>
 
