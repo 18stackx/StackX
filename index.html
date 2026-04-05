@@ -9,14 +9,22 @@
       text-align:center;
       font-family:Arial;
     }
+
+    img{
+      width:140px;
+      margin-top:20px;
+    }
+
     button{
-      padding:10px;
+      padding:10px 15px;
       margin:5px;
       border:none;
       border-radius:8px;
       background:#22c55e;
       color:white;
+      font-size:14px;
     }
+
     .box{
       background:#1e293b;
       margin:10px;
@@ -28,7 +36,8 @@
 
 <body>
 
-<h1>🚀 StackX</h1>
+<img src="logo.png">
+<h1>StackX</h1>
 <p>Play Smart. Win Big.</p>
 
 <button onclick="login()">Login with Google</button>
@@ -67,29 +76,37 @@ const db = firebase.firestore();
 let userEmail = "";
 let team = [];
 
-// LOGIN
+// LOGIN (mobile friendly)
 function login(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithRedirect(provider);
+  firebase.auth().signInWithRedirect(provider);
 }
 
+// GET USER AFTER LOGIN
 auth.getRedirectResult().then(result=>{
   if(result.user){
     userEmail = result.user.email;
-    document.getElementById("user").innerText = userEmail;
+    document.getElementById("user").innerText = "Logged in: " + userEmail;
   }
 });
 
-// PLAYERS
-const players = ["Virat","Rohit","Dhoni","Gill","Hardik"];
+// LOAD PLAYERS
+window.onload = function(){
+  const players = ["Virat","Rohit","Dhoni","Gill","Hardik","KL Rahul","Sky","Jadeja"];
 
-players.forEach(p=>{
-  let btn = document.createElement("button");
-  btn.innerText = p;
-  btn.onclick = ()=>addPlayer(p);
-  document.getElementById("players").appendChild(btn);
-});
+  const container = document.getElementById("players");
 
+  players.forEach(p=>{
+    let btn = document.createElement("button");
+    btn.innerText = p;
+    btn.onclick = ()=>addPlayer(p);
+    container.appendChild(btn);
+  });
+
+  loadLeaderboard();
+};
+
+// ADD PLAYER
 function addPlayer(name){
   if(team.includes(name)){
     alert("Already selected");
@@ -104,6 +121,7 @@ function addPlayer(name){
   }
 }
 
+// SHOW TEAM
 function showTeam(){
   let html = "";
   team.forEach(p=>{
@@ -144,8 +162,6 @@ function loadLeaderboard(){
     document.getElementById("leaderboard").innerHTML = html;
   });
 }
-
-loadLeaderboard();
 </script>
 
 </body>
