@@ -11,19 +11,23 @@
       color:white;
     }
 
-    /* HEADER */
     .header{
       display:flex;
       justify-content:space-between;
       align-items:center;
-      padding:15px;
+      padding:12px 15px;
       background:#111827;
     }
 
     .logo{
-      font-size:22px;
-      font-weight:bold;
-      color:#22c55e;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .logo img{
+      width:40px;
+      border-radius:8px;
     }
 
     .btn{
@@ -34,29 +38,15 @@
       color:white;
     }
 
-    /* HERO */
     .hero{
       background:url("https://wallpapercave.com/wp/wp9535412.jpg") center/cover;
       padding:40px 20px;
-      text-align:left;
     }
 
-    .hero h1{
-      margin:0;
-      font-size:28px;
-    }
-
-    .hero p{
-      color:#d1d5db;
-      margin-top:5px;
-    }
-
-    /* CONTAINER */
     .container{
       padding:15px;
     }
 
-    /* CARD */
     .card{
       background:#1f2937;
       padding:15px;
@@ -64,19 +54,6 @@
       margin-bottom:15px;
     }
 
-    /* MATCH CARD */
-    .match{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-    }
-
-    .live{
-      color:red;
-      font-weight:bold;
-    }
-
-    /* PLAYERS */
     .players button{
       margin:5px;
       padding:8px;
@@ -86,14 +63,12 @@
       color:white;
     }
 
-    /* TEAM */
     .team{
       background:#111827;
       padding:10px;
       border-radius:10px;
     }
 
-    /* LEADERBOARD */
     .box{
       background:#111827;
       padding:10px;
@@ -107,34 +82,38 @@
 
 <!-- HEADER -->
 <div class="header">
-  <div class="logo">🚀 StackX</div>
-  <button class="btn">Login</button>
+  <div class="logo">
+    <img src="logo.png">
+    <div>
+      <div>StackX</div>
+      <small>Play Smart. Win Big.</small>
+    </div>
+  </div>
+
+  <button class="btn" onclick="login()" id="loginBtn">Login</button>
 </div>
 
 <!-- HERO -->
 <div class="hero">
   <h1>Play Smart. Win Big.</h1>
-  <p>Create your fantasy team & compete with others 🔥</p>
+  <p>Create your fantasy team & win rewards 🔥</p>
 </div>
 
 <div class="container">
 
-  <!-- MATCH CARD -->
-  <div class="card match">
-    <div>
-      <h3>RCB vs CSK</h3>
-      <p class="live">LIVE • 2h 15m left</p>
-    </div>
-    <button class="btn">Join</button>
+  <!-- MATCH -->
+  <div class="card">
+    <h3>RCB vs CSK</h3>
+    <p style="color:red;">LIVE</p>
   </div>
 
-  <!-- TEAM SELECT -->
+  <!-- PLAYERS -->
   <div class="card">
-    <h3>Select Your Team</h3>
+    <h3>Select Team</h3>
     <div id="players" class="players"></div>
   </div>
 
-  <!-- YOUR TEAM -->
+  <!-- TEAM -->
   <div class="card">
     <h3>Your Team</h3>
     <div class="team">
@@ -145,7 +124,7 @@
 
   <!-- LEADERBOARD -->
   <div class="card">
-    <h3>Top Players</h3>
+    <h3>Leaderboard</h3>
     <div id="leaderboard">
       <div class="box">Abhi - 120 pts</div>
       <div class="box">Rahul - 98 pts</div>
@@ -154,9 +133,38 @@
 
 </div>
 
-<script>
-let team = [];
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
 
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
+  authDomain: "stackx-9f92e.firebaseapp.com",
+  projectId: "stackx-9f92e",
+  storageBucket: "stackx-9f92e.firebasestorage.app",
+  messagingSenderId: "463571776687",
+  appId: "1:463571776687:web:16e07abfd0900b8bfc505a"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+// LOGIN
+function login(){
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithRedirect(provider);
+}
+
+// USER DETECT (FIXED)
+auth.onAuthStateChanged(function(user){
+  if(user){
+    document.getElementById("loginBtn").innerText = user.email;
+  }
+});
+
+// PLAYERS
+let team = [];
 const players = ["Virat","Rohit","Dhoni","Gill","Hardik","KL Rahul","Sky"];
 
 players.forEach(p=>{
@@ -171,7 +179,6 @@ function addPlayer(name){
     alert("Already selected");
     return;
   }
-
   if(team.length < 11){
     team.push(name);
     showTeam();
