@@ -2,33 +2,102 @@
 <html>
 <head>
   <title>StackX</title>
+
   <style>
     body{
-      background:#0f172a;
+      margin:0;
+      font-family: 'Segoe UI', sans-serif;
+      background:#0b0f1a;
       color:white;
-      text-align:center;
-      font-family:Arial;
     }
 
-    img{
-      width:140px;
-      margin-top:20px;
+    /* HEADER */
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:15px;
+      background:#111827;
     }
 
-    button{
-      padding:10px 15px;
-      margin:5px;
-      border:none;
-      border-radius:8px;
+    .logo{
+      font-size:22px;
+      font-weight:bold;
+      color:#22c55e;
+    }
+
+    .btn{
       background:#22c55e;
+      border:none;
+      padding:8px 14px;
+      border-radius:8px;
       color:white;
-      font-size:14px;
     }
 
-    .box{
-      background:#1e293b;
-      margin:10px;
+    /* HERO */
+    .hero{
+      background:url("https://wallpapercave.com/wp/wp9535412.jpg") center/cover;
+      padding:40px 20px;
+      text-align:left;
+    }
+
+    .hero h1{
+      margin:0;
+      font-size:28px;
+    }
+
+    .hero p{
+      color:#d1d5db;
+      margin-top:5px;
+    }
+
+    /* CONTAINER */
+    .container{
+      padding:15px;
+    }
+
+    /* CARD */
+    .card{
+      background:#1f2937;
+      padding:15px;
+      border-radius:12px;
+      margin-bottom:15px;
+    }
+
+    /* MATCH CARD */
+    .match{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+
+    .live{
+      color:red;
+      font-weight:bold;
+    }
+
+    /* PLAYERS */
+    .players button{
+      margin:5px;
+      padding:8px;
+      border:none;
+      border-radius:6px;
+      background:#374151;
+      color:white;
+    }
+
+    /* TEAM */
+    .team{
+      background:#111827;
       padding:10px;
+      border-radius:10px;
+    }
+
+    /* LEADERBOARD */
+    .box{
+      background:#111827;
+      padding:10px;
+      margin:8px 0;
       border-radius:10px;
     }
   </style>
@@ -36,77 +105,67 @@
 
 <body>
 
-<img src="logo.png">
-<h1>StackX</h1>
-<p>Play Smart. Win Big.</p>
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">🚀 StackX</div>
+  <button class="btn">Login</button>
+</div>
 
-<button onclick="login()">Login with Google</button>
-<p id="user"></p>
+<!-- HERO -->
+<div class="hero">
+  <h1>Play Smart. Win Big.</h1>
+  <p>Create your fantasy team & compete with others 🔥</p>
+</div>
 
-<h3>Select Team</h3>
-<div id="players"></div>
+<div class="container">
 
-<h4>Your Team</h4>
-<ul id="team"></ul>
+  <!-- MATCH CARD -->
+  <div class="card match">
+    <div>
+      <h3>RCB vs CSK</h3>
+      <p class="live">LIVE • 2h 15m left</p>
+    </div>
+    <button class="btn">Join</button>
+  </div>
 
-<button onclick="submitTeam()">Submit Team</button>
+  <!-- TEAM SELECT -->
+  <div class="card">
+    <h3>Select Your Team</h3>
+    <div id="players" class="players"></div>
+  </div>
 
-<h3>Leaderboard</h3>
-<div id="leaderboard"></div>
+  <!-- YOUR TEAM -->
+  <div class="card">
+    <h3>Your Team</h3>
+    <div class="team">
+      <ul id="team"></ul>
+    </div>
+    <button class="btn" onclick="submitTeam()">Submit Team</button>
+  </div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+  <!-- LEADERBOARD -->
+  <div class="card">
+    <h3>Top Players</h3>
+    <div id="leaderboard">
+      <div class="box">Abhi - 120 pts</div>
+      <div class="box">Rahul - 98 pts</div>
+    </div>
+  </div>
+
+</div>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
-  authDomain: "stackx-9f92e.firebaseapp.com",
-  projectId: "stackx-9f92e",
-  storageBucket: "stackx-9f92e.firebasestorage.app",
-  messagingSenderId: "463571776687",
-  appId: "1:463571776687:web:16e07abfd0900b8bfc505a"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-let userEmail = "";
 let team = [];
 
-// LOGIN (mobile friendly)
-function login(){
-  const provider = new firebase.auth.GoogleAuthProvider();
-  firebase.auth().signInWithRedirect(provider);
-}
+const players = ["Virat","Rohit","Dhoni","Gill","Hardik","KL Rahul","Sky"];
 
-// GET USER AFTER LOGIN
-auth.getRedirectResult().then(result=>{
-  if(result.user){
-    userEmail = result.user.email;
-    document.getElementById("user").innerText = "Logged in: " + userEmail;
-  }
+players.forEach(p=>{
+  let btn = document.createElement("button");
+  btn.innerText = p;
+  btn.onclick = ()=>addPlayer(p);
+  document.getElementById("players").appendChild(btn);
 });
 
-// LOAD PLAYERS
-window.onload = function(){
-  const players = ["Virat","Rohit","Dhoni","Gill","Hardik","KL Rahul","Sky","Jadeja"];
-
-  const container = document.getElementById("players");
-
-  players.forEach(p=>{
-    let btn = document.createElement("button");
-    btn.innerText = p;
-    btn.onclick = ()=>addPlayer(p);
-    container.appendChild(btn);
-  });
-
-  loadLeaderboard();
-};
-
-// ADD PLAYER
 function addPlayer(name){
   if(team.includes(name)){
     alert("Already selected");
@@ -116,12 +175,9 @@ function addPlayer(name){
   if(team.length < 11){
     team.push(name);
     showTeam();
-  } else {
-    alert("Team full");
   }
 }
 
-// SHOW TEAM
 function showTeam(){
   let html = "";
   team.forEach(p=>{
@@ -130,37 +186,8 @@ function showTeam(){
   document.getElementById("team").innerHTML = html;
 }
 
-// SAVE TEAM
 function submitTeam(){
-  if(team.length === 0){
-    alert("Select team first");
-    return;
-  }
-
-  db.collection("teams").add({
-    user: userEmail || "guest",
-    players: team,
-    points: Math.floor(Math.random()*100)
-  })
-  .then(()=>{
-    alert("Team Saved 🔥");
-    loadLeaderboard();
-  });
-}
-
-// LEADERBOARD
-function loadLeaderboard(){
-  db.collection("teams")
-  .orderBy("points","desc")
-  .get()
-  .then(snapshot=>{
-    let html = "";
-    snapshot.forEach(doc=>{
-      let d = doc.data();
-      html += `<div class="box">${d.user}<br>Points: ${d.points}</div>`;
-    });
-    document.getElementById("leaderboard").innerHTML = html;
-  });
+  alert("Team Submitted 🔥");
 }
 </script>
 
