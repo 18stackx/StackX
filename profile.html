@@ -32,7 +32,6 @@
     }
 
     .nav div{
-      text-align:center;
       font-size:14px;
       cursor:pointer;
     }
@@ -52,6 +51,12 @@
       margin-top:10px;
       width:90%;
     }
+
+    .historyBox{
+      display:none;
+      margin-top:10px;
+      font-size:14px;
+    }
   </style>
 </head>
 
@@ -68,6 +73,15 @@
 <div class="box">
   <h3>🎮 Joined Contests</h3>
   <div id="contests">No contests yet</div>
+</div>
+
+<!-- 🔥 WALLET HISTORY -->
+<div class="box" onclick="toggleHistory()">
+  <h3>📜 Wallet History ⬇️</h3>
+  
+  <div id="history" class="historyBox">
+    No history
+  </div>
 </div>
 
 <div class="box">
@@ -133,14 +147,29 @@ onAuthStateChanged(auth, async (user)=>{
       document.getElementById("ref").innerText = refCode;
       document.getElementById("link").innerText = link;
 
-      // 🔥 save globally for copy
       window.refLink = link;
+
+      // 🔥 WALLET HISTORY
+      let historyDiv = document.getElementById("history");
+
+      if(data.history && data.history.length > 0){
+        historyDiv.innerHTML = data.history.map(h => {
+          if(h.type === "deposit"){
+            return `<span style="color:#22c55e;">+₹${h.amt}</span>`;
+          } else {
+            return `<span style="color:red;">-₹${h.amt}</span>`;
+          }
+        }).join("<br>");
+      } else {
+        historyDiv.innerText = "No history";
+      }
 
     } else {
       await setDoc(userRef,{
         balance:50,
         contests:[],
-        ref:user.email.split("@")[0]
+        ref:user.email.split("@")[0],
+        history:[]
       });
     }
   }
@@ -148,19 +177,25 @@ onAuthStateChanged(auth, async (user)=>{
 </script>
 
 <script>
-function copyRef(){
-  navigator.clipboard.writeText(window.refLink);
-  alert("Referral link copied ");
+// 🔥 TOGGLE HISTORY
+function toggleHistory(){
+  let box = document.getElementById("history");
+  box.style.display = (box.style.display === "block") ? "none" : "block";
 }
 
+// COPY REF
+function copyRef(){
+  navigator.clipboard.writeText(window.refLink);
+  alert("Referral link copied 😈");
+}
+
+// NAV
 function goHome(){
   window.location.href = "home.html";
 }
-
 function goProfile(){
   window.location.href = "profile.html";
 }
-
 function goWallet(){
   window.location.href = "wallet.html";
 }
