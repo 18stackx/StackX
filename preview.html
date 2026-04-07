@@ -4,22 +4,162 @@
   <title>Team Preview</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- 🔥 FONT -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+
   <style>
-    body{background:#0b0f1a;color:white;font-family:Arial;text-align:center;}
-    .player{
-      background:#1f2937;
-      margin:10px;
-      padding:10px;
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:'Poppins',sans-serif;
+    }
+
+    body{
+      background:#0f0f1a;
+      color:white;
+      text-align:center;
+      padding-bottom:80px;
+      overflow-x:hidden;
+    }
+
+    /* 🔥 GLOW BG */
+    body::before{
+      content:'';
+      position:fixed;
+      width:600px;
+      height:600px;
+      background:radial-gradient(circle, rgba(255,0,80,0.25), transparent 70%);
+      top:-200px;
+      left:-200px;
+      filter:blur(120px);
+      z-index:-1;
+    }
+
+    body::after{
+      content:'';
+      position:fixed;
+      width:600px;
+      height:600px;
+      background:radial-gradient(circle, rgba(0,150,255,0.25), transparent 70%);
+      bottom:-200px;
+      right:-200px;
+      filter:blur(120px);
+      z-index:-1;
+    }
+
+    /* 🔥 HEADER */
+    .header{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      margin-top:15px;
+    }
+
+    .header img{
+      width:40px;
       border-radius:10px;
+    }
+
+    .trusted{
+      font-size:12px;
+      color:#22c55e;
+    }
+
+    h2{
+      margin-top:10px;
+    }
+
+    /* 🔥 TEAM GRID */
+    .team{
+      margin-top:20px;
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+      gap:15px;
+      padding:15px;
+    }
+
+    /* 🔥 PLAYER CARD */
+    .player{
+      background:rgba(255,255,255,0.05);
+      padding:15px;
+      border-radius:15px;
+      transition:0.3s;
+      backdrop-filter:blur(10px);
+      font-size:14px;
+    }
+
+    .player:hover{
+      transform:translateY(-5px);
+      background:rgba(255,255,255,0.08);
+    }
+
+    /* 🔥 CAPTAIN */
+    .captain{
+      border:2px solid gold;
+      box-shadow:0 0 10px gold;
+    }
+
+    /* 🔥 VICE */
+    .vice{
+      border:2px solid #00c3ff;
+      box-shadow:0 0 10px #00c3ff;
+    }
+
+    /* 🔥 BUTTON */
+    button{
+      padding:12px;
+      border:none;
+      border-radius:30px;
+      background:#ff2a2a;
+      color:white;
+      width:80%;
+      margin-top:20px;
+      font-weight:600;
+    }
+
+    /* 🔥 NAV */
+    .nav{
+      position:fixed;
+      bottom:0;
+      width:100%;
+      background:rgba(0,0,0,0.7);
+      backdrop-filter:blur(10px);
+      display:flex;
+      justify-content:space-around;
+      padding:12px;
+    }
+
+    .nav div{
+      cursor:pointer;
     }
   </style>
 </head>
 
 <body>
 
+<!-- 🔥 HEADER -->
+<div class="header">
+  <img src="logo.png">
+  <div>
+    <div><b>StackX Fantasy</b></div>
+    <div class="trusted">✔ Trusted Site</div>
+  </div>
+</div>
+
 <h2>🔥 My Team</h2>
 
-<div id="team"></div>
+<div id="team" class="team"></div>
+
+<button onclick="goBack()">⬅ Back</button>
+
+<!-- NAV -->
+<div class="nav">
+  <div onclick="goHome()">🏠</div>
+  <div onclick="goProfile()">👤</div>
+  <div onclick="goWallet()">💰</div>
+</div>
 
 <script>
 let data = JSON.parse(localStorage.getItem("team"));
@@ -34,16 +174,34 @@ if(!data){
     let div = document.createElement("div");
     div.className = "player";
 
-    let label = "";
-
-    if(p===data.captain) label = " (C ⭐)";
-    if(p===data.vice) label = " (VC ⚡)";
-
-    div.innerText = p + label;
+    if(p===data.captain){
+      div.classList.add("captain");
+      div.innerText = p + " (C ⭐)";
+    }
+    else if(p===data.vice){
+      div.classList.add("vice");
+      div.innerText = p + " (VC ⚡)";
+    }
+    else{
+      div.innerText = p;
+    }
 
     container.appendChild(div);
   });
+}
 
+// NAV
+function goHome(){
+  window.location.href="home.html";
+}
+function goProfile(){
+  window.location.href="profile.html";
+}
+function goWallet(){
+  window.location.href="wallet.html";
+}
+function goBack(){
+  window.history.back();
 }
 </script>
 
