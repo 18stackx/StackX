@@ -10,7 +10,8 @@
       color:white;
       font-family:Arial;
       text-align:center;
-      padding-bottom:70px; /* 🔥 nav ke liye space */
+      padding-bottom:70px;
+      display:none; /* 🔥 hide until auth */
     }
 
     .box{
@@ -45,7 +46,6 @@
       margin-top:10px;
     }
 
-    /* 🔥 NAV */
     .nav{
       position:fixed;
       bottom:0;
@@ -68,12 +68,10 @@
 
 <h2>💰 Wallet</h2>
 
-<!-- BALANCE -->
 <div class="box">
   <h3>Balance: ₹<span id="bal">0</span></h3>
 </div>
 
-<!-- ADD MONEY -->
 <div class="box">
   <h3>➕ Add Money</h3>
 
@@ -87,11 +85,10 @@
 
   <p class="note">
     ⚠️ Minimum deposit ₹300.<br>
-    Pay to UPI → submit details → message on Telegram → after verification wallet updated.
+    Pay → submit → message Telegram → verify → wallet update.
   </p>
 </div>
 
-<!-- WITHDRAW -->
 <div class="box">
   <h3>💸 Withdraw</h3>
 
@@ -102,11 +99,11 @@
 
   <p class="note">
     ⚠️ Minimum withdraw ₹700.<br>
-    After request → message on Telegram → payment will be done manually.
+    After request → Telegram → manual transfer.
   </p>
 </div>
 
-<!-- 🔥 NAVIGATION -->
+<!-- NAV -->
 <div class="nav">
   <div onclick="goHome()">🏠 Home</div>
   <div onclick="goProfile()">👤 Profile</div>
@@ -127,10 +124,18 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 🔥 LOAD BALANCE
+// 🔥 AUTH GUARD + LOAD DATA
 onAuthStateChanged(auth, async (user)=>{
-  if(user){
+  if(!user){
+    // ❌ not logged in
+    window.location.href = "index.html";
+  } else {
+
+    // ✅ show page
+    document.body.style.display = "block";
+
     let snap = await getDoc(doc(db,"users",user.email));
+
     if(snap.exists()){
       document.getElementById("bal").innerText = snap.data().balance || 0;
     }
@@ -154,7 +159,7 @@ function submitAdd(){
     return;
   }
 
-  alert("Payment Submitted ✅\nNow message on Telegram for verification.");
+  alert("Payment Submitted ✅\nNow message on Telegram.");
 }
 
 // 💸 WITHDRAW
@@ -175,15 +180,13 @@ function submitWithdraw(){
   alert("Withdraw Request Sent ✅\nNow message on Telegram.");
 }
 
-// 🔥 NAVIGATION FUNCTIONS
+// NAV
 function goHome(){
   window.location.href = "home.html";
 }
-
 function goProfile(){
   window.location.href = "profile.html";
 }
-
 function goWallet(){
   window.location.href = "wallet.html";
 }
