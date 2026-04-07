@@ -45,6 +45,35 @@
       cursor:pointer;
       font-size:14px;
     }
+
+    /* 🔥 SUPPORT */
+    .supportBox{
+      position:fixed;
+      bottom:100px;
+      left:10px;
+      z-index:999;
+      text-align:center;
+    }
+
+    .supportText{
+      font-size:12px;
+      margin-bottom:5px;
+      color:#9ca3af;
+    }
+
+    .tg{
+      background:#0088cc;
+      width:50px;
+      height:50px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .tg img{
+      width:28px;
+    }
   </style>
 </head>
 
@@ -62,6 +91,15 @@
   <div id="m1" class="match" onclick="openMatch('m1')">Loading...</div>
   <div id="m2" class="match" onclick="openMatch('m2')">Loading...</div>
   <div id="m3" class="match" onclick="openMatch('m3')">Loading...</div>
+</div>
+
+<!-- 🔥 SUPPORT BUTTON -->
+<div class="supportBox">
+  <div class="supportText">For Support<br>Contact Us</div>
+
+  <a href="https://t.me/stackx_admin" target="_blank" class="tg">
+    <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png">
+  </a>
 </div>
 
 <!-- NAV -->
@@ -98,7 +136,7 @@ async function loadMatches(){
   }
 }
 
-// 🔥 USER BALANCE (optional login)
+// 🔥 USER BALANCE
 onAuthStateChanged(auth, async (user)=>{
   if(user){
     let snap = await getDoc(doc(db,"users",user.email));
@@ -116,7 +154,6 @@ loadMatches();
 <script>
 // 🔥 MATCH OPEN
 function openMatch(id){
-
   let name = document.getElementById(id).innerText;
 
   localStorage.setItem("matchId", id);
@@ -125,18 +162,10 @@ function openMatch(id){
   window.location.href = "match.html";
 }
 
-// 🔥 NAV
-function goHome(){
-  window.location.href = "home.html";
-}
-
-function goProfile(){
-  window.location.href = "profile.html";
-}
-
-function goWallet(){
-  window.location.href = "wallet.html";
-}
+// 🔥 NAV (GLOBAL FIX)
+window.goHome = ()=> location.href="home.html";
+window.goProfile = ()=> location.href="profile.html";
+window.goWallet = ()=> location.href="wallet.html";
 </script>
 
 </body>
