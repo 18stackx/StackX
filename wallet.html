@@ -10,6 +10,7 @@
       color:white;
       font-family:Arial;
       text-align:center;
+      padding-bottom:70px; /* 🔥 nav ke liye space */
     }
 
     .box{
@@ -42,6 +43,23 @@
       font-size:13px;
       color:#9ca3af;
       margin-top:10px;
+    }
+
+    /* 🔥 NAV */
+    .nav{
+      position:fixed;
+      bottom:0;
+      width:100%;
+      background:#111827;
+      display:flex;
+      justify-content:space-around;
+      padding:10px;
+    }
+
+    .nav div{
+      text-align:center;
+      font-size:14px;
+      cursor:pointer;
     }
   </style>
 </head>
@@ -86,6 +104,13 @@
     ⚠️ Minimum withdraw ₹700.<br>
     After request → message on Telegram → payment will be done manually.
   </p>
+</div>
+
+<!-- 🔥 NAVIGATION -->
+<div class="nav">
+  <div onclick="goHome()">🏠 Home</div>
+  <div onclick="goProfile()">👤 Profile</div>
+  <div onclick="goWallet()">💰 Wallet</div>
 </div>
 
 <script type="module">
@@ -148,6 +173,19 @@ function submitWithdraw(){
   }
 
   alert("Withdraw Request Sent ✅\nNow message on Telegram.");
+}
+
+// 🔥 NAVIGATION FUNCTIONS
+function goHome(){
+  window.location.href = "home.html";
+}
+
+function goProfile(){
+  window.location.href = "profile.html";
+}
+
+function goWallet(){
+  window.location.href = "wallet.html";
 }
 </script>
 
