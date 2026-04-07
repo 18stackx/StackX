@@ -11,6 +11,7 @@
       font-family:Arial;
       text-align:center;
       padding-bottom:70px;
+      display:none; /* 🔥 hide until auth */
     }
 
     .box{
@@ -45,7 +46,6 @@
 <div class="box">
   <p><b>Email:</b> <span id="email"></span></p>
   <p><b>Name:</b> <span id="name"></span></p>
-
   <p><b>Wallet:</b> ₹<span id="bal">0</span></p>
 </div>
 
@@ -88,11 +88,16 @@ const db = getFirestore(app);
 let userRef;
 
 onAuthStateChanged(auth, async (user)=>{
-  if(user){
+  if(!user){
+    // ❌ not logged in → redirect
+    window.location.href = "index.html";
+  } else {
+
+    // ✅ show page
+    document.body.style.display = "block";
 
     userRef = doc(db,"users",user.email);
 
-    // 🔥 EMAIL + NAME (Google se)
     document.getElementById("email").innerText = user.email;
     document.getElementById("name").innerText = user.displayName || "User";
 
@@ -105,29 +110,27 @@ onAuthStateChanged(auth, async (user)=>{
       let deposit = data.deposit || 0;
       let withdraw = data.withdraw || 0;
 
-      // 🔥 WALLET
       document.getElementById("bal").innerText = balance;
 
-      // 🔥 EARNINGS AUTO
       let earnings = balance - deposit + withdraw;
       document.getElementById("wins").innerText = earnings;
 
-      // 🔥 CONTESTS
       document.getElementById("contests").innerText =
         (data.contests || []).join(" , ") || "No contests";
 
-      // 🔥 REFERRAL
       document.getElementById("ref").innerText =
         data.ref || user.email.split("@")[0];
 
     } else {
       await setDoc(userRef,{
-        balance:50, // 🎁 signup bonus
+        balance:50,
         deposit:0,
         withdraw:0,
         contests:[],
         ref:user.email.split("@")[0]
       });
+
+      document.getElementById("bal").innerText = 50;
     }
   }
 });
