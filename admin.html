@@ -51,7 +51,6 @@
 <!-- PANEL -->
 <div id="panel" style="display:none;">
 
-  <!-- MATCH SECTION -->
   <div class="card">
     <h3>Update Matches</h3>
 
@@ -65,7 +64,6 @@
     <button id="apiBtn">⚡ Fetch Matches (API)</button>
   </div>
 
-  <!-- WALLET SECTION -->
   <div class="card">
     <h3>💰 Update User Wallet</h3>
 
@@ -78,15 +76,13 @@
 </div>
 
 <script>
-// 🔐 LOGIN
-const ADMIN_USER = "abhibababr";
-const ADMIN_PASS = "943188@.";
-
+// 🔐 LOGIN FIXED
 document.getElementById("loginBtn").onclick = function(){
-  let u = document.getElementById("user").value;
-  let p = document.getElementById("pass").value;
 
-  if(u === ADMIN_USER && p === ADMIN_PASS){
+  let u = document.getElementById("user").value.trim();
+  let p = document.getElementById("pass").value.trim();
+
+  if(u === "abhibababr" && p === "943188@."){
     document.getElementById("loginBox").style.display = "none";
     document.getElementById("panel").style.display = "block";
   } else {
@@ -120,10 +116,9 @@ document.getElementById("saveBtn").onclick = async ()=>{
   alert("Matches Updated 🔥");
 };
 
-// ⚡ API FETCH (cricketdata.org)
+// ⚡ API FETCH
 document.getElementById("apiBtn").onclick = async ()=>{
   try{
-
     let res = await fetch("https://api.cricketdata.org/v1/matches?apikey=c51049f9-0d1d-45b8-80a6-c2d80e95da65");
     let data = await res.json();
 
@@ -135,9 +130,7 @@ document.getElementById("apiBtn").onclick = async ()=>{
     let m4 = matches[3] ? matches[3].teamInfo?.[0]?.name + " vs " + matches[3].teamInfo?.[1]?.name : "";
     let m5 = matches[4] ? matches[4].teamInfo?.[0]?.name + " vs " + matches[4].teamInfo?.[1]?.name : "";
 
-    await setDoc(doc(db,"matches","today"),{
-      m1,m2,m3,m4,m5
-    });
+    await setDoc(doc(db,"matches","today"),{ m1,m2,m3,m4,m5 });
 
     alert("Matches Auto Updated 😈🔥");
 
