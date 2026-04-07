@@ -12,6 +12,22 @@
       color:white;
     }
 
+    /* 🔥 LOGO BACKGROUND */
+    body::before{
+      content:"";
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background:url('logo.png') no-repeat center;
+      background-size:180px;
+      opacity:0.05;
+      filter: blur(1px);
+      z-index:-1;
+      pointer-events:none;
+    }
+
     /* HEADER */
     .header{
       background:#111827;
@@ -21,21 +37,9 @@
       align-items:center;
     }
 
-    body::before{
-  content:"";
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-
-  background:url('logo.png') no-repeat center;
-  background-size:200px;
-
-  opacity:0.08;
-  filter: blur(2px);
-  z-index:-1;
-}
+    .logo{
+      font-size:20px;
+      font-weight:bold;
     }
 
     .login{
@@ -78,6 +82,16 @@
       margin:15px;
     }
 
+    button{
+      width:100%;
+      padding:10px;
+      border:none;
+      border-radius:8px;
+      background:#22c55e;
+      color:white;
+      font-weight:bold;
+    }
+
     /* NAV */
     .nav{
       position:fixed;
@@ -92,6 +106,7 @@
     .nav div{
       text-align:center;
       font-size:14px;
+      cursor:pointer;
     }
 
   </style>
@@ -105,16 +120,14 @@
   <div class="login">Login</div>
 </div>
 
-<!-- LIVE MATCHES -->
+<!-- MATCHES -->
 <div class="section">
   <h3>🔥 Live Cricket Matches</h3>
 
-  <div class="card" id="matchesBox">
-
+  <div class="card">
     <div class="match" onclick="openMatch(this)">RCB vs CSK</div>
     <div class="match" onclick="openMatch(this)">MI vs KKR</div>
     <div class="match" onclick="openMatch(this)">SRH vs DC</div>
-
   </div>
 </div>
 
@@ -131,16 +144,42 @@
 
 <!-- NAV -->
 <div class="nav">
-  <div>🏠 Home</div>
-  <div>👤 Profile</div>
-  <div>💰 Wallet</div>
+  <div onclick="goHome()">🏠 Home</div>
+  <div onclick="goProfile()">👤 Profile</div>
+  <div onclick="goWallet()">💰 Wallet</div>
 </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
+  authDomain:"stackx-9f92e.firebaseapp.com",
+  projectId:"stackx-9f92e"
+});
+
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// 🔥 WALLET LOAD
+auth.onAuthStateChanged(async (user)=>{
+  if(user){
+    const ref = doc(db,"users",user.email);
+    const snap = await getDoc(ref);
+
+    if(snap.exists()){
+      document.getElementById("balance").innerText = snap.data().balance || 0;
+    }
+  }
+});
+</script>
 
 <script>
 // 🔥 OPEN MATCH
 function openMatch(el){
   let match = el.innerText;
-
   localStorage.setItem("matchName", match);
   window.location.href = "match.html";
 }
@@ -159,16 +198,24 @@ function showTeam(){
 
   data.players.forEach(p=>{
     let tag = "";
+    if(p===data.captain) tag=" (C ⭐)";
+    if(p===data.vice) tag=" (VC ⚡)";
 
-    if(p === data.captain) tag = " (C ⭐)";
-    if(p === data.vice) tag = " (VC ⚡)";
-
-    box.innerHTML += `
-      <div style="background:#1f2937;padding:10px;margin:6px;border-radius:8px;">
-        ${p}${tag}
-      </div>
-    `;
+    box.innerHTML += `<div style="background:#1f2937;padding:10px;margin:6px;border-radius:8px;">${p}${tag}</div>`;
   });
+}
+
+// 🔥 NAVIGATION
+function goHome(){
+  window.location.href = "home.html";
+}
+
+function goProfile(){
+  window.location.href = "profile.html";
+}
+
+function goWallet(){
+  window.location.href = "wallet.html";
 }
 </script>
 
