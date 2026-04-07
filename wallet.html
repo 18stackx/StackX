@@ -11,7 +11,7 @@
       font-family:Arial;
       text-align:center;
       padding-bottom:70px;
-      display:none; /* 🔥 hide until auth */
+      display:none;
     }
 
     .box{
@@ -112,7 +112,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const app = initializeApp({
@@ -124,28 +124,23 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 🔥 AUTH GUARD + LOAD DATA
+// 🔥 AUTH + LOAD BALANCE
 onAuthStateChanged(auth, async (user)=>{
   if(!user){
-    // ❌ not logged in
     window.location.href = "index.html";
   } else {
-
-    // ✅ show page
     document.body.style.display = "block";
 
     let snap = await getDoc(doc(db,"users",user.email));
-
     if(snap.exists()){
       document.getElementById("bal").innerText = snap.data().balance || 0;
     }
   }
 });
-</script>
 
-<script>
-// ➕ ADD MONEY
-function submitAdd(){
+// 🔥 ADD MONEY (REFERRAL SYSTEM)
+window.submitAdd = async function(){
+
   let amt = parseInt(document.getElementById("amt").value);
   let txn = document.getElementById("txn").value;
 
@@ -159,11 +154,38 @@ function submitAdd(){
     return;
   }
 
+  const user = auth.currentUser;
+  const userRef = doc(db,"users",user.email);
+
+  let userSnap = await getDoc(userRef);
+  let data = userSnap.data() || {};
+
+  // 🔥 deposit save
+  await setDoc(userRef,{
+    deposit: (data.deposit || 0) + amt
+  },{ merge:true });
+
+  // 🔥 referral bonus
+  if(data.refBy && data.refBy !== user.email.split("@")[0]){
+
+    let refUserRef = doc(db,"users",data.refBy);
+    let refSnap = await getDoc(refUserRef);
+
+    if(refSnap.exists()){
+      let oldBal = refSnap.data().balance || 0;
+      let bonus = Math.floor(amt * 0.10);
+
+      await setDoc(refUserRef,{
+        balance: oldBal + bonus
+      },{ merge:true });
+    }
+  }
+
   alert("Payment Submitted ✅\nNow message on Telegram.");
-}
+};
 
 // 💸 WITHDRAW
-function submitWithdraw(){
+window.submitWithdraw = function(){
   let upi = document.getElementById("upi").value;
   let amt = parseInt(document.getElementById("wamt").value);
 
@@ -178,7 +200,7 @@ function submitWithdraw(){
   }
 
   alert("Withdraw Request Sent ✅\nNow message on Telegram.");
-}
+};
 
 // NAV
 function goHome(){
