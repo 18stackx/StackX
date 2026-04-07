@@ -10,7 +10,7 @@
       color:white;
       font-family:Arial;
       text-align:center;
-      padding-bottom:70px; /* 🔥 nav space */
+      padding-bottom:70px;
     }
 
     .box{
@@ -20,30 +20,6 @@
       border-radius:10px;
     }
 
-    img{
-      width:80px;
-      height:80px;
-      border-radius:50%;
-      margin-bottom:10px;
-    }
-
-    input{
-      padding:8px;
-      border-radius:8px;
-      border:none;
-      margin-top:5px;
-    }
-
-    button{
-      padding:8px 12px;
-      border:none;
-      border-radius:8px;
-      background:#22c55e;
-      color:white;
-      margin-top:10px;
-    }
-
-    /* 🔥 NAV */
     .nav{
       position:fixed;
       bottom:0;
@@ -67,24 +43,15 @@
 <h2>👤 Profile</h2>
 
 <div class="box">
-  <img id="photo" src="https://via.placeholder.com/80">
-  
   <p><b>Email:</b> <span id="email"></span></p>
-
-  <p>
-    <b>Name:</b><br>
-    <input id="nameInput">
-    <br>
-    <button onclick="saveName()">Save Name</button>
-  </p>
+  <p><b>Name:</b> <span id="name"></span></p>
 
   <p><b>Wallet:</b> ₹<span id="bal">0</span></p>
-  <button onclick="refreshWallet()">🔄 Refresh</button>
 </div>
 
 <div class="box">
   <h3>🏆 Earnings</h3>
-  <p>Total Wins: ₹<span id="wins">0</span></p>
+  <p>Total Profit: ₹<span id="wins">0</span></p>
 </div>
 
 <div class="box">
@@ -97,7 +64,7 @@
   <p>Your Code: <b id="ref"></b></p>
 </div>
 
-<!-- 🔥 NAVIGATION -->
+<!-- NAV -->
 <div class="nav">
   <div onclick="goHome()">🏠 Home</div>
   <div onclick="goProfile()">👤 Profile</div>
@@ -120,56 +87,53 @@ const db = getFirestore(app);
 
 let userRef;
 
-// 🔥 LOAD DATA
 onAuthStateChanged(auth, async (user)=>{
   if(user){
 
     userRef = doc(db,"users",user.email);
 
+    // 🔥 EMAIL + NAME (Google se)
     document.getElementById("email").innerText = user.email;
-    document.getElementById("photo").src = user.photoURL || "https://via.placeholder.com/80";
+    document.getElementById("name").innerText = user.displayName || "User";
 
     let snap = await getDoc(userRef);
 
     if(snap.exists()){
       let data = snap.data();
 
-      document.getElementById("bal").innerText = data.balance || 0;
-      document.getElementById("nameInput").value = data.name || user.displayName || "";
-      document.getElementById("wins").innerText = data.wins || 0;
+      let balance = data.balance || 0;
+      let deposit = data.deposit || 0;
+      let withdraw = data.withdraw || 0;
 
-      document.getElementById("contests").innerText = (data.contests || []).join(", ") || "No contests";
+      // 🔥 WALLET
+      document.getElementById("bal").innerText = balance;
 
-      document.getElementById("ref").innerText = data.ref || user.email.split("@")[0];
+      // 🔥 EARNINGS AUTO
+      let earnings = balance - deposit + withdraw;
+      document.getElementById("wins").innerText = earnings;
+
+      // 🔥 CONTESTS
+      document.getElementById("contests").innerText =
+        (data.contests || []).join(" , ") || "No contests";
+
+      // 🔥 REFERRAL
+      document.getElementById("ref").innerText =
+        data.ref || user.email.split("@")[0];
 
     } else {
       await setDoc(userRef,{
-        name:user.displayName || "",
-        balance:50, // 🎁 bonus
-        wins:0,
+        balance:50, // 🎁 signup bonus
+        deposit:0,
+        withdraw:0,
         contests:[],
         ref:user.email.split("@")[0]
       });
     }
   }
 });
-
-// 🔥 SAVE NAME
-window.saveName = async ()=>{
-  let name = document.getElementById("nameInput").value;
-  await setDoc(userRef,{ name },{ merge:true });
-  alert("Name Updated 😈");
-};
-
-// 🔥 REFRESH WALLET
-window.refreshWallet = async ()=>{
-  let snap = await getDoc(userRef);
-  document.getElementById("bal").innerText = snap.data().balance || 0;
-};
 </script>
 
 <script>
-// 🔥 NAVIGATION
 function goHome(){
   window.location.href = "home.html";
 }
