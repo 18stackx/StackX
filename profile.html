@@ -5,140 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body{
-      margin:0;
-      font-family: Arial;
-      background:#0b0f1a;
-      color:white;
-    }
-
-    .header{
-      text-align:center;
-      padding:20px;
-      background:#111827;
-    }
-
-    .container{
-      padding:15px;
-    }
-
-    .card{
-      background:#1f2937;
-      padding:15px;
-      border-radius:12px;
-      margin-bottom:15px;
-    }
-
-    .title{
-      font-size:13px;
-      color:#9ca3af;
-      margin-bottom:5px;
-    }
-
-    .value{
-      font-size:18px;
-      font-weight:bold;
-    }
-
-    .row{
-      display:flex;
-      justify-content:space-between;
-      text-align:center;
-    }
+    body{background:#0b0f1a;color:white;font-family:Arial;text-align:center;}
 
     .box{
-      flex:1;
-      margin:5px;
-      background:#111827;
-      padding:10px;
+      background:#1f2937;
+      margin:20px;
+      padding:20px;
       border-radius:10px;
     }
 
-    .logout{
-      width:100%;
-      padding:12px;
+    button{
+      padding:10px;
       background:red;
       border:none;
-      border-radius:10px;
+      border-radius:8px;
       color:white;
-      font-weight:bold;
-    }
-
-    .nav{
-      position:fixed;
-      bottom:0;
-      width:100%;
-      display:flex;
-      background:#111827;
-    }
-
-    .nav button{
-      flex:1;
-      padding:12px;
-      border:none;
-      background:none;
-      color:white;
+      margin-top:10px;
     }
   </style>
 </head>
 
 <body>
 
-<div class="header">
-  <h2>👤 My Profile</h2>
-</div>
+<h2>👤 Profile</h2>
 
-<div class="container">
-
-  <!-- USER INFO -->
-  <div class="card">
-    <div class="title">User Info</div>
-    <div class="value" id="name">Loading...</div>
-    <div style="font-size:12px;color:#9ca3af;" id="email"></div>
-  </div>
-
-  <!-- STATS -->
-  <div class="card">
-    <div class="title">📊 Stats</div>
-    <div class="row">
-      <div class="box">
-        <div>Contests</div>
-        <div>12</div>
-      </div>
-      <div class="box">
-        <div>Wins</div>
-        <div>3</div>
-      </div>
-      <div class="box">
-        <div>Points</div>
-        <div>540</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- WALLET -->
-  <div class="card">
-    <div class="title">💰 Wallet</div>
-    <div class="value">₹100</div>
-  </div>
-
-  <!-- MY TEAMS -->
-  <div class="card">
-    <div class="title">📜 My Teams</div>
-    <div>Team 1 - Virat, Rohit, Dhoni</div>
-    <div>Team 2 - Gill, Hardik</div>
-  </div>
-
-  <!-- LOGOUT -->
-  <button class="logout" id="logoutBtn">Logout</button>
-
-</div>
-
-<!-- NAVIGATION -->
-<div class="nav">
-  <button onclick="goHome()">🏠 Home</button>
-  <button onclick="goProfile()">👤 Profile</button>
-  <button onclick="goWallet()">💰 Wallet</button>
+<div class="box">
+  <p id="email">Loading...</p>
+  <button onclick="logout()">Logout</button>
 </div>
 
 <script type="module">
@@ -153,25 +46,17 @@ const app = initializeApp({
 
 const auth = getAuth(app);
 
-// ✅ USER INFO FIXED
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth,(user)=>{
   if(user){
-    document.getElementById("name").innerText = user.displayName || "User";
     document.getElementById("email").innerText = user.email;
-  } else {
-    window.location.href = "index.html";
   }
 });
 
-// LOGOUT
-document.getElementById("logoutBtn").onclick = () => {
+window.logout = ()=>{
   signOut(auth);
+  alert("Logged out");
+  window.location.href = "index.html";
 };
-
-// NAV
-window.goHome = () => window.location.href="home.html";
-window.goProfile = () => window.location.href="profile.html";
-window.goWallet = () => window.location.href="wallet.html";
 </script>
 
 </body>
