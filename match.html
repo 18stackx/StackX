@@ -5,18 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body{
-      background:#0b0f1a;
-      color:white;
-      font-family:Arial;
-      margin:0;
-    }
-
-    .header{
-      padding:15px;
-      text-align:center;
-      background:#111827;
-    }
+    body{background:#0b0f1a;color:white;font-family:Arial;margin:0;}
+    .header{padding:15px;text-align:center;background:#111827;}
 
     .player{
       background:#1f2937;
@@ -26,19 +16,18 @@
       cursor:pointer;
     }
 
-    .selected{
-      background:green !important;
-    }
+    .selected{background:green;}
+    .captain{border:2px solid gold;}
+    .vice{border:2px solid cyan;}
 
     button{
       width:90%;
-      margin:15px;
+      margin:10px;
       padding:12px;
       border:none;
       border-radius:10px;
       background:#22c55e;
       color:white;
-      font-weight:bold;
     }
   </style>
 </head>
@@ -46,18 +35,18 @@
 <body>
 
 <div class="header">
-  <h3 id="matchTitle">Players</h3>
+  <h3 id="matchTitle"></h3>
 </div>
 
 <div id="players"></div>
 
 <button onclick="saveTeam()">Save Team</button>
+<button onclick="goPreview()">Preview Team</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 🔥 Firebase Config
 const app = initializeApp({
   apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
   authDomain:"stackx-9f92e.firebaseapp.com",
@@ -66,38 +55,21 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 
-// 🔥 MATCH NAME
 let match = localStorage.getItem("matchName");
-document.getElementById("matchTitle").innerText = match || "Players";
+document.getElementById("matchTitle").innerText = match;
 
-// 🔥 CHECK
-if(!match){
-  document.getElementById("players").innerHTML = "<p style='text-align:center;'>No match selected ❌</p>";
-  throw new Error("No match");
-}
+let [t1,t2] = match.split(" vs ");
 
-// 🔥 TEAM SPLIT
-let teams = match.split(" vs ");
-let t1 = teams[0].trim();
-let t2 = teams[1].trim();
+let snap1 = await getDoc(doc(db,"teams",t1.trim()));
+let snap2 = await getDoc(doc(db,"teams",t2.trim()));
 
-// 🔥 FETCH TEAMS
-let snap1 = await getDoc(doc(db,"teams",t1));
-let snap2 = await getDoc(doc(db,"teams",t2));
+let allPlayers = [...snap1.data().players, ...snap2.data().players];
 
-if(!snap1.exists() || !snap2.exists()){
-  document.getElementById("players").innerHTML = "<p style='text-align:center;'>Teams not found ❌</p>";
-  throw new Error("Team missing");
-}
-
-let players1 = snap1.data().players || [];
-let players2 = snap2.data().players || [];
-
-let allPlayers = [...players1, ...players2];
-
-// 🔥 UI + SELECT SYSTEM
 let container = document.getElementById("players");
+
 let selected = [];
+let captain = null;
+let vice = null;
 
 allPlayers.forEach(p=>{
   let div = document.createElement("div");
@@ -105,26 +77,56 @@ allPlayers.forEach(p=>{
   div.innerText = p;
 
   div.onclick = ()=>{
-    if(selected.includes(p)){
-      selected = selected.filter(x=>x!==p);
-      div.classList.remove("selected");
-    } else {
-      if(selected.length >= 11){
-        alert("Max 11 players allowed ❌");
+    if(!selected.includes(p)){
+      if(selected.length>=11){
+        alert("Max 11 players ❌");
         return;
       }
       selected.push(p);
       div.classList.add("selected");
+    }else{
+
+      // 👉 CAPTAIN
+      if(!captain){
+        captain = p;
+        div.classList.add("captain");
+        alert("Captain selected ⭐");
+        return;
+      }
+
+      // 👉 VICE CAPTAIN
+      if(!vice && p!==captain){
+        vice = p;
+        div.classList.add("vice");
+        alert("Vice Captain selected ⚡");
+        return;
+      }
+
+      // 👉 REMOVE
+      selected = selected.filter(x=>x!==p);
+      div.classList.remove("selected","captain","vice");
+
+      if(p===captain) captain=null;
+      if(p===vice) vice=null;
     }
   };
 
   container.appendChild(div);
 });
 
-// 🔥 SAVE TEAM
+// SAVE
 window.saveTeam = ()=>{
-  localStorage.setItem("myTeam", JSON.stringify(selected));
+  localStorage.setItem("team", JSON.stringify({
+    players:selected,
+    captain,
+    vice
+  }));
   alert("Team Saved 😈🔥");
+};
+
+// PREVIEW PAGE
+window.goPreview = ()=>{
+  window.location.href = "preview.html";
 };
 </script>
 
