@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Wallet</title>
+  <title>Wallet - StackX</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -13,9 +13,9 @@
     }
 
     .header{
-      text-align:center;
-      padding:20px;
+      padding:15px;
       background:#111827;
+      text-align:center;
     }
 
     .container{
@@ -25,37 +25,15 @@
     .card{
       background:#1f2937;
       padding:20px;
-      margin-bottom:15px;
       border-radius:12px;
       text-align:center;
     }
 
     .balance{
-      font-size:30px;
+      font-size:28px;
       font-weight:bold;
-      margin:10px 0;
+      margin:20px 0;
     }
-
-    input{
-      width:100%;
-      padding:12px;
-      margin-top:10px;
-      border:none;
-      border-radius:10px;
-    }
-
-    .btn{
-      width:100%;
-      padding:12px;
-      margin-top:10px;
-      border:none;
-      border-radius:10px;
-      font-weight:bold;
-      color:white;
-    }
-
-    .add{background:#22c55e;}
-    .withdraw{background:red;}
 
     .nav{
       position:fixed;
@@ -83,25 +61,9 @@
 
 <div class="container">
 
-  <!-- BALANCE -->
   <div class="card">
-    <div>Available Balance</div>
-    <div class="balance">₹100</div>
-  </div>
-
-  <!-- ADD MONEY -->
-  <div class="card">
-    <h3>Add Money</h3>
-    <input type="number" id="addAmt" placeholder="Enter amount">
-    <button class="btn add" onclick="addMoney()">Add</button>
-  </div>
-
-  <!-- WITHDRAW -->
-  <div class="card">
-    <h3>Withdraw</h3>
-    <input type="number" id="withdrawAmt" placeholder="Enter amount">
-    <input type="text" id="upi" placeholder="Enter UPI ID">
-    <button class="btn withdraw" onclick="withdraw()">Withdraw</button>
+    <h3>Your Balance</h3>
+    <div class="balance">₹<span id="balance">0</span></div>
   </div>
 
 </div>
@@ -113,28 +75,38 @@
   <button onclick="goWallet()">💰 Wallet</button>
 </div>
 
-<script>
-function addMoney(){
-  let amt = document.getElementById("addAmt").value;
-  if(!amt) return alert("Enter amount");
-  alert("Add request sent: ₹" + amt);
-}
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-function withdraw(){
-  let amt = document.getElementById("withdrawAmt").value;
-  let upi = document.getElementById("upi").value;
+const app = initializeApp({
+  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
+  authDomain:"stackx-9f92e.firebaseapp.com",
+  projectId:"stackx-9f92e"
+});
 
-  if(!amt || !upi){
-    alert("Fill all fields");
-    return;
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// 🔥 FETCH BALANCE
+auth.onAuthStateChanged(async (user)=>{
+  if(user){
+    const ref = doc(db,"users",user.email);
+    const snap = await getDoc(ref);
+
+    if(snap.exists()){
+      document.getElementById("balance").innerText = snap.data().balance;
+    } else {
+      document.getElementById("balance").innerText = 0;
+    }
   }
+});
 
-  alert("Withdraw request sent 🔥\n₹"+amt+"\nUPI: "+upi);
-}
-
-function goHome(){ window.location.href="home.html"; }
-function goProfile(){ window.location.href="profile.html"; }
-function goWallet(){ window.location.href="wallet.html"; }
+// NAV
+window.goHome = () => window.location.href="home.html";
+window.goProfile = () => window.location.href="profile.html";
+window.goWallet = () => window.location.href="wallet.html";
 </script>
 
 </body>
