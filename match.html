@@ -1,13 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Players</title>
+  <title>Match</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body{background:#0b0f1a;color:white;font-family:Arial;margin:0;}
+    body{
+      background:#0b0f1a;
+      color:white;
+      font-family:Arial;
+      margin:0;
+    }
 
-    .header{padding:15px;text-align:center;background:#111827;}
+    .header{
+      padding:15px;
+      text-align:center;
+      background:#111827;
+    }
 
     .player{
       background:#1f2937;
@@ -21,7 +30,7 @@
 <body>
 
 <div class="header">
-  <h3>Players</h3>
+  <h3 id="matchTitle">Players</h3>
 </div>
 
 <div id="players"></div>
@@ -30,6 +39,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// 🔥 Firebase Config
 const app = initializeApp({
   apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
   authDomain:"stackx-9f92e.firebaseapp.com",
@@ -38,26 +48,53 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 
-let matchId = localStorage.getItem("matchId");
+// 🔥 MATCH NAME GET
+let match = localStorage.getItem("matchName");
+document.getElementById("matchTitle").innerText = match || "Players";
 
-// 🔥 FETCH PLAYERS FROM FIREBASE
-const ref = doc(db,"players",matchId);
-const snap = await getDoc(ref);
+// 🔥 SAFETY CHECK
+if(!match){
+  document.getElementById("players").innerHTML = "<p style='text-align:center;'>No match selected ❌</p>";
+  throw new Error("No match");
+}
 
+// 🔥 TEAM SPLIT
+let teams = match.split(" vs ");
+
+if(teams.length !== 2){
+  document.getElementById("players").innerHTML = "<p style='text-align:center;'>Invalid match format ❌</p>";
+  throw new Error("Format error");
+}
+
+let t1 = teams[0].trim();
+let t2 = teams[1].trim();
+
+// 🔥 FETCH TEAMS DATA
+let snap1 = await getDoc(doc(db,"teams",t1));
+let snap2 = await getDoc(doc(db,"teams",t2));
+
+if(!snap1.exists() || !snap2.exists()){
+  document.getElementById("players").innerHTML = "<p style='text-align:center;'>Teams not found ❌</p>";
+  throw new Error("Team missing");
+}
+
+let players1 = snap1.data().players || [];
+let players2 = snap2.data().players || [];
+
+// 🔥 COMBINE PLAYERS
+let allPlayers = [...players1, ...players2];
+
+// 🔥 SHOW PLAYERS
 let container = document.getElementById("players");
 
-if(snap.exists()){
-  let list = snap.data().list;
+container.innerHTML = "";
 
-  list.forEach(p=>{
-    let div = document.createElement("div");
-    div.className = "player";
-    div.innerText = p;
-    container.appendChild(div);
-  });
-}else{
-  container.innerText = "No players found ❌";
-}
+allPlayers.forEach(p=>{
+  let div = document.createElement("div");
+  div.className = "player";
+  div.innerText = p;
+  container.appendChild(div);
+});
 </script>
 
 </body>
