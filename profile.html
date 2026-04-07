@@ -24,8 +24,6 @@
       font-size:18px;
     }
 
-    body.hidden{display:none;}
-
     body::before{
       content:'';
       position:fixed;
@@ -125,11 +123,11 @@
   </style>
 </head>
 
-<body class="hidden">
+<body>
 
 <div id="loader">Loading...</div>
 
-<div id="main">
+<div id="main" style="display:none;">
 
 <div class="header">
   <img src="logo.png">
@@ -182,7 +180,7 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
-  apiKey:"AIza...",  // 🔥 apna full key daal
+  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
   authDomain:"stackx-9f92e.firebaseapp.com",
   projectId:"stackx-9f92e"
 });
@@ -190,13 +188,13 @@ const app = initializeApp({
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// ✅ FINAL AUTH FIX
+// 🔥 FINAL SAFE AUTH
 onAuthStateChanged(auth, async (user)=>{
 
   if(user){
 
     document.getElementById("loader").style.display="none";
-    document.body.classList.remove("hidden");
+    document.getElementById("main").style.display="block";
 
     const userRef = doc(db,"users",user.email);
 
@@ -224,7 +222,6 @@ onAuthStateChanged(auth, async (user)=>{
       const historyDiv = document.getElementById("history");
 
       if(data.history && data.history.length > 0){
-
         historyDiv.innerHTML = data.history.map(h=>{
           const sign = h.type==="deposit"?"+":"-";
           const type = h.type==="deposit"?"Deposit":"Withdraw";
@@ -238,7 +235,6 @@ onAuthStateChanged(auth, async (user)=>{
             </div>
           </div>`;
         }).join("");
-
       } else {
         historyDiv.innerHTML="No history";
       }
@@ -246,12 +242,12 @@ onAuthStateChanged(auth, async (user)=>{
 
   } else {
 
-    // 🔥 FIXED (NO AUTO LOGOUT)
+    // 🔥 SAFE REDIRECT (NO BUG)
     setTimeout(()=>{
-      if(!auth.currentUser){
+      if(auth.currentUser === null){
         window.location.href="index.html";
       }
-    },3000);
+    },2000);
 
   }
 
