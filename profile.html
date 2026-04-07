@@ -30,7 +30,7 @@
     }
 
     .title{
-      font-size:14px;
+      font-size:13px;
       color:#9ca3af;
       margin-bottom:5px;
     }
@@ -64,7 +64,6 @@
       font-weight:bold;
     }
 
-    /* bottom nav */
     .nav{
       position:fixed;
       bottom:0;
@@ -94,7 +93,8 @@
   <!-- USER INFO -->
   <div class="card">
     <div class="title">User Info</div>
-    <div class="value" id="email">Loading...</div>
+    <div class="value" id="name">Loading...</div>
+    <div style="font-size:12px;color:#9ca3af;" id="email"></div>
   </div>
 
   <!-- STATS -->
@@ -134,10 +134,11 @@
 
 </div>
 
-<!-- NAV -->
+<!-- NAVIGATION -->
 <div class="nav">
   <button onclick="goHome()">🏠 Home</button>
   <button onclick="goProfile()">👤 Profile</button>
+  <button onclick="goWallet()">💰 Wallet</button>
 </div>
 
 <script type="module">
@@ -152,9 +153,10 @@ const app = initializeApp({
 
 const auth = getAuth(app);
 
-// USER SHOW
+// ✅ USER INFO FIXED
 onAuthStateChanged(auth, (user) => {
   if(user){
+    document.getElementById("name").innerText = user.displayName || "User";
     document.getElementById("email").innerText = user.email;
   } else {
     window.location.href = "index.html";
@@ -169,6 +171,7 @@ document.getElementById("logoutBtn").onclick = () => {
 // NAV
 window.goHome = () => window.location.href="home.html";
 window.goProfile = () => window.location.href="profile.html";
+window.goWallet = () => window.location.href="wallet.html";
 </script>
 
 </body>
