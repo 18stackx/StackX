@@ -14,6 +14,25 @@
       display:none;
     }
 
+    /* 🔥 HEADER */
+    .header{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .header img{
+      width:40px;
+      border-radius:8px;
+    }
+
+    .trusted{
+      font-size:12px;
+      color:#22c55e;
+    }
+
     .box{
       background:#1f2937;
       margin:15px;
@@ -29,11 +48,12 @@
       display:flex;
       justify-content:space-around;
       padding:10px;
+      z-index:999;
     }
 
     .nav div{
-      font-size:14px;
       cursor:pointer;
+      font-size:14px;
     }
 
     .refbox{
@@ -57,10 +77,38 @@
       margin-top:10px;
       font-size:14px;
     }
+
+    /* 🔥 TELEGRAM */
+    .tg{
+      position:fixed;
+      bottom:80px;
+      right:15px;
+      background:#0088cc;
+      width:50px;
+      height:50px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:999;
+    }
+
+    .tg img{
+      width:28px;
+    }
   </style>
 </head>
 
 <body>
+
+<!-- 🔥 HEADER -->
+<div class="header">
+  <img src="logo.png">
+  <div>
+    <div><b>StackX Fantasy</b></div>
+    <div class="trusted">✔ Trusted Site</div>
+  </div>
+</div>
 
 <h2>👤 Profile</h2>
 
@@ -75,13 +123,9 @@
   <div id="contests">No contests yet</div>
 </div>
 
-<!-- 🔥 WALLET HISTORY -->
 <div class="box" onclick="toggleHistory()">
   <h3>📜 Wallet History ⬇️</h3>
-  
-  <div id="history" class="historyBox">
-    No history
-  </div>
+  <div id="history" class="historyBox">No history</div>
 </div>
 
 <div class="box">
@@ -91,12 +135,17 @@
   <p id="link"></p>
 
   <div class="refbox">
-    👉 Get ₹20 bonus when user joins from your link<br>
-    👉 Get 10% bonus on their deposits 💸
+    👉 Get ₹20 bonus when user joins<br>
+    👉 Get 10% on deposits 💸
   </div>
 
   <button onclick="copyRef()">📋 Copy Referral Link</button>
 </div>
+
+<!-- 🔥 TELEGRAM -->
+<a href="https://t.me/stackx_admin" target="_blank" class="tg">
+  <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png">
+</a>
 
 <!-- NAV -->
 <div class="nav">
@@ -149,21 +198,15 @@ onAuthStateChanged(auth, async (user)=>{
 
       window.refLink = link;
 
-      // 🔥 WALLET HISTORY
       let historyDiv = document.getElementById("history");
 
       if(data.history && data.history.length > 0){
         historyDiv.innerHTML = data.history.map(h => {
-          if(h.type === "deposit"){
-            return `<span style="color:#22c55e;">+₹${h.amt}</span>`;
-          } else {
-            return `<span style="color:red;">-₹${h.amt}</span>`;
-          }
+          return h.type === "deposit"
+            ? `<span style="color:#22c55e;">+₹${h.amt}</span>`
+            : `<span style="color:red;">-₹${h.amt}</span>`;
         }).join("<br>");
-      } else {
-        historyDiv.innerText = "No history";
       }
-
     } else {
       await setDoc(userRef,{
         balance:50,
@@ -177,28 +220,20 @@ onAuthStateChanged(auth, async (user)=>{
 </script>
 
 <script>
-// 🔥 TOGGLE HISTORY
 function toggleHistory(){
   let box = document.getElementById("history");
   box.style.display = (box.style.display === "block") ? "none" : "block";
 }
 
-// COPY REF
 function copyRef(){
   navigator.clipboard.writeText(window.refLink);
   alert("Referral link copied 😈");
 }
 
-// NAV
-function goHome(){
-  window.location.href = "home.html";
-}
-function goProfile(){
-  window.location.href = "profile.html";
-}
-function goWallet(){
-  window.location.href = "wallet.html";
-}
+// NAV FIX
+window.goHome = ()=> location.href="home.html";
+window.goProfile = ()=> location.href="profile.html";
+window.goWallet = ()=> location.href="wallet.html";
 </script>
 
 </body>
