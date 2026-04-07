@@ -1,4 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body style="background:black;color:white;text-align:center;padding:30px">
+
+<h2>🔥 Admin Panel</h2>
+
+<button id="btn">Add All Teams</button>
+
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -10,47 +24,33 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 
-// 🔥 FINAL FUNCTION
-window.addAllTeams = async function(){
+// 🔥 BUTTON CLICK FIX
+document.getElementById("btn").onclick = async () => {
 
   try{
 
-    const teams = {
+    await setDoc(doc(db,"teams","RCB"),{
+      players:["Virat Kohli","Rajat Patidar"]
+    });
 
-      RCB: ["Rajat Patidar","Virat Kohli","Devdutt Padikkal","Phil Salt","Jitesh Sharma","Jordan Cox","Krunal Pandya","Swapnil Singh","Tim David","Romario Shepherd","Jacob Bethell","Venkatesh Iyer","Satvik Deswal","Mangesh Yadav","Vicky Ostwal","Vihaan Malhotra","Kanishk Chouhan","Josh Hazlewood","Bhuvneshwar Kumar","Yash Dayal","Nuwan Thushara","Rasikh Salam","Suyash Sharma","Abhinandan Singh","Jacob Duffy"],
+    await setDoc(doc(db,"teams","CSK"),{
+      players:["MS Dhoni","Ruturaj"]
+    });
 
-      CSK: ["Ruturaj Gaikwad","MS Dhoni","Sanju Samson","Dewald Brevis","Ayush Mhatre","Kartik Sharma","Sarfaraz Khan","Urvil Patel","Shivam Dube","Ravindra Ghosh","Aman Khan","Akeal Hosein","Anshul Kamboj","Matthew Short","Jamie Overton","Prashant Veer","Zakary Foulkes","Noor Ahmad","Rahul Chahar","Shreyas Gopal","Khaleel Ahmed","Mukesh Choudhary","Matt Henry","Spencer Johnson","Gurjapneet Singh"],
+    await setDoc(doc(db,"teams","MI"),{
+      players:["Rohit Sharma","Hardik"]
+    });
 
-      MI: ["Hardik Pandya","Rohit Sharma","Suryakumar Yadav","Tilak Varma","Dewald Brevis","Ishan Kishan","Vishnu Vinod","Tim David","Romario Shepherd","Nehal Wadhera","Shams Mulani","Mohammad Nabi","Arjun Tendulkar","Jasprit Bumrah","Gerald Coetzee","Dilshan Madushanka","Akash Madhwal","Kumar Kartikeya","Piyush Chawla","Shreyas Gopal","Luke Wood","Nuwan Thushara","Kwena Maphaka","Anshul Kamboj","Naman Dhir"],
-
-      KKR: ["Ajinkya Rahane","Rinku Singh","Angkrish Raghuvanshi","Manish Pandey","Rahul Tripathi","Finn Allen","Tim Seifert","Tejasvi Singh","Rovman Powell","Sunil Narine","Anukul Roy","Ramandeep Singh","Cameron Green","Rachin Ravindra","Sarthak Ranjan","Daksh Kamra","Varun Chakravarthy","Vaibhav Arora","Umran Malik","Matheesha Pathirana","Blessing Muzarabani","Navdeep Saini","Kartik Tyagi","Saurabh Dubey","Prashant Solanki"],
-
-      SRH: ["Pat Cummins","Heinrich Klaasen","Travis Head","Abhishek Sharma","Nitish Kumar Reddy","Ishan Kishan","Aniket Verma","Smaran Ravichandran","Salil Arora","Kamindu Mendis","Liam Livingstone","Jack Edwards","Shivang Kumar","Harsh Dubey","Harshal Patel","Jaydev Unadkat","Zeeshan Ansari","Brydon Carse","Eshan Malinga","Shivam Mavi","Sakib Hussain","Amit Kumar","Praful Hinge","Onkar Tarmale","Krains Fuletra"],
-
-      DC: ["Axar Patel","KL Rahul","Prithvi Shaw","David Warner","Harry Brook","Tristan Stubbs","Rishabh Pant","Abishek Porel","Mitchell Marsh","Lalit Yadav","Shardul Thakur","Kuldeep Yadav","Anrich Nortje","Khaleel Ahmed","Mukesh Kumar","Mitchell Starc","Ishant Sharma","Ricky Bhui","Sumit Kumar","Vicky Ostwal","Yash Dhull","Kumar Kushagra","Jhye Richardson","Rasikh Salam","Swastik Chikara"],
-
-      RR: ["Riyan Parag","Yashasvi Jaiswal","Vaibhav Suryavanshi","Dhruv Jurel","Shimron Hetmyer","Ravindra Jadeja","Donovan Ferreira","Dasun Shanaka","Ravi Bishnoi","Sandeep Sharma","Tushar Deshpande","Jofra Archer","Nandre Burger","Kwena Maphaka","Kuldeep Sen","Adam Milne","Yudhvir Singh","Shubham Dubey","Vignesh Puthur","Sushant Mishra","Aman Rao","Brijesh Sharma","Ravi Singh","Yash Raj Punja"],
-
-      LSG: ["Rishabh Pant","Nicholas Pooran","Quinton de Kock","Ayush Badoni","Deepak Hooda","Krunal Pandya","Marcus Stoinis","Kyle Mayers","Ravi Bishnoi","Mark Wood","Mohsin Khan","Mayank Yadav","Naveen-ul-Haq","Yash Thakur","Amit Mishra","Daniel Sams","Arshin Kulkarni","Krishnappa Gowtham","Prerak Mankad","Ashton Turner","David Willey","Shamar Joseph","Manimaran Siddharth","Arpit Guleria","Digvesh Singh"],
-
-      PBKS: ["Shreyas Iyer","Shikhar Dhawan","Jonny Bairstow","Liam Livingstone","Jitesh Sharma","Prabhsimran Singh","Sam Curran","Sikandar Raza","Rishi Dhawan","Harpreet Brar","Rahul Chahar","Arshdeep Singh","Kagiso Rabada","Nathan Ellis","Harshal Patel","Vidwath Kaverappa","Shivam Singh","Atharva Taide","Harnoor Singh","Ashutosh Sharma","Tanay Thyagarajan","Prince Choudhary","Vishwanath"],
-
-      GT: ["Shubman Gill","Sai Sudharsan","Jos Buttler","Anuj Rawat","Kumar Kushagra","Rahul Tewatia","Shahrukh Khan","Rashid Khan","Washington Sundar","Jayant Yadav","Manav Suthar","Nishant Sindhu","Glenn Phillips","Jason Holder","Mohammed Siraj","Umesh Yadav","Noor Ahmad","Spencer Johnson","Darshan Nalkande","Sai Kishore","Mohit Sharma","Joshua Little","Kartik Tyagi","Sandeep Warrier","Ashok Sharma"]
-
-    };
-
-    // 🔥 LOOP (auto add)
-    for (let team in teams){
-      await setDoc(doc(db,"teams",team),{
-        players: teams[team]
-      });
-    }
-
-    alert("🔥 ALL TEAMS ADDED SUCCESSFULLY 😈");
+    alert("🔥 Working! Teams added");
 
   }catch(e){
     console.log(e);
-    alert("Error ❌ check console");
+    alert("Error ❌");
   }
+
 };
+
 </script>
+
+</body>
+</html>
