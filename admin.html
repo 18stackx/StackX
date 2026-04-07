@@ -1,98 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Admin Panel</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body{background:#0b0f1a;color:white;font-family:Arial;margin:0;}
-
-    .card{
-      background:#1f2937;
-      padding:20px;
-      margin:20px;
-      border-radius:10px;
-      max-width:400px;
-      margin:auto;
-      margin-top:30px;
-    }
-
-    input{
-      width:100%;
-      padding:10px;
-      margin:8px 0;
-      border:none;
-      border-radius:8px;
-    }
-
-    button{
-      width:100%;
-      padding:12px;
-      border:none;
-      border-radius:8px;
-      background:#22c55e;
-      color:white;
-      margin-top:10px;
-      font-weight:bold;
-    }
-  </style>
-</head>
-
-<body>
-
-<!-- LOGIN -->
-<div id="loginBox" class="card">
-  <h3>🔐 Admin Login</h3>
-  <input id="user" placeholder="User ID">
-  <input id="pass" type="password" placeholder="Password">
-  <button id="loginBtn">Login</button>
-</div>
-
-<!-- PANEL -->
-<div id="panel" style="display:none;">
-
-  <!-- MATCH SECTION -->
-  <div class="card">
-    <h3>Update Matches</h3>
-
-    <input id="m1" placeholder="Match 1">
-    <input id="m2" placeholder="Match 2">
-    <input id="m3" placeholder="Match 3">
-
-    <button id="saveBtn">Save Matches</button>
-    <button id="apiBtn">⚡ Fetch Matches + Players</button>
-  </div>
-
-  <!-- WALLET -->
-  <div class="card">
-    <h3>💰 Update User Wallet</h3>
-
-    <input id="uemail" placeholder="User Email">
-    <input id="amount" placeholder="Amount (+/-)">
-
-    <button id="walletBtn">Update Balance</button>
-  </div>
-
-</div>
-
-<script>
-// 🔐 LOGIN
-document.getElementById("loginBtn").onclick = function(){
-  let u = document.getElementById("user").value.trim();
-  let p = document.getElementById("pass").value.trim();
-
-  if(u === "abhibababr" && p === "943188@."){
-    document.getElementById("loginBox").style.display = "none";
-    document.getElementById("panel").style.display = "block";
-  } else {
-    alert("Wrong ID/Password ❌");
-  }
-};
-</script>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
@@ -102,90 +10,59 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 
-// 🔥 MANUAL SAVE
-document.getElementById("saveBtn").onclick = async ()=>{
-  await setDoc(doc(db,"matches","today"),{
-    m1:m1.value,
-    m2:m2.value,
-    m3:m3.value
+// 🔥 ALL TEAMS FUNCTION
+window.addAllTeams = async function(){
+
+  // RCB
+  await setDoc(doc(db,"teams","RCB"),{
+    players:["Rajat Patidar","Virat Kohli","Devdutt Padikkal","Phil Salt","Jitesh Sharma","Jordan Cox","Krunal Pandya","Swapnil Singh","Tim David","Romario Shepherd","Jacob Bethell","Venkatesh Iyer","Satvik Deswal","Mangesh Yadav","Vicky Ostwal","Vihaan Malhotra","Kanishk Chouhan","Josh Hazlewood","Bhuvneshwar Kumar","Yash Dayal","Nuwan Thushara","Rasikh Salam","Suyash Sharma","Abhinandan Singh","Jacob Duffy"]
   });
 
-  alert("Matches Updated 🔥");
-};
+  // CSK
+  await setDoc(doc(db,"teams","CSK"),{
+    players:["Ruturaj Gaikwad","MS Dhoni","Sanju Samson","Dewald Brevis","Ayush Mhatre","Kartik Sharma","Sarfaraz Khan","Urvil Patel","Shivam Dube","Ravindra Ghosh","Aman Khan","Akeal Hosein","Anshul Kamboj","Matthew Short","Jamie Overton","Prashant Veer","Zakary Foulkes","Noor Ahmad","Rahul Chahar","Shreyas Gopal","Khaleel Ahmed","Mukesh Choudhary","Matt Henry","Spencer Johnson","Gurjapneet Singh"]
+  });
 
-// ⚡ MATCH + PLAYERS API
-document.getElementById("apiBtn").onclick = async ()=>{
-  try{
+  // MI
+  await setDoc(doc(db,"teams","MI"),{
+    players:["Hardik Pandya","Rohit Sharma","Suryakumar Yadav","Tilak Varma","Dewald Brevis","Ishan Kishan","Vishnu Vinod","Tim David","Romario Shepherd","Nehal Wadhera","Shams Mulani","Mohammad Nabi","Arjun Tendulkar","Jasprit Bumrah","Gerald Coetzee","Dilshan Madushanka","Akash Madhwal","Kumar Kartikeya","Piyush Chawla","Shreyas Gopal","Luke Wood","Nuwan Thushara","Kwena Maphaka","Anshul Kamboj","Naman Dhir"]
+  });
 
-    let res = await fetch("https://api.cricapi.com/v1/currentMatches?apikey=c51049f9-0d1d-45b8-80a6-c2d80e95da65&offset=0");
-    let data = await res.json();
+  // KKR
+  await setDoc(doc(db,"teams","KKR"),{
+    players:["Ajinkya Rahane","Rinku Singh","Angkrish Raghuvanshi","Manish Pandey","Rahul Tripathi","Finn Allen","Tim Seifert","Tejasvi Singh","Rovman Powell","Sunil Narine","Anukul Roy","Ramandeep Singh","Cameron Green","Rachin Ravindra","Sarthak Ranjan","Daksh Kamra","Varun Chakravarthy","Vaibhav Arora","Umran Malik","Matheesha Pathirana","Blessing Muzarabani","Navdeep Saini","Kartik Tyagi","Saurabh Dubey","Prashant Solanki"]
+  });
 
-    let matches = data.data || [];
+  // SRH
+  await setDoc(doc(db,"teams","SRH"),{
+    players:["Pat Cummins","Heinrich Klaasen","Travis Head","Abhishek Sharma","Nitish Kumar Reddy","Ishan Kishan","Aniket Verma","Smaran Ravichandran","Salil Arora","Kamindu Mendis","Liam Livingstone","Jack Edwards","Shivang Kumar","Harsh Dubey","Harshal Patel","Jaydev Unadkat","Zeeshan Ansari","Brydon Carse","Eshan Malinga","Shivam Mavi","Sakib Hussain","Amit Kumar","Praful Hinge","Onkar Tarmale","Krains Fuletra"]
+  });
 
-    let m1 = matches[0]?.name || "";
-    let m2 = matches[1]?.name || "";
-    let m3 = matches[2]?.name || "";
+  // DC
+  await setDoc(doc(db,"teams","DC"),{
+    players:["Axar Patel","KL Rahul","Prithvi Shaw","David Warner","Harry Brook","Tristan Stubbs","Rishabh Pant","Abishek Porel","Mitchell Marsh","Lalit Yadav","Shardul Thakur","Kuldeep Yadav","Anrich Nortje","Khaleel Ahmed","Mukesh Kumar","Mitchell Starc","Ishant Sharma","Ricky Bhui","Sumit Kumar","Vicky Ostwal","Yash Dhull","Kumar Kushagra","Jhye Richardson","Rasikh Salam","Swastik Chikara"]
+  });
 
-    // 🔥 SAVE MATCHES
-    await setDoc(doc(db,"matches","today"),{ m1,m2,m3 });
+  // RR
+  await setDoc(doc(db,"teams","RR"),{
+    players:["Riyan Parag","Yashasvi Jaiswal","Vaibhav Suryavanshi","Dhruv Jurel","Shimron Hetmyer","Ravindra Jadeja","Donovan Ferreira","Dasun Shanaka","Ravi Bishnoi","Sandeep Sharma","Tushar Deshpande","Jofra Archer","Nandre Burger","Kwena Maphaka","Kuldeep Sen","Adam Milne","Yudhvir Singh","Shubham Dubey","Vignesh Puthur","Sushant Mishra","Aman Rao","Brijesh Sharma","Ravi Singh","Yash Raj Punja"]
+  });
 
-    // 🔥 DEMO PLAYERS (same for all — safe system)
-    let players = [
-      "Virat Kohli","Rohit Sharma","MS Dhoni",
-      "Hardik Pandya","KL Rahul","Jasprit Bumrah",
-      "Ravindra Jadeja","Shubman Gill","Surya Kumar Yadav",
-      "Rishabh Pant","Shreyas Iyer"
-    ];
+  // LSG
+  await setDoc(doc(db,"teams","LSG"),{
+    players:["Rishabh Pant","Nicholas Pooran","Quinton de Kock","Ayush Badoni","Deepak Hooda","Krunal Pandya","Marcus Stoinis","Kyle Mayers","Ravi Bishnoi","Mark Wood","Mohsin Khan","Mayank Yadav","Naveen-ul-Haq","Yash Thakur","Amit Mishra","Daniel Sams","Arshin Kulkarni","Krishnappa Gowtham","Prerak Mankad","Ashton Turner","David Willey","Shamar Joseph","Manimaran Siddharth","Arpit Guleria","Digvesh Singh"]
+  });
 
-    // 🔥 SAVE PLAYERS MATCH-WISE
-    await setDoc(doc(db,"players","match1"),{ list:players });
-    await setDoc(doc(db,"players","match2"),{ list:players });
-    await setDoc(doc(db,"players","match3"),{ list:players });
+  // PBKS
+  await setDoc(doc(db,"teams","PBKS"),{
+    players:["Shreyas Iyer","Shikhar Dhawan","Jonny Bairstow","Liam Livingstone","Jitesh Sharma","Prabhsimran Singh","Sam Curran","Sikandar Raza","Rishi Dhawan","Harpreet Brar","Rahul Chahar","Arshdeep Singh","Kagiso Rabada","Nathan Ellis","Harshal Patel","Vidwath Kaverappa","Shivam Singh","Atharva Taide","Harnoor Singh","Ashutosh Sharma","Tanay Thyagarajan","Prince Choudhary","Vishwanath"]
+  });
 
-    alert("Matches + Players Updated 😈🔥");
+  // GT
+  await setDoc(doc(db,"teams","GT"),{
+    players:["Shubman Gill","Sai Sudharsan","Jos Buttler","Anuj Rawat","Kumar Kushagra","Rahul Tewatia","Shahrukh Khan","Rashid Khan","Washington Sundar","Jayant Yadav","Manav Suthar","Nishant Sindhu","Glenn Phillips","Jason Holder","Mohammed Siraj","Umesh Yadav","Noor Ahmad","Spencer Johnson","Darshan Nalkande","Sai Kishore","Mohit Sharma","Joshua Little","Kartik Tyagi","Sandeep Warrier","Ashok Sharma"]
+  });
 
-  }catch(err){
-    alert("API Error ❌");
-    console.log(err);
-  }
-};
-
-// 💰 WALLET
-document.getElementById("walletBtn").onclick = async ()=>{
-  let email = document.getElementById("uemail").value.trim();
-  let amt = parseInt(document.getElementById("amount").value);
-
-  if(!email || isNaN(amt)){
-    alert("Fill all fields");
-    return;
-  }
-
-  const ref = doc(db,"users",email);
-  const snap = await getDoc(ref);
-
-  if(snap.exists()){
-    let old = snap.data().balance || 0;
-    let newBalance = old + amt;
-
-    if(newBalance < 0){
-      alert("Insufficient Balance ❌");
-      return;
-    }
-
-    await updateDoc(ref,{ balance:newBalance });
-
-  } else {
-    if(amt < 0){
-      alert("User not found ❌");
-      return;
-    }
-
-    await setDoc(ref,{ balance:amt });
-  }
-
-  alert("Wallet Updated 💰");
+  alert("🔥 ALL TEAMS ADDED SUCCESSFULLY 😈");
 };
 </script>
-
-</body>
-</html>
