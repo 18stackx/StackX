@@ -4,16 +4,10 @@
   <title>Wallet</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- 🔥 FONT -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
 
   <style>
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-      font-family:'Poppins',sans-serif;
-    }
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
 
     body{
       background:#0f0f1a;
@@ -21,35 +15,8 @@
       text-align:center;
       padding-bottom:80px;
       display:none;
-      overflow-x:hidden;
     }
 
-    /* 🔥 GLOW BG */
-    body::before{
-      content:'';
-      position:fixed;
-      width:600px;
-      height:600px;
-      background:radial-gradient(circle, rgba(255,0,80,0.25), transparent 70%);
-      top:-200px;
-      left:-200px;
-      filter:blur(120px);
-      z-index:-1;
-    }
-
-    body::after{
-      content:'';
-      position:fixed;
-      width:600px;
-      height:600px;
-      background:radial-gradient(circle, rgba(0,150,255,0.25), transparent 70%);
-      bottom:-200px;
-      right:-200px;
-      filter:blur(120px);
-      z-index:-1;
-    }
-
-    /* 🔥 HEADER */
     .header{
       display:flex;
       align-items:center;
@@ -58,30 +25,18 @@
       margin-top:15px;
     }
 
-    .header img{
-      width:40px;
-      border-radius:10px;
-    }
+    .header img{width:40px;border-radius:10px;}
+    .trusted{font-size:12px;color:#22c55e;}
 
-    .trusted{
-      font-size:12px;
-      color:#22c55e;
-    }
+    h2{margin-top:10px;}
 
-    h2{
-      margin-top:10px;
-    }
-
-    /* 🔥 BOX */
     .box{
       background:rgba(255,255,255,0.05);
       margin:15px;
       padding:20px;
       border-radius:20px;
-      backdrop-filter:blur(10px);
     }
 
-    /* 🔥 INPUT */
     input{
       width:85%;
       padding:12px;
@@ -90,7 +45,6 @@
       border:none;
     }
 
-    /* 🔥 BUTTON */
     button{
       padding:12px;
       border:none;
@@ -99,35 +53,24 @@
       color:white;
       width:90%;
       margin-top:10px;
-      font-weight:600;
-      transition:0.3s;
-    }
-
-    button:hover{
-      transform:scale(1.05);
     }
 
     .note{
       font-size:13px;
       color:#9ca3af;
-      line-height:1.5;
       margin-top:10px;
     }
 
-    /* 🔥 NAV */
     .nav{
       position:fixed;
       bottom:0;
       width:100%;
       background:rgba(0,0,0,0.7);
-      backdrop-filter:blur(10px);
       display:flex;
       justify-content:space-around;
       padding:12px;
-      z-index:999;
     }
 
-    /* 🔥 TELEGRAM */
     .tg{
       position:fixed;
       bottom:90px;
@@ -139,18 +82,14 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      z-index:999;
     }
 
-    .tg img{
-      width:28px;
-    }
+    .tg img{width:28px;}
   </style>
 </head>
 
 <body>
 
-<!-- 🔥 HEADER -->
 <div class="header">
   <img src="logo.png">
   <div>
@@ -168,60 +107,31 @@
 <div class="box">
   <h3>➕ Add Money</h3>
 
-  <p>Pay to UPI ID:</p>
-  <b>yourupi@upi</b>
+  <b>UPI: yourupi@upi</b>
 
-  <p class="note">
-    🎁 Deposit Offers:<br>
-    ₹300 → 10% bonus<br>
-    ₹1000 → 20% bonus<br>
-    ₹3000 → 50% bonus<br>
-    ₹5000 → 50% bonus<br>
-    ₹10000 → 100% bonus
-  </p>
+  <img src="qr.jpg" width="150" style="margin-top:10px;border-radius:10px;">
 
-  <img src="qr.jpg" width="180" style="border-radius:15px;margin-top:10px;">
-
-  <input id="amt" placeholder="Enter Amount (min ₹300)">
+  <input id="amt" placeholder="Amount (min ₹300)">
   <input id="txn" placeholder="Transaction ID">
 
   <button onclick="submitAdd()">Submit Payment</button>
 
-  <p class="note">
-    After payment, message us on Telegram to update your balance.
-  </p>
+  <p class="note">After payment → message Telegram</p>
 </div>
 
 <div class="box">
   <h3>💸 Withdraw</h3>
 
-  <input id="upi" placeholder="Your UPI ID">
-  <input id="wamt" placeholder="Enter Amount (min ₹700)">
+  <input id="upi" placeholder="Your UPI">
+  <input id="wamt" placeholder="Amount (min ₹700)">
 
-  <button onclick="submitWithdraw()">Request Withdraw</button>
-
-  <p class="note">
-    After request, message us on Telegram to process withdrawal.
-  </p>
+  <button onclick="submitWithdraw()">Withdraw</button>
 </div>
 
-<div class="box">
-  <h3>📜 Terms</h3>
-  <p class="note">
-    • Min deposit ₹300<br>
-    • Min withdraw ₹700<br>
-    • Deposits non-refundable<br>
-    • Withdraw within 24 hrs<br>
-    • Any misuse = restriction
-  </p>
-</div>
-
-<!-- TELEGRAM -->
 <a href="https://t.me/stackx_admin" target="_blank" class="tg">
   <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png">
 </a>
 
-<!-- NAV -->
 <div class="nav">
   <div onclick="goHome()">🏠</div>
   <div onclick="goProfile()">👤</div>
@@ -242,30 +152,105 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+// LOAD BALANCE
 onAuthStateChanged(auth, async (user)=>{
   if(!user){
     window.location.href="index.html";
   } else {
     document.body.style.display="block";
 
-    let snap=await getDoc(doc(db,"users",user.email));
+    let snap = await getDoc(doc(db,"users",user.email));
     if(snap.exists()){
-      document.getElementById("bal").innerText=snap.data().balance||0;
+      document.getElementById("bal").innerText = snap.data().balance || 0;
     }
   }
 });
 
+// 🔥 ADD MONEY
 window.submitAdd = async function(){
-  alert("Payment Submitted ✅\nMessage on Telegram to update balance");
+
+  let amt = parseInt(document.getElementById("amt").value);
+  let txn = document.getElementById("txn").value;
+
+  if(!amt || !txn){
+    alert("Fill all details ❌");
+    return;
+  }
+
+  if(amt < 300){
+    alert("Min ₹300 ❌");
+    return;
+  }
+
+  const user = auth.currentUser;
+  const ref = doc(db,"users",user.email);
+
+  let snap = await getDoc(ref);
+  let data = snap.data() || {};
+
+  await setDoc(ref,{
+    deposit:(data.deposit||0)+amt,
+    history:[
+      ...(data.history||[]),
+      {
+        type:"deposit",
+        amt:amt,
+        time:new Date().toLocaleString('en-IN')
+      }
+    ]
+  },{merge:true});
+
+  alert("Submitted ✅\nMessage Telegram");
 };
 
+// 🔥 WITHDRAW
 window.submitWithdraw = async function(){
-  alert("Withdraw Request Sent ✅\nMessage on Telegram to process withdrawal");
+
+  let upi = document.getElementById("upi").value;
+  let amt = parseInt(document.getElementById("wamt").value);
+
+  if(!upi || !amt){
+    alert("Fill all ❌");
+    return;
+  }
+
+  if(amt < 700){
+    alert("Min ₹700 ❌");
+    return;
+  }
+
+  const user = auth.currentUser;
+  const ref = doc(db,"users",user.email);
+
+  let snap = await getDoc(ref);
+  let data = snap.data();
+
+  let bal = data.balance || 0;
+
+  if(bal < amt){
+    alert("Low balance ❌");
+    return;
+  }
+
+  await setDoc(ref,{
+    balance:bal-amt,
+    history:[
+      ...(data.history||[]),
+      {
+        type:"withdraw",
+        amt:amt,
+        time:new Date().toLocaleString('en-IN')
+      }
+    ]
+  },{merge:true});
+
+  alert("Withdraw Sent ✅\nMessage Telegram");
 };
 
-window.goHome = ()=> location.href="home.html";
-window.goProfile = ()=> location.href="profile.html";
-window.goWallet = ()=> location.href="wallet.html";
+// NAV
+window.goHome=()=>location.href="home.html";
+window.goProfile=()=>location.href="profile.html";
+window.goWallet=()=>location.href="wallet.html";
 </script>
 
 </body>
