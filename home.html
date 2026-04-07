@@ -12,13 +12,28 @@
       color:white;
     }
 
+    /* HEADER */
     .header{
-      padding:15px;
-      text-align:center;
       background:#111827;
+      padding:15px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
     }
 
-    .container{
+    .logo{
+      font-size:20px;
+      font-weight:bold;
+    }
+
+    .login{
+      background:#22c55e;
+      padding:8px 15px;
+      border-radius:8px;
+    }
+
+    /* MATCH SECTION */
+    .section{
       padding:15px;
     }
 
@@ -30,104 +45,119 @@
 
     .match{
       padding:12px;
-      margin:8px 0;
       background:#374151;
       border-radius:10px;
+      margin-top:10px;
       cursor:pointer;
+      font-weight:bold;
     }
 
+    /* WALLET */
+    .wallet{
+      background:#1f2937;
+      margin:15px;
+      padding:15px;
+      border-radius:12px;
+      text-align:center;
+    }
+
+    /* TEAM */
+    .team{
+      margin:15px;
+    }
+
+    /* NAV */
     .nav{
       position:fixed;
       bottom:0;
       width:100%;
-      display:flex;
       background:#111827;
+      display:flex;
+      justify-content:space-around;
+      padding:10px;
     }
 
-    .nav button{
-      flex:1;
-      padding:12px;
-      border:none;
-      background:none;
-      color:white;
+    .nav div{
+      text-align:center;
+      font-size:14px;
     }
+
   </style>
 </head>
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
-  <h2>🏏 StackX</h2>
+  <div class="logo">🏏 StackX</div>
+  <div class="login">Login</div>
 </div>
 
-<div class="container">
+<!-- LIVE MATCHES -->
+<div class="section">
+  <h3>🔥 Live Cricket Matches</h3>
 
-  <div class="card">
-    <h3>Live Matches</h3>
+  <div class="card" id="matchesBox">
 
-    <div class="match" onclick="openMatch('match1')" id="match1">Loading...</div>
-    <div class="match" onclick="openMatch('match2')" id="match2"></div>
-    <div class="match" onclick="openMatch('match3')" id="match3"></div>
+    <div class="match" onclick="openMatch(this)">RCB vs CSK</div>
+    <div class="match" onclick="openMatch(this)">MI vs KKR</div>
+    <div class="match" onclick="openMatch(this)">SRH vs DC</div>
 
   </div>
+</div>
 
+<!-- WALLET -->
+<div class="wallet">
+  💰 Wallet: ₹<span id="balance">0</span>
+</div>
+
+<!-- MY TEAM -->
+<div class="team">
+  <button onclick="showTeam()">👑 My Team</button>
+  <div id="teamBox"></div>
 </div>
 
 <!-- NAV -->
 <div class="nav">
-  <button onclick="goHome()">🏠 Home</button>
-  <button onclick="goProfile()">👤 Profile</button>
-  <button onclick="goWallet()">💰 Wallet</button>
-<hr>
-
-<h3>💰 Wallet: ₹<span id="balance">0</span></h3>
-
-<button onclick="showTeam()">👑 My Team</button>
-
-<div id="teamBox" style="margin-top:15px;"></div>
+  <div>🏠 Home</div>
+  <div>👤 Profile</div>
+  <div>💰 Wallet</div>
 </div>
 
 <script>
-// 🔥 MATCH CLICK (UPGRADED)
-function openMatch(id){
+// 🔥 OPEN MATCH
+function openMatch(el){
+  let match = el.innerText;
 
-  let matchName = document.getElementById(id).innerText;
-
-  localStorage.setItem("matchId", id);
-  localStorage.setItem("matchName", matchName);
-
+  localStorage.setItem("matchName", match);
   window.location.href = "match.html";
 }
 
-// NAV
-function goHome(){ window.location.href="home.html"; }
-function goProfile(){ window.location.href="profile.html"; }
-function goWallet(){ window.location.href="wallet.html"; }
-</script>
+// 🔥 SHOW TEAM
+function showTeam(){
+  let data = JSON.parse(localStorage.getItem("team"));
+  let box = document.getElementById("teamBox");
 
-<!-- FIREBASE REALTIME -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const app = initializeApp({
-  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
-  authDomain:"stackx-9f92e.firebaseapp.com",
-  projectId:"stackx-9f92e"
-});
-
-const db = getFirestore(app);
-
-// 🔥 REALTIME MATCH UPDATE
-onSnapshot(doc(db,"matches","today"),(snap)=>{
-  if(snap.exists()){
-    let data = snap.data();
-
-    document.getElementById("match1").innerText = data.m1 || "";
-    document.getElementById("match2").innerText = data.m2 || "";
-    document.getElementById("match3").innerText = data.m3 || "";
+  if(!data){
+    box.innerHTML = "<p>No team selected ❌</p>";
+    return;
   }
-});
+
+  box.innerHTML = "<h3>🔥 My Team</h3>";
+
+  data.players.forEach(p=>{
+    let tag = "";
+
+    if(p === data.captain) tag = " (C ⭐)";
+    if(p === data.vice) tag = " (VC ⚡)";
+
+    box.innerHTML += `
+      <div style="background:#1f2937;padding:10px;margin:6px;border-radius:8px;">
+        ${p}${tag}
+      </div>
+    `;
+  });
+}
 </script>
 
 </body>
