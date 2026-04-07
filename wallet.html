@@ -60,6 +60,25 @@
     .nav div{
       cursor:pointer;
     }
+
+    /* 🔥 TELEGRAM BUTTON */
+    .tg{
+      position:fixed;
+      bottom:80px;
+      right:15px;
+      background:#0088cc;
+      width:50px;
+      height:50px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:999;
+    }
+
+    .tg img{
+      width:28px;
+    }
   </style>
 </head>
 
@@ -77,7 +96,17 @@
   <p>Pay to UPI ID:</p>
   <b>yourupi@upi</b>
 
-  <!-- 🔥 QR -->
+  <!-- 🔥 BONUS OFFERS -->
+  <p class="note">
+    🎁 Deposit Offers:<br>
+    ₹300 → Get up to 10% bonus<br>
+    ₹1000 → Get up to 20% bonus<br>
+    ₹3000 → Get up to 50% bonus<br>
+    ₹5000 → Get up to 50% bonus<br>
+    ₹10000 → Get up to 100% bonus
+  </p>
+
+  <!-- QR -->
   <p>Scan & Pay:</p>
   <img src="qr.jpg" width="180" style="border-radius:10px;margin-top:10px;">
 
@@ -86,9 +115,6 @@
 
   <button onclick="submitAdd()">Submit Payment</button>
 
-  <p class="note">
-    ⚠️ Minimum deposit ₹300.
-  </p>
 </div>
 
 <div class="box">
@@ -99,6 +125,11 @@
 
   <button onclick="submitWithdraw()">Request Withdraw</button>
 </div>
+
+<!-- TELEGRAM -->
+<a href="https://t.me/stackx_admin" target="_blank" class="tg">
+  <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png">
+</a>
 
 <!-- NAV -->
 <div class="nav">
@@ -121,7 +152,6 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// AUTH
 onAuthStateChanged(auth, async (user)=>{
   if(!user){
     window.location.href = "index.html";
@@ -135,9 +165,8 @@ onAuthStateChanged(auth, async (user)=>{
   }
 });
 
-// ADD MONEY
+// ADD
 window.submitAdd = async function(){
-
   let amt = parseInt(document.getElementById("amt").value);
   let txn = document.getElementById("txn").value;
 
@@ -147,7 +176,7 @@ window.submitAdd = async function(){
   }
 
   if(amt < 300){
-    alert("Minimum deposit is ₹300 ❌");
+    alert("Minimum deposit ₹300 ❌");
     return;
   }
 
@@ -170,7 +199,6 @@ window.submitAdd = async function(){
 
 // WITHDRAW
 window.submitWithdraw = async function(){
-
   let upi = document.getElementById("upi").value;
   let amt = parseInt(document.getElementById("wamt").value);
 
@@ -208,7 +236,7 @@ window.submitWithdraw = async function(){
   alert("Withdraw Request Sent ✅");
 };
 
-// NAV FIX
+// NAV
 window.goHome = ()=> location.href="home.html";
 window.goProfile = ()=> location.href="profile.html";
 window.goWallet = ()=> location.href="wallet.html";
