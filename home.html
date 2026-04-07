@@ -4,41 +4,108 @@
   <title>Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- 🔥 FONT -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+
   <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:'Poppins',sans-serif;
+    }
+
     body{
-      background:#0b0f1a;
+      background:#0f0f1a;
       color:white;
-      font-family:Arial;
-      padding-bottom:70px;
+      padding-bottom:80px;
+      overflow-x:hidden;
+    }
+
+    /* 🔥 GLOW BG */
+    body::before{
+      content:'';
+      position:fixed;
+      width:600px;
+      height:600px;
+      background:radial-gradient(circle, rgba(255,0,80,0.25), transparent 70%);
+      top:-200px;
+      left:-200px;
+      filter:blur(120px);
+      z-index:-1;
+    }
+
+    body::after{
+      content:'';
+      position:fixed;
+      width:600px;
+      height:600px;
+      background:radial-gradient(circle, rgba(0,150,255,0.25), transparent 70%);
+      bottom:-200px;
+      right:-200px;
+      filter:blur(120px);
+      z-index:-1;
+    }
+
+    /* 🔥 HEADER */
+    .header{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      margin-top:15px;
+    }
+
+    .header img{
+      width:40px;
+      border-radius:10px;
+    }
+
+    .trusted{
+      font-size:12px;
+      color:#22c55e;
     }
 
     h2{
       text-align:center;
+      margin-top:10px;
     }
 
+    /* 🔥 BOX */
     .box{
-      background:#1f2937;
+      background:rgba(255,255,255,0.05);
       margin:15px;
       padding:20px;
-      border-radius:10px;
+      border-radius:20px;
+      backdrop-filter:blur(10px);
     }
 
+    /* 🔥 MATCH */
     .match{
-      background:#111827;
+      background:rgba(255,255,255,0.05);
       padding:15px;
       margin:10px 0;
-      border-radius:8px;
+      border-radius:15px;
       cursor:pointer;
+      transition:0.3s;
     }
 
+    .match:hover{
+      transform:translateY(-5px);
+      background:rgba(255,255,255,0.08);
+    }
+
+    /* 🔥 NAV */
     .nav{
       position:fixed;
       bottom:0;
       width:100%;
-      background:#111827;
+      background:rgba(0,0,0,0.7);
+      backdrop-filter:blur(10px);
       display:flex;
       justify-content:space-around;
-      padding:10px;
+      padding:12px;
+      z-index:999;
     }
 
     .nav div{
@@ -74,10 +141,25 @@
     .tg img{
       width:28px;
     }
+
+    .note{
+      font-size:13px;
+      color:#9ca3af;
+      line-height:1.5;
+    }
   </style>
 </head>
 
 <body>
+
+<!-- 🔥 HEADER -->
+<div class="header">
+  <img src="logo.png">
+  <div>
+    <div><b>StackX Fantasy</b></div>
+    <div class="trusted">✔ Trusted Site</div>
+  </div>
+</div>
 
 <h2>🏏 Cricket Fantasy</h2>
 
@@ -93,7 +175,28 @@
   <div id="m3" class="match" onclick="openMatch('m3')">Loading...</div>
 </div>
 
-<!-- 🔥 SUPPORT BUTTON -->
+<!-- 🔥 TERMS -->
+<div class="box">
+  <h3>📜 Terms & Conditions</h3>
+
+  <p class="note">
+    • Minimum deposit: ₹300<br>
+    • Minimum withdrawal: ₹700<br><br>
+
+    • Deposits are non-refundable after successful payment.<br>
+    • Bonus offers are subject to change anytime.<br><br>
+
+    • Platform may charge fees / taxes on winnings.<br><br>
+
+    • Withdrawal requests processed within 24 hours.<br><br>
+
+    • Any suspicious activity may lead to restriction.<br><br>
+
+    • By using this app, you agree to all terms.
+  </p>
+</div>
+
+<!-- 🔥 SUPPORT -->
 <div class="supportBox">
   <div class="supportText">For Support<br>Contact Us</div>
 
@@ -123,7 +226,6 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 🔥 LOAD MATCHES
 async function loadMatches(){
   let snap = await getDoc(doc(db,"matches","today"));
 
@@ -136,7 +238,6 @@ async function loadMatches(){
   }
 }
 
-// 🔥 USER BALANCE
 onAuthStateChanged(auth, async (user)=>{
   if(user){
     let snap = await getDoc(doc(db,"users",user.email));
@@ -152,7 +253,6 @@ loadMatches();
 </script>
 
 <script>
-// 🔥 MATCH OPEN
 function openMatch(id){
   let name = document.getElementById(id).innerText;
 
@@ -162,7 +262,6 @@ function openMatch(id){
   window.location.href = "match.html";
 }
 
-// 🔥 NAV (GLOBAL FIX)
 window.goHome = ()=> location.href="home.html";
 window.goProfile = ()=> location.href="profile.html";
 window.goWallet = ()=> location.href="wallet.html";
@@ -170,23 +269,3 @@ window.goWallet = ()=> location.href="wallet.html";
 
 </body>
 </html>
-
-<div class="box">
-  <h3>📜 Terms & Conditions</h3>
-
-  <p class="note">
-    • Minimum deposit: ₹300<br>
-    • Minimum withdrawal: ₹700<br><br>
-
-    • Deposits are non-refundable after successful payment.<br>
-    • Bonus offers are subject to change anytime.<br><br>
-
-    • Platform may charge fees / taxes on winnings as applicable.<br><br>
-
-    • Withdrawal requests are processed within 24 hours after verification.<br><br>
-
-    • Any suspicious activity may lead to account restriction.<br><br>
-
-    • By using this app, you agree to all terms and conditions.
-  </p>
-</div>
