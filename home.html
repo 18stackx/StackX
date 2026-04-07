@@ -7,15 +7,15 @@
   <style>
     body{
       margin:0;
-      font-family: Arial;
+      font-family:Arial;
       background:#0b0f1a;
       color:white;
     }
 
     .header{
       padding:15px;
-      background:#111827;
       text-align:center;
+      background:#111827;
     }
 
     .container{
@@ -26,7 +26,14 @@
       background:#1f2937;
       padding:15px;
       border-radius:12px;
-      margin-bottom:15px;
+    }
+
+    .match{
+      padding:12px;
+      margin:8px 0;
+      background:#374151;
+      border-radius:10px;
+      cursor:pointer;
     }
 
     .nav{
@@ -50,18 +57,18 @@
 <body>
 
 <div class="header">
-  <h2>🚀 StackX</h2>
+  <h2>🏏 StackX</h2>
 </div>
 
 <div class="container">
 
-  <!-- 🔥 MATCHES -->
   <div class="card">
-    <h3 id="match1">Loading...</h3>
-    <h3 id="match2"></h3>
-    <h3 id="match3"></h3>
-    <h3 id="match4"></h3>
-    <h3 id="match5"></h3>
+    <h3>Live Matches</h3>
+
+    <div class="match" onclick="openMatch('match1')" id="match1">Loading...</div>
+    <div class="match" onclick="openMatch('match2')" id="match2"></div>
+    <div class="match" onclick="openMatch('match3')" id="match3"></div>
+
   </div>
 
 </div>
@@ -73,9 +80,28 @@
   <button onclick="goWallet()">💰 Wallet</button>
 </div>
 
+<script>
+// 🔥 MATCH CLICK (UPGRADED)
+function openMatch(id){
+
+  let matchName = document.getElementById(id).innerText;
+
+  localStorage.setItem("matchId", id);
+  localStorage.setItem("matchName", matchName);
+
+  window.location.href = "match.html";
+}
+
+// NAV
+function goHome(){ window.location.href="home.html"; }
+function goProfile(){ window.location.href="profile.html"; }
+function goWallet(){ window.location.href="wallet.html"; }
+</script>
+
+<!-- FIREBASE REALTIME -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
@@ -85,28 +111,16 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 
-// 🔥 FETCH MATCHES
-async function loadMatches(){
-  const ref = doc(db,"matches","today");
-  const snap = await getDoc(ref);
-
+// 🔥 REALTIME MATCH UPDATE
+onSnapshot(doc(db,"matches","today"),(snap)=>{
   if(snap.exists()){
-    const data = snap.data();
+    let data = snap.data();
 
     document.getElementById("match1").innerText = data.m1 || "";
     document.getElementById("match2").innerText = data.m2 || "";
     document.getElementById("match3").innerText = data.m3 || "";
-    document.getElementById("match4").innerText = data.m4 || "";
-    document.getElementById("match5").innerText = data.m5 || "";
   }
-}
-
-loadMatches();
-
-// NAV
-window.goHome = () => window.location.href="home.html";
-window.goProfile = () => window.location.href="profile.html";
-window.goWallet = () => window.location.href="wallet.html";
+});
 </script>
 
 </body>
