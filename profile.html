@@ -11,7 +11,7 @@
       font-family:Arial;
       text-align:center;
       padding-bottom:70px;
-      display:none; /* 🔥 hide until auth */
+      display:none;
     }
 
     .box{
@@ -36,6 +36,22 @@
       font-size:14px;
       cursor:pointer;
     }
+
+    .refbox{
+      font-size:14px;
+      color:#9ca3af;
+      margin-top:10px;
+    }
+
+    button{
+      padding:10px;
+      border:none;
+      border-radius:8px;
+      background:#22c55e;
+      color:white;
+      margin-top:10px;
+      width:90%;
+    }
   </style>
 </head>
 
@@ -50,18 +66,22 @@
 </div>
 
 <div class="box">
-  <h3>🏆 Earnings</h3>
-  <p>Total Profit: ₹<span id="wins">0</span></p>
-</div>
-
-<div class="box">
   <h3>🎮 Joined Contests</h3>
   <div id="contests">No contests yet</div>
 </div>
 
 <div class="box">
-  <h3>🎁 Referral</h3>
-  <p>Your Code: <b id="ref"></b></p>
+  <h3>🎁 Refer & Earn</h3>
+
+  <p><b>Your Code:</b> <span id="ref"></span></p>
+  <p id="link"></p>
+
+  <div class="refbox">
+    👉 Get ₹20 bonus when user joins from your link<br>
+    👉 Get 10% bonus on their deposits 💸
+  </div>
+
+  <button onclick="copyRef()">📋 Copy Referral Link</button>
 </div>
 
 <!-- NAV -->
@@ -85,18 +105,14 @@ const app = initializeApp({
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let userRef;
-
 onAuthStateChanged(auth, async (user)=>{
   if(!user){
-    // ❌ not logged in → redirect
     window.location.href = "index.html";
   } else {
 
-    // ✅ show page
     document.body.style.display = "block";
 
-    userRef = doc(db,"users",user.email);
+    let userRef = doc(db,"users",user.email);
 
     document.getElementById("email").innerText = user.email;
     document.getElementById("name").innerText = user.displayName || "User";
@@ -106,37 +122,37 @@ onAuthStateChanged(auth, async (user)=>{
     if(snap.exists()){
       let data = snap.data();
 
-      let balance = data.balance || 0;
-      let deposit = data.deposit || 0;
-      let withdraw = data.withdraw || 0;
-
-      document.getElementById("bal").innerText = balance;
-
-      let earnings = balance - deposit + withdraw;
-      document.getElementById("wins").innerText = earnings;
+      document.getElementById("bal").innerText = data.balance || 0;
 
       document.getElementById("contests").innerText =
         (data.contests || []).join(" , ") || "No contests";
 
-      document.getElementById("ref").innerText =
-        data.ref || user.email.split("@")[0];
+      let refCode = data.ref || user.email.split("@")[0];
+      let link = window.location.origin + "?ref=" + refCode;
+
+      document.getElementById("ref").innerText = refCode;
+      document.getElementById("link").innerText = link;
+
+      // 🔥 save globally for copy
+      window.refLink = link;
 
     } else {
       await setDoc(userRef,{
         balance:50,
-        deposit:0,
-        withdraw:0,
         contests:[],
         ref:user.email.split("@")[0]
       });
-
-      document.getElementById("bal").innerText = 50;
     }
   }
 });
 </script>
 
 <script>
+function copyRef(){
+  navigator.clipboard.writeText(window.refLink);
+  alert("Referral link copied 😈🔥");
+}
+
 function goHome(){
   window.location.href = "home.html";
 }
