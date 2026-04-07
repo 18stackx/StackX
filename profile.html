@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body{
+      margin:0;
+      font-family: Arial;
+      background:#0b0f1a;
+      color:white;
+    }
+
+    .header{
+      text-align:center;
+      padding:20px;
+      background:#111827;
+    }
+
+    .card{
+      background:#1f2937;
+      padding:20px;
+      margin:15px;
+      border-radius:12px;
+      text-align:center;
+    }
+
+    .btn{
+      background:red;
+      padding:10px;
+      border:none;
+      border-radius:8px;
+      color:white;
+      margin-top:10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="header">
+  <h2>My Profile</h2>
+</div>
+
+<div class="card">
+  <h3 id="email">Loading...</h3>
+  <p>Welcome to StackX 🔥</p>
+
+  <button class="btn" id="logoutBtn">Logout</button>
+</div>
+
+<!-- BOTTOM NAV -->
+<div style="position:fixed;bottom:0;width:100%;display:flex;background:#111827;">
+  <button onclick="goHome()" style="flex:1;padding:10px;">🏠 Home</button>
+  <button onclick="goProfile()" style="flex:1;padding:10px;">👤 Profile</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
+  authDomain:"stackx-9f92e.firebaseapp.com",
+  projectId:"stackx-9f92e"
+});
+
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, (user) => {
+  if(user){
+    document.getElementById("email").innerText = user.email;
+  } else {
+    window.location.href = "index.html";
+  }
+});
+
+document.getElementById("logoutBtn").onclick = () => {
+  signOut(auth);
+};
+
+window.goHome = () => window.location.href="home.html";
+window.goProfile = () => window.location.href="profile.html";
+</script>
+
+</body>
+</html>
