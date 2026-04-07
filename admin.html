@@ -51,6 +51,7 @@
 <!-- PANEL -->
 <div id="panel" style="display:none;">
 
+  <!-- MATCH SECTION -->
   <div class="card">
     <h3>Update Matches</h3>
 
@@ -64,6 +65,7 @@
     <button id="apiBtn">⚡ Fetch Matches (API)</button>
   </div>
 
+  <!-- WALLET -->
   <div class="card">
     <h3>💰 Update User Wallet</h3>
 
@@ -76,7 +78,7 @@
 </div>
 
 <script>
-// 🔐 LOGIN FIXED
+// 🔐 LOGIN FIX
 document.getElementById("loginBtn").onclick = function(){
 
   let u = document.getElementById("user").value.trim();
@@ -116,19 +118,26 @@ document.getElementById("saveBtn").onclick = async ()=>{
   alert("Matches Updated 🔥");
 };
 
-// ⚡ API FETCH
+// ⚡ FINAL API (FIXED)
 document.getElementById("apiBtn").onclick = async ()=>{
   try{
-    let res = await fetch("https://api.cricketdata.org/v1/matches?apikey=c51049f9-0d1d-45b8-80a6-c2d80e95da65");
+
+    let res = await fetch("https://api.cricapi.com/v1/currentMatches?apikey=c51049f9-0d1d-45b8-80a6-c2d80e95da65&offset=0");
     let data = await res.json();
 
-    let matches = data.matches || [];
+    if(data.status !== "success"){
+      alert("API limit / key issue ❌");
+      console.log(data);
+      return;
+    }
 
-    let m1 = matches[0] ? matches[0].teamInfo?.[0]?.name + " vs " + matches[0].teamInfo?.[1]?.name : "";
-    let m2 = matches[1] ? matches[1].teamInfo?.[0]?.name + " vs " + matches[1].teamInfo?.[1]?.name : "";
-    let m3 = matches[2] ? matches[2].teamInfo?.[0]?.name + " vs " + matches[2].teamInfo?.[1]?.name : "";
-    let m4 = matches[3] ? matches[3].teamInfo?.[0]?.name + " vs " + matches[3].teamInfo?.[1]?.name : "";
-    let m5 = matches[4] ? matches[4].teamInfo?.[0]?.name + " vs " + matches[4].teamInfo?.[1]?.name : "";
+    let matches = data.data || [];
+
+    let m1 = matches[0]?.name || "";
+    let m2 = matches[1]?.name || "";
+    let m3 = matches[2]?.name || "";
+    let m4 = matches[3]?.name || "";
+    let m5 = matches[4]?.name || "";
 
     await setDoc(doc(db,"matches","today"),{ m1,m2,m3,m4,m5 });
 
