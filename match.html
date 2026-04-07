@@ -23,6 +23,22 @@
       padding:12px;
       margin:8px;
       border-radius:10px;
+      cursor:pointer;
+    }
+
+    .selected{
+      background:green !important;
+    }
+
+    button{
+      width:90%;
+      margin:15px;
+      padding:12px;
+      border:none;
+      border-radius:10px;
+      background:#22c55e;
+      color:white;
+      font-weight:bold;
     }
   </style>
 </head>
@@ -34,6 +50,8 @@
 </div>
 
 <div id="players"></div>
+
+<button onclick="saveTeam()">Save Team</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -48,11 +66,11 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 
-// 🔥 MATCH NAME GET
+// 🔥 MATCH NAME
 let match = localStorage.getItem("matchName");
 document.getElementById("matchTitle").innerText = match || "Players";
 
-// 🔥 SAFETY CHECK
+// 🔥 CHECK
 if(!match){
   document.getElementById("players").innerHTML = "<p style='text-align:center;'>No match selected ❌</p>";
   throw new Error("No match");
@@ -60,16 +78,10 @@ if(!match){
 
 // 🔥 TEAM SPLIT
 let teams = match.split(" vs ");
-
-if(teams.length !== 2){
-  document.getElementById("players").innerHTML = "<p style='text-align:center;'>Invalid match format ❌</p>";
-  throw new Error("Format error");
-}
-
 let t1 = teams[0].trim();
 let t2 = teams[1].trim();
 
-// 🔥 FETCH TEAMS DATA
+// 🔥 FETCH TEAMS
 let snap1 = await getDoc(doc(db,"teams",t1));
 let snap2 = await getDoc(doc(db,"teams",t2));
 
@@ -81,20 +93,39 @@ if(!snap1.exists() || !snap2.exists()){
 let players1 = snap1.data().players || [];
 let players2 = snap2.data().players || [];
 
-// 🔥 COMBINE PLAYERS
 let allPlayers = [...players1, ...players2];
 
-// 🔥 SHOW PLAYERS
+// 🔥 UI + SELECT SYSTEM
 let container = document.getElementById("players");
-
-container.innerHTML = "";
+let selected = [];
 
 allPlayers.forEach(p=>{
   let div = document.createElement("div");
   div.className = "player";
   div.innerText = p;
+
+  div.onclick = ()=>{
+    if(selected.includes(p)){
+      selected = selected.filter(x=>x!==p);
+      div.classList.remove("selected");
+    } else {
+      if(selected.length >= 11){
+        alert("Max 11 players allowed ❌");
+        return;
+      }
+      selected.push(p);
+      div.classList.add("selected");
+    }
+  };
+
   container.appendChild(div);
 });
+
+// 🔥 SAVE TEAM
+window.saveTeam = ()=>{
+  localStorage.setItem("myTeam", JSON.stringify(selected));
+  alert("Team Saved 😈🔥");
+};
 </script>
 
 </body>
