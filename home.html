@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Profile</title>
+  <title>Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -9,9 +9,11 @@
       background:#0b0f1a;
       color:white;
       font-family:Arial;
-      text-align:center;
       padding-bottom:70px;
-      display:none;
+    }
+
+    h2{
+      text-align:center;
     }
 
     .box{
@@ -19,6 +21,14 @@
       margin:15px;
       padding:20px;
       border-radius:10px;
+    }
+
+    .match{
+      background:#111827;
+      padding:15px;
+      margin:10px 0;
+      border-radius:8px;
+      cursor:pointer;
     }
 
     .nav{
@@ -32,55 +42,26 @@
     }
 
     .nav div{
-      text-align:center;
-      font-size:14px;
       cursor:pointer;
-    }
-
-    .refbox{
       font-size:14px;
-      color:#9ca3af;
-      margin-top:10px;
-    }
-
-    button{
-      padding:8px 12px;
-      border:none;
-      border-radius:8px;
-      background:#22c55e;
-      color:white;
-      margin-top:10px;
     }
   </style>
 </head>
 
 <body>
 
-<h2>👤 Profile</h2>
+<h2>🏏 Cricket Fantasy</h2>
 
 <div class="box">
-  <p><b>Email:</b> <span id="email"></span></p>
-  <p><b>Name:</b> <span id="name"></span></p>
-  <p><b>Wallet:</b> ₹<span id="bal">0</span></p>
+  <h3>💰 Wallet: ₹<span id="balance">--</span></h3>
 </div>
 
 <div class="box">
-  <h3>🎮 Joined Contests</h3>
-  <div id="contests">No contests yet</div>
-</div>
+  <h3>🔥 Live Matches</h3>
 
-<div class="box">
-  <h3>🎁 Refer & Earn</h3>
-
-  <p>Your Code: <b id="ref"></b></p>
-  <p id="link"></p>
-
-  <div class="refbox">
-    👉 Get ₹20 bonus when user joins from your link<br>
-    👉 Get 10% bonus on their deposits 💸
-  </div>
-
-  <button onclick="copyLink()">Copy Referral Link</button>
+  <div id="m1" class="match" onclick="openMatch('m1')">Loading...</div>
+  <div id="m2" class="match" onclick="openMatch('m2')">Loading...</div>
+  <div id="m3" class="match" onclick="openMatch('m3')">Loading...</div>
 </div>
 
 <!-- NAV -->
@@ -92,8 +73,8 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
@@ -101,55 +82,50 @@ const app = initializeApp({
   projectId:"stackx-9f92e"
 });
 
-const auth = getAuth(app);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
+// 🔥 LOAD MATCHES
+async function loadMatches(){
+  let snap = await getDoc(doc(db,"matches","today"));
+
+  if(snap.exists()){
+    let data = snap.data();
+
+    document.getElementById("m1").innerText = data.m1 || "No Match";
+    document.getElementById("m2").innerText = data.m2 || "No Match";
+    document.getElementById("m3").innerText = data.m3 || "No Match";
+  }
+}
+
+// 🔥 USER BALANCE (optional login)
 onAuthStateChanged(auth, async (user)=>{
-  if(!user){
-    window.location.href = "index.html";
-  } else {
-
-    document.body.style.display = "block";
-
-    let userRef = doc(db,"users",user.email);
-
-    document.getElementById("email").innerText = user.email;
-    document.getElementById("name").innerText = user.displayName || "User";
-
-    let snap = await getDoc(userRef);
-
+  if(user){
+    let snap = await getDoc(doc(db,"users",user.email));
     if(snap.exists()){
-      let data = snap.data();
-
-      document.getElementById("bal").innerText = data.balance || 0;
-
-      document.getElementById("contests").innerText =
-        (data.contests || []).join(" , ") || "No contests";
-
-      let refCode = data.ref || user.email.split("@")[0];
-      document.getElementById("ref").innerText = refCode;
-
-      let link = window.location.origin + "?ref=" + refCode;
-      document.getElementById("link").innerText = link;
-
-    } else {
-      await setDoc(userRef,{
-        balance:50,
-        contests:[],
-        ref:user.email.split("@")[0]
-      });
+      document.getElementById("balance").innerText = snap.data().balance || 0;
     }
+  } else {
+    document.getElementById("balance").innerText = "--";
   }
 });
+
+loadMatches();
 </script>
 
 <script>
-function copyLink(){
-  let text = document.getElementById("link").innerText;
-  navigator.clipboard.writeText(text);
-  alert("Referral link copied 😈");
+// 🔥 MATCH OPEN
+function openMatch(id){
+
+  let name = document.getElementById(id).innerText;
+
+  localStorage.setItem("matchId", id);
+  localStorage.setItem("matchName", name);
+
+  window.location.href = "match.html";
 }
 
+// 🔥 NAV
 function goHome(){
   window.location.href = "home.html";
 }
