@@ -4,67 +4,133 @@
   <title>Wallet</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- 🔥 FONT -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+
   <style>
-    body{
-      background:#0b0f1a;
-      color:white;
-      font-family:Arial;
-      text-align:center;
-      padding-bottom:70px;
-      display:none;
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:'Poppins',sans-serif;
     }
 
-    .box{
-      background:#1f2937;
-      margin:15px;
-      padding:20px;
+    body{
+      background:#0f0f1a;
+      color:white;
+      text-align:center;
+      padding-bottom:80px;
+      display:none;
+      overflow-x:hidden;
+    }
+
+    /* 🔥 GLOW BG */
+    body::before{
+      content:'';
+      position:fixed;
+      width:600px;
+      height:600px;
+      background:radial-gradient(circle, rgba(255,0,80,0.25), transparent 70%);
+      top:-200px;
+      left:-200px;
+      filter:blur(120px);
+      z-index:-1;
+    }
+
+    body::after{
+      content:'';
+      position:fixed;
+      width:600px;
+      height:600px;
+      background:radial-gradient(circle, rgba(0,150,255,0.25), transparent 70%);
+      bottom:-200px;
+      right:-200px;
+      filter:blur(120px);
+      z-index:-1;
+    }
+
+    /* 🔥 HEADER */
+    .header{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      margin-top:15px;
+    }
+
+    .header img{
+      width:40px;
       border-radius:10px;
     }
 
+    .trusted{
+      font-size:12px;
+      color:#22c55e;
+    }
+
+    h2{
+      margin-top:10px;
+    }
+
+    /* 🔥 BOX */
+    .box{
+      background:rgba(255,255,255,0.05);
+      margin:15px;
+      padding:20px;
+      border-radius:20px;
+      backdrop-filter:blur(10px);
+    }
+
+    /* 🔥 INPUT */
     input{
-      width:80%;
-      padding:10px;
+      width:85%;
+      padding:12px;
       margin:8px;
-      border-radius:8px;
+      border-radius:10px;
       border:none;
     }
 
+    /* 🔥 BUTTON */
     button{
-      padding:10px;
+      padding:12px;
       border:none;
-      border-radius:8px;
-      background:#22c55e;
+      border-radius:30px;
+      background:#ff2a2a;
       color:white;
-      width:85%;
+      width:90%;
       margin-top:10px;
-      font-weight:bold;
+      font-weight:600;
+      transition:0.3s;
+    }
+
+    button:hover{
+      transform:scale(1.05);
     }
 
     .note{
       font-size:13px;
       color:#9ca3af;
+      line-height:1.5;
       margin-top:10px;
     }
 
+    /* 🔥 NAV */
     .nav{
       position:fixed;
       bottom:0;
       width:100%;
-      background:#111827;
+      background:rgba(0,0,0,0.7);
+      backdrop-filter:blur(10px);
       display:flex;
       justify-content:space-around;
-      padding:10px;
+      padding:12px;
       z-index:999;
     }
 
-    .nav div{
-      cursor:pointer;
-    }
-
-    /* 🔥 TELEGRAM BUTTON */
+    /* 🔥 TELEGRAM */
     .tg{
       position:fixed;
-      bottom:80px;
+      bottom:90px;
       right:15px;
       background:#0088cc;
       width:50px;
@@ -84,6 +150,15 @@
 
 <body>
 
+<!-- 🔥 HEADER -->
+<div class="header">
+  <img src="logo.png">
+  <div>
+    <div><b>StackX Fantasy</b></div>
+    <div class="trusted">✔ Trusted Site</div>
+  </div>
+</div>
+
 <h2>💰 Wallet</h2>
 
 <div class="box">
@@ -96,25 +171,25 @@
   <p>Pay to UPI ID:</p>
   <b>yourupi@upi</b>
 
-  <!-- 🔥 BONUS OFFERS -->
   <p class="note">
     🎁 Deposit Offers:<br>
-    ₹300 → Get up to 10% bonus<br>
-    ₹1000 → Get up to 20% bonus<br>
-    ₹3000 → Get up to 50% bonus<br>
-    ₹5000 → Get up to 50% bonus<br>
-    ₹10000 → Get up to 100% bonus
+    ₹300 → 10% bonus<br>
+    ₹1000 → 20% bonus<br>
+    ₹3000 → 50% bonus<br>
+    ₹5000 → 50% bonus<br>
+    ₹10000 → 100% bonus
   </p>
 
-  <!-- QR -->
-  <p>Scan & Pay:</p>
-  <img src="qr.jpg" width="180" style="border-radius:10px;margin-top:10px;">
+  <img src="qr.jpg" width="180" style="border-radius:15px;margin-top:10px;">
 
   <input id="amt" placeholder="Enter Amount (min ₹300)">
   <input id="txn" placeholder="Transaction ID">
 
   <button onclick="submitAdd()">Submit Payment</button>
 
+  <p class="note">
+    After payment, message us on Telegram to update your balance.
+  </p>
 </div>
 
 <div class="box">
@@ -124,6 +199,21 @@
   <input id="wamt" placeholder="Enter Amount (min ₹700)">
 
   <button onclick="submitWithdraw()">Request Withdraw</button>
+
+  <p class="note">
+    After request, message us on Telegram to process withdrawal.
+  </p>
+</div>
+
+<div class="box">
+  <h3>📜 Terms</h3>
+  <p class="note">
+    • Min deposit ₹300<br>
+    • Min withdraw ₹700<br>
+    • Deposits non-refundable<br>
+    • Withdraw within 24 hrs<br>
+    • Any misuse = restriction
+  </p>
 </div>
 
 <!-- TELEGRAM -->
@@ -133,9 +223,9 @@
 
 <!-- NAV -->
 <div class="nav">
-  <div onclick="goHome()">🏠 Home</div>
-  <div onclick="goProfile()">👤 Profile</div>
-  <div onclick="goWallet()">💰 Wallet</div>
+  <div onclick="goHome()">🏠</div>
+  <div onclick="goProfile()">👤</div>
+  <div onclick="goWallet()">💰</div>
 </div>
 
 <script type="module">
@@ -154,114 +244,29 @@ const auth = getAuth(app);
 
 onAuthStateChanged(auth, async (user)=>{
   if(!user){
-    window.location.href = "index.html";
+    window.location.href="index.html";
   } else {
-    document.body.style.display = "block";
+    document.body.style.display="block";
 
-    let snap = await getDoc(doc(db,"users",user.email));
+    let snap=await getDoc(doc(db,"users",user.email));
     if(snap.exists()){
-      document.getElementById("bal").innerText = snap.data().balance || 0;
+      document.getElementById("bal").innerText=snap.data().balance||0;
     }
   }
 });
 
-// ADD
 window.submitAdd = async function(){
-  let amt = parseInt(document.getElementById("amt").value);
-  let txn = document.getElementById("txn").value;
-
-  if(!amt || !txn){
-    alert("Fill all details ❌");
-    return;
-  }
-
-  if(amt < 300){
-    alert("Minimum deposit ₹300 ❌");
-    return;
-  }
-
-  const user = auth.currentUser;
-  const userRef = doc(db,"users",user.email);
-
-  let snap = await getDoc(userRef);
-  let data = snap.data() || {};
-
-  await setDoc(userRef,{
-    deposit:(data.deposit||0)+amt,
-    history:[
-      ...(data.history||[]),
-      {type:"deposit",amt:amt}
-    ]
-  },{merge:true});
-
-  alert("Payment Submitted ✅\Message us on Telegram to update your balance");
+  alert("Payment Submitted ✅\nMessage on Telegram to update balance");
 };
 
-// WITHDRAW
 window.submitWithdraw = async function(){
-  let upi = document.getElementById("upi").value;
-  let amt = parseInt(document.getElementById("wamt").value);
-
-  if(!upi || !amt){
-    alert("Fill all details ❌");
-    return;
-  }
-
-  if(amt < 700){
-    alert("Minimum withdrawal ₹700 ❌");
-    return;
-  }
-
-  const user = auth.currentUser;
-  const userRef = doc(db,"users",user.email);
-
-  let snap = await getDoc(userRef);
-  let data = snap.data();
-
-  let balance = data.balance || 0;
-
-  if(balance < amt){
-    alert("Insufficient balance ❌");
-    return;
-  }
-
-  await setDoc(userRef,{
-    balance:balance-amt,
-    history:[
-      ...(data.history||[]),
-      {type:"withdraw",amt:amt}
-    ]
-  },{merge:true});
-
-  alert("Withdraw Request Sent ✅\nMessage us on Telegram to process your withdrawal✅");
+  alert("Withdraw Request Sent ✅\nMessage on Telegram to process withdrawal");
 };
 
-// NAV
 window.goHome = ()=> location.href="home.html";
 window.goProfile = ()=> location.href="profile.html";
 window.goWallet = ()=> location.href="wallet.html";
-
 </script>
 
 </body>
 </html>
-
-<div class="box">
-  <h3>📜 Terms & Conditions</h3>
-
-  <p class="note">
-    • Minimum deposit: ₹300<br>
-    • Minimum withdrawal: ₹700<br><br>
-
-    • Deposits are non-refundable after successful payment.<br>
-    • Bonus offers are subject to change anytime.<br><br>
-
-    • Platform may charge fees / taxes on winnings as applicable.<br><br>
-
-    • Withdrawal requests are processed within 24 hours after verification.<br><br>
-
-    • Any suspicious activity may lead to account restriction.<br><br>
-
-    • By using this app, you agree to all terms and conditions.
-  </p>
-</div>
