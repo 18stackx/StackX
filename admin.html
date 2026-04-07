@@ -26,6 +26,9 @@
       background:#1f2937;
       padding:15px;
       border-radius:12px;
+      max-width:400px;
+      margin:auto;
+      margin-top:40px;
     }
 
     input{
@@ -34,7 +37,6 @@
       margin:8px 0;
       border:none;
       border-radius:8px;
-      outline:none;
     }
 
     button{
@@ -52,26 +54,56 @@
 
 <body>
 
-<div class="header">
-  <h2>⚙️ Admin Panel</h2>
+<!-- LOGIN -->
+<div id="loginBox" class="card">
+  <h3>🔐 Admin Login</h3>
+  <input id="user" placeholder="User ID">
+  <input id="pass" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
 </div>
 
-<div class="container">
-  <div class="card">
+<!-- ADMIN PANEL -->
+<div id="adminPanel" style="display:none;">
+  <div class="header">
+    <h2>⚙️ Admin Panel</h2>
+  </div>
 
-    <h3>Update Matches</h3>
+  <div class="container">
+    <div class="card">
 
-    <input id="m1" placeholder="Match 1 (RCB vs CSK)">
-    <input id="m2" placeholder="Match 2">
-    <input id="m3" placeholder="Match 3">
-    <input id="m4" placeholder="Match 4">
-    <input id="m5" placeholder="Match 5">
+      <h3>Update Matches</h3>
 
-    <button onclick="save()">Save Matches</button>
+      <input id="m1" placeholder="Match 1">
+      <input id="m2" placeholder="Match 2">
+      <input id="m3" placeholder="Match 3">
+      <input id="m4" placeholder="Match 4">
+      <input id="m5" placeholder="Match 5">
 
+      <button onclick="save()">Save Matches</button>
+
+    </div>
   </div>
 </div>
 
+<script>
+// 🔐 LOGIN CHECK
+const ADMIN_USER = "abhibababr";
+const ADMIN_PASS = "943188@.";
+
+function login(){
+  let u = document.getElementById("user").value;
+  let p = document.getElementById("pass").value;
+
+  if(u === ADMIN_USER && p === ADMIN_PASS){
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("adminPanel").style.display = "block";
+  } else {
+    alert("Wrong ID or Password ❌");
+  }
+}
+</script>
+
+<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
