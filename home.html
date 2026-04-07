@@ -1,92 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>StackX</title>
+  <title>Profile</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body{
-      margin:0;
-      font-family:Arial;
       background:#0b0f1a;
       color:white;
-    }
-
-    /* 🔥 BACKGROUND LOGO */
-    body::before{
-      content:"";
-      position:fixed;
-      top:0;
-      left:0;
-      width:100%;
-      height:100%;
-      background:url('logo.png') no-repeat center;
-      background-size:180px;
-      opacity:0.05;
-      filter: blur(1px);
-      z-index:-1;
-      pointer-events:none;
-    }
-
-    /* HEADER */
-    .header{
-      background:#111827;
-      padding:15px;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-    }
-
-    .logo{
-      font-size:20px;
-      font-weight:bold;
-    }
-
-    /* MATCH SECTION */
-    .section{
-      padding:15px;
-    }
-
-    .card{
-      background:#1f2937;
-      padding:15px;
-      border-radius:12px;
-    }
-
-    .match{
-      padding:12px;
-      background:#374151;
-      border-radius:10px;
-      margin-top:10px;
-      cursor:pointer;
-      font-weight:bold;
-    }
-
-    /* WALLET */
-    .wallet{
-      background:#1f2937;
-      margin:15px;
-      padding:15px;
-      border-radius:12px;
+      font-family:Arial;
       text-align:center;
+      padding-bottom:70px;
+      display:none;
     }
 
-    /* TEAM */
-    .team{
+    .box{
+      background:#1f2937;
       margin:15px;
+      padding:20px;
+      border-radius:10px;
     }
 
-    button{
-      width:100%;
-      padding:10px;
-      border:none;
-      border-radius:8px;
-      background:#22c55e;
-      color:white;
-      font-weight:bold;
-    }
-
-    /* NAV */
     .nav{
       position:fixed;
       bottom:0;
@@ -103,36 +37,50 @@
       cursor:pointer;
     }
 
+    .refbox{
+      font-size:14px;
+      color:#9ca3af;
+      margin-top:10px;
+    }
+
+    button{
+      padding:8px 12px;
+      border:none;
+      border-radius:8px;
+      background:#22c55e;
+      color:white;
+      margin-top:10px;
+    }
   </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
-<div class="header">
-  <div class="logo">🏏 StackX</div>
+<h2>👤 Profile</h2>
+
+<div class="box">
+  <p><b>Email:</b> <span id="email"></span></p>
+  <p><b>Name:</b> <span id="name"></span></p>
+  <p><b>Wallet:</b> ₹<span id="bal">0</span></p>
 </div>
 
-<!-- MATCHES -->
-<div class="section">
-  <h3>🔥 Live Cricket Matches</h3>
+<div class="box">
+  <h3>🎮 Joined Contests</h3>
+  <div id="contests">No contests yet</div>
+</div>
 
-  <div class="card">
-    <div class="match" onclick="openMatch(this)">RCB vs CSK</div>
-    <div class="match" onclick="openMatch(this)">MI vs KKR</div>
-    <div class="match" onclick="openMatch(this)">SRH vs DC</div>
+<div class="box">
+  <h3>🎁 Refer & Earn</h3>
+
+  <p>Your Code: <b id="ref"></b></p>
+  <p id="link"></p>
+
+  <div class="refbox">
+    👉 Get ₹20 bonus when user joins from your link<br>
+    👉 Get 10% bonus on their deposits 💸
   </div>
-</div>
 
-<!-- WALLET -->
-<div class="wallet">
-  💰 Wallet: ₹<span id="balance">0</span>
-</div>
-
-<!-- MY TEAM -->
-<div class="team">
-  <button onclick="showTeam()">👑 My Team</button>
-  <div id="teamBox"></div>
+  <button onclick="copyLink()">Copy Referral Link</button>
 </div>
 
 <!-- NAV -->
@@ -144,8 +92,8 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
@@ -153,52 +101,55 @@ const app = initializeApp({
   projectId:"stackx-9f92e"
 });
 
-const db = getFirestore(app);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
-// 🔥 WALLET LOAD
-auth.onAuthStateChanged(async (user)=>{
-  if(user){
-    const ref = doc(db,"users",user.email);
-    const snap = await getDoc(ref);
+onAuthStateChanged(auth, async (user)=>{
+  if(!user){
+    window.location.href = "index.html";
+  } else {
+
+    document.body.style.display = "block";
+
+    let userRef = doc(db,"users",user.email);
+
+    document.getElementById("email").innerText = user.email;
+    document.getElementById("name").innerText = user.displayName || "User";
+
+    let snap = await getDoc(userRef);
 
     if(snap.exists()){
-      document.getElementById("balance").innerText = snap.data().balance || 0;
+      let data = snap.data();
+
+      document.getElementById("bal").innerText = data.balance || 0;
+
+      document.getElementById("contests").innerText =
+        (data.contests || []).join(" , ") || "No contests";
+
+      let refCode = data.ref || user.email.split("@")[0];
+      document.getElementById("ref").innerText = refCode;
+
+      let link = window.location.origin + "?ref=" + refCode;
+      document.getElementById("link").innerText = link;
+
+    } else {
+      await setDoc(userRef,{
+        balance:50,
+        contests:[],
+        ref:user.email.split("@")[0]
+      });
     }
   }
 });
 </script>
 
 <script>
-// 🔥 OPEN MATCH
-function openMatch(el){
-  let match = el.innerText;
-  localStorage.setItem("matchName", match);
-  window.location.href = "match.html";
+function copyLink(){
+  let text = document.getElementById("link").innerText;
+  navigator.clipboard.writeText(text);
+  alert("Referral link copied 😈");
 }
 
-// 🔥 SHOW TEAM
-function showTeam(){
-  let data = JSON.parse(localStorage.getItem("team"));
-  let box = document.getElementById("teamBox");
-
-  if(!data){
-    box.innerHTML = "<p>No team selected ❌</p>";
-    return;
-  }
-
-  box.innerHTML = "<h3>🔥 My Team</h3>";
-
-  data.players.forEach(p=>{
-    let tag = "";
-    if(p===data.captain) tag=" (C ⭐)";
-    if(p===data.vice) tag=" (VC ⚡)";
-
-    box.innerHTML += `<div style="background:#1f2937;padding:10px;margin:6px;border-radius:8px;">${p}${tag}</div>`;
-  });
-}
-
-// 🔥 NAVIGATION
 function goHome(){
   window.location.href = "home.html";
 }
