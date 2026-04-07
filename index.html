@@ -7,28 +7,25 @@
   <style>
     body{
       margin:0;
-      font-family: 'Segoe UI', sans-serif;
+      font-family:'Segoe UI', sans-serif;
       background:#0b0f1a;
       color:white;
-
-body::before{
-  content:"";
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-
-  background:url('logo.png') no-repeat center;
-  background-size:200px;
-
-  opacity:0.08;
-  filter: blur(2px);
-  z-index:-1;
-}
     }
 
-    /* HEADER */
+    body::before{
+      content:"";
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background:url('logo.png') no-repeat center;
+      background-size:200px;
+      opacity:0.08;
+      filter:blur(2px);
+      z-index:-1;
+    }
+
     .header{
       text-align:center;
       padding:25px 10px;
@@ -40,25 +37,14 @@ body::before{
       border-radius:12px;
     }
 
-    .header h2{
-      margin:5px 0 0;
-    }
-
+    .header h2{margin:5px 0 0;}
     .header p{
       margin:0;
       font-size:12px;
       color:#9ca3af;
     }
 
-    /* LOGIN AREA */
-    .container{
-      padding:20px;
-      margin-top:20px;
-    }
-
-    .login-box{
-      width:100%;
-    }
+    .container{padding:20px;margin-top:20px;}
 
     input{
       width:100%;
@@ -66,7 +52,6 @@ body::before{
       margin:10px 0;
       border:none;
       border-radius:10px;
-      font-size:14px;
     }
 
     button{
@@ -76,21 +61,12 @@ body::before{
       border:none;
       border-radius:10px;
       font-weight:bold;
-      font-size:14px;
       cursor:pointer;
     }
 
-    .login-btn{
-      background:#22c55e;
-      color:white;
-    }
+    .login-btn{background:#22c55e;color:white;}
+    .google-btn{background:#4285F4;color:white;}
 
-    .google-btn{
-      background:#4285F4;
-      color:white;
-    }
-
-    /* FOOTER */
     .footer{
       text-align:center;
       padding:20px;
@@ -102,70 +78,74 @@ body::before{
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <img src="logo.png">
   <h2>StackX</h2>
   <p>Play Smart. Win Big.</p>
 </div>
 
-<!-- LOGIN -->
 <div class="container">
-  <div class="login-box">
 
-    <input type="text" placeholder="User ID">
-    <input type="password" placeholder="Password">
+  <input type="text" placeholder="User ID">
+  <input type="password" placeholder="Password">
 
-    <button class="login-btn" onclick="manualLogin()">Login</button>
+  <button class="login-btn" onclick="manualLogin()">Login</button>
+  <button class="google-btn" id="googleBtn">Login with Google</button>
 
-    <button class="google-btn" id="googleBtn">Login with Google</button>
-
-  </div>
 </div>
 
-<!-- FOOTER -->
 <div class="footer">
   StackX is a fantasy gaming platform where users create teams,
   compete and win exciting rewards 🔥
 </div>
 
-<!-- FIREBASE (MODERN) -->
+<!-- FIREBASE -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
-    authDomain: "stackx-9f92e.firebaseapp.com",
-    projectId: "stackx-9f92e"
-  };
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
+const app = initializeApp({
+  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
+  authDomain:"stackx-9f92e.firebaseapp.com",
+  projectId:"stackx-9f92e"
+});
 
-  // GOOGLE LOGIN
-  document.getElementById("googleBtn").addEventListener("click", async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      alert("Login Success: " + result.user.email);
-      window.location.href = "home.html";
-    } catch (error) {
-      alert(error.message);
-    }
-  });
+const auth = getAuth(app);
 
-  // AUTO LOGIN CHECK
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      console.log("Already logged in:", user.email);
-    }
-  });
+// 🔥 MOST IMPORTANT LINE
+await setPersistence(auth, browserLocalPersistence);
 
-  // MANUAL LOGIN (dummy)
-  window.manualLogin = function(){
-    alert("Manual login (demo)");
+const provider = new GoogleAuthProvider();
+
+// ✅ GOOGLE LOGIN
+document.getElementById("googleBtn").onclick = async () => {
+  try {
+    await signInWithPopup(auth, provider);
+    window.location.href = "home.html";
+  } catch (err) {
+    alert(err.message);
   }
+};
+
+// ✅ AUTO LOGIN REDIRECT
+onAuthStateChanged(auth, (user)=>{
+  if(user){
+    window.location.href = "home.html";
+  }
+});
+
+// dummy
+window.manualLogin = ()=>{
+  alert("Manual login (demo)");
+};
 </script>
 
 </body>
