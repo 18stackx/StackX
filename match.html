@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Players</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body{background:#0b0f1a;color:white;font-family:Arial;margin:0;}
+
+    .header{padding:15px;text-align:center;background:#111827;}
+
+    .player{
+      background:#1f2937;
+      padding:12px;
+      margin:8px;
+      border-radius:10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="header">
+  <h3>Players</h3>
+</div>
+
+<div id="players"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
+  authDomain:"stackx-9f92e.firebaseapp.com",
+  projectId:"stackx-9f92e"
+});
+
+const db = getFirestore(app);
+
+let matchId = localStorage.getItem("matchId");
+
+// 🔥 FETCH PLAYERS FROM FIREBASE
+const ref = doc(db,"players",matchId);
+const snap = await getDoc(ref);
+
+let container = document.getElementById("players");
+
+if(snap.exists()){
+  let list = snap.data().list;
+
+  list.forEach(p=>{
+    let div = document.createElement("div");
+    div.className = "player";
+    div.innerText = p;
+    container.appendChild(div);
+  });
+}else{
+  container.innerText = "No players found ❌";
+}
+</script>
+
+</body>
+</html>
