@@ -4,28 +4,60 @@
   <title>Profile</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+
   <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:'Poppins',sans-serif;
+    }
+
     body{
-      background:#0b0f1a;
+      background:#0f0f1a;
       color:white;
-      font-family:Arial;
       text-align:center;
-      padding-bottom:70px;
+      padding-bottom:80px;
       display:none;
     }
 
-    /* 🔥 HEADER */
+    /* 🔥 GLOW */
+    body::before{
+      content:'';
+      position:fixed;
+      width:600px;
+      height:600px;
+      background:radial-gradient(circle, rgba(255,0,80,0.25), transparent 70%);
+      top:-200px;
+      left:-200px;
+      filter:blur(120px);
+      z-index:-1;
+    }
+
+    body::after{
+      content:'';
+      position:fixed;
+      width:600px;
+      height:600px;
+      background:radial-gradient(circle, rgba(0,150,255,0.25), transparent 70%);
+      bottom:-200px;
+      right:-200px;
+      filter:blur(120px);
+      z-index:-1;
+    }
+
     .header{
       display:flex;
-      align-items:center;
       justify-content:center;
+      align-items:center;
       gap:10px;
-      margin-top:10px;
+      margin-top:15px;
     }
 
     .header img{
       width:40px;
-      border-radius:8px;
+      border-radius:10px;
     }
 
     .trusted{
@@ -33,55 +65,77 @@
       color:#22c55e;
     }
 
+    h2{
+      margin-top:10px;
+    }
+
     .box{
-      background:#1f2937;
+      background:rgba(255,255,255,0.05);
       margin:15px;
       padding:20px;
-      border-radius:10px;
+      border-radius:20px;
+      backdrop-filter:blur(10px);
+    }
+
+    /* 🔥 HISTORY */
+    .historyBox{
+      display:none;
+      margin-top:10px;
+    }
+
+    .historyItem{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:8px 0;
+      border-bottom:1px solid rgba(255,255,255,0.1);
+      font-size:13px;
+    }
+
+    .left{
+      text-align:left;
+      color:#9ca3af;
+    }
+
+    .center{
+      font-weight:600;
+    }
+
+    .right{
+      font-weight:600;
+    }
+
+    .deposit{
+      color:#22c55e;
+    }
+
+    .withdraw{
+      color:red;
+    }
+
+    button{
+      padding:12px;
+      border:none;
+      border-radius:30px;
+      background:#ff2a2a;
+      color:white;
+      width:90%;
+      margin-top:10px;
     }
 
     .nav{
       position:fixed;
       bottom:0;
       width:100%;
-      background:#111827;
+      background:rgba(0,0,0,0.7);
       display:flex;
       justify-content:space-around;
-      padding:10px;
-      z-index:999;
+      padding:12px;
     }
 
-    .nav div{
-      cursor:pointer;
-      font-size:14px;
-    }
-
-    .refbox{
-      font-size:14px;
-      color:#9ca3af;
-      margin-top:10px;
-    }
-
-    button{
-      padding:10px;
-      border:none;
-      border-radius:8px;
-      background:#22c55e;
-      color:white;
-      margin-top:10px;
-      width:90%;
-    }
-
-    .historyBox{
-      display:none;
-      margin-top:10px;
-      font-size:14px;
-    }
-
-    /* 🔥 TELEGRAM */
     .tg{
       position:fixed;
-      bottom:80px;
+      bottom:90px;
       right:15px;
       background:#0088cc;
       width:50px;
@@ -90,18 +144,14 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      z-index:999;
     }
 
-    .tg img{
-      width:28px;
-    }
+    .tg img{width:28px;}
   </style>
 </head>
 
 <body>
 
-<!-- 🔥 HEADER -->
 <div class="header">
   <img src="logo.png">
   <div>
@@ -113,45 +163,36 @@
 <h2>👤 Profile</h2>
 
 <div class="box">
-  <p><b>Email:</b> <span id="email"></span></p>
-  <p><b>Name:</b> <span id="name"></span></p>
-  <p><b>Wallet:</b> ₹<span id="bal">0</span></p>
+  <p>Email: <span id="email"></span></p>
+  <p>Name: <span id="name"></span></p>
+  <p>Wallet: ₹<span id="bal">0</span></p>
 </div>
 
 <div class="box">
   <h3>🎮 Joined Contests</h3>
-  <div id="contests">No contests yet</div>
+  <div id="contests">No contests</div>
 </div>
 
 <div class="box" onclick="toggleHistory()">
   <h3>📜 Wallet History ⬇️</h3>
-  <div id="history" class="historyBox">No history</div>
+  <div id="history" class="historyBox"></div>
 </div>
 
 <div class="box">
   <h3>🎁 Refer & Earn</h3>
-
-  <p><b>Your Code:</b> <span id="ref"></span></p>
+  <p id="ref"></p>
   <p id="link"></p>
-
-  <div class="refbox">
-    👉 Get ₹20 bonus when user joins<br>
-    👉 Get 10% on deposits 💸
-  </div>
-
-  <button onclick="copyRef()">📋 Copy Referral Link</button>
+  <button onclick="copyRef()">Copy Link</button>
 </div>
 
-<!-- 🔥 TELEGRAM -->
 <a href="https://t.me/stackx_admin" target="_blank" class="tg">
   <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png">
 </a>
 
-<!-- NAV -->
 <div class="nav">
-  <div onclick="goHome()">🏠 Home</div>
-  <div onclick="goProfile()">👤 Profile</div>
-  <div onclick="goWallet()">💰 Wallet</div>
+  <div onclick="goHome()">🏠</div>
+  <div onclick="goProfile()">👤</div>
+  <div onclick="goWallet()">💰</div>
 </div>
 
 <script type="module">
@@ -160,7 +201,7 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
-  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
+  apiKey:"AIza...",
   authDomain:"stackx-9f92e.firebaseapp.com",
   projectId:"stackx-9f92e"
 });
@@ -170,50 +211,37 @@ const db = getFirestore(app);
 
 onAuthStateChanged(auth, async (user)=>{
   if(!user){
-    window.location.href = "index.html";
-  } else {
+    window.location.href="index.html";
+  }else{
 
-    document.body.style.display = "block";
+    document.body.style.display="block";
 
     let userRef = doc(db,"users",user.email);
 
-    document.getElementById("email").innerText = user.email;
-    document.getElementById("name").innerText = user.displayName || "User";
+    email.innerText=user.email;
+    name.innerText=user.displayName;
 
-    let snap = await getDoc(userRef);
+    let snap=await getDoc(userRef);
 
     if(snap.exists()){
-      let data = snap.data();
+      let data=snap.data();
 
-      document.getElementById("bal").innerText = data.balance || 0;
+      bal.innerText=data.balance||0;
 
-      document.getElementById("contests").innerText =
-        (data.contests || []).join(" , ") || "No contests";
+      contests.innerText=(data.contests||[]).join(", ")||"No contests";
 
-      let refCode = data.ref || user.email.split("@")[0];
-      let link = window.location.origin + "?ref=" + refCode;
+      let historyDiv=document.getElementById("history");
 
-      document.getElementById("ref").innerText = refCode;
-      document.getElementById("link").innerText = link;
-
-      window.refLink = link;
-
-      let historyDiv = document.getElementById("history");
-
-      if(data.history && data.history.length > 0){
-        historyDiv.innerHTML = data.history.map(h => {
-          return h.type === "deposit"
-            ? `<span style="color:#22c55e;">+₹${h.amt}</span>`
-            : `<span style="color:red;">-₹${h.amt}</span>`;
-        }).join("<br>");
+      if(data.history){
+        historyDiv.innerHTML=data.history.map(h=>{
+          return `
+          <div class="historyItem">
+            <div class="left">${h.time || "—"}</div>
+            <div class="center">${h.type}</div>
+            <div class="right ${h.type}">${h.type==="deposit" ? "+" : "-"}₹${h.amt}</div>
+          </div>`;
+        }).join("");
       }
-    } else {
-      await setDoc(userRef,{
-        balance:50,
-        contests:[],
-        ref:user.email.split("@")[0],
-        history:[]
-      });
     }
   }
 });
@@ -221,40 +249,19 @@ onAuthStateChanged(auth, async (user)=>{
 
 <script>
 function toggleHistory(){
-  let box = document.getElementById("history");
-  box.style.display = (box.style.display === "block") ? "none" : "block";
+  let box=document.getElementById("history");
+  box.style.display=box.style.display==="block"?"none":"block";
 }
 
 function copyRef(){
-  navigator.clipboard.writeText(window.refLink);
-  alert("Referral link copied 😈");
+  navigator.clipboard.writeText(window.location.href);
+  alert("Copied 😈");
 }
 
-// NAV FIX
-window.goHome = ()=> location.href="home.html";
-window.goProfile = ()=> location.href="profile.html";
-window.goWallet = ()=> location.href="wallet.html";
+window.goHome=()=>location.href="home.html";
+window.goProfile=()=>location.href="profile.html";
+window.goWallet=()=>location.href="wallet.html";
 </script>
 
 </body>
 </html>
-
-<div class="box">
-  <h3>📜 Terms & Conditions</h3>
-
-  <p class="note">
-    • Minimum deposit: ₹300<br>
-    • Minimum withdrawal: ₹700<br><br>
-
-    • Deposits are non-refundable after successful payment.<br>
-    • Bonus offers are subject to change anytime.<br><br>
-
-    • Platform may charge fees / taxes on winnings as applicable.<br><br>
-
-    • Withdrawal requests are processed within 24 hours after verification.<br><br>
-
-    • Any suspicious activity may lead to account restriction.<br><br>
-
-    • By using this app, you agree to all terms and conditions.
-  </p>
-</div>
