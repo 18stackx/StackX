@@ -15,6 +15,7 @@
     .header{
       display:flex;
       justify-content:space-between;
+      align-items:center;
       padding:12px;
       background:#111827;
     }
@@ -35,7 +36,9 @@
       color:#9ca3af;
     }
 
-    .container{padding:15px;}
+    .container{
+      padding:15px;
+    }
 
     .card{
       background:#1f2937;
@@ -69,6 +72,14 @@
       margin:8px 0;
       border-radius:10px;
     }
+
+    .logout{
+      background:red;
+      border:none;
+      padding:6px 10px;
+      border-radius:6px;
+      color:white;
+    }
   </style>
 </head>
 
@@ -79,9 +90,11 @@
     <img src="logo.png">
     <div>
       <div>StackX</div>
-      <div class="user" id="userEmail"></div>
+      <div class="user" id="userEmail">Loading...</div>
     </div>
   </div>
+
+  <button class="logout" id="logoutBtn">Logout</button>
 </div>
 
 <div class="container">
@@ -93,54 +106,83 @@
 
   <div class="card">
     <h3>Select Team</h3>
-    <div id="count">0/11</div>
+    <div id="count">0 / 11</div>
     <div id="players" class="players"></div>
   </div>
 
   <div class="card">
     <h3>Your Team</h3>
-    <div class="team"><ul id="team"></ul></div>
+    <div class="team">
+      <ul id="team"></ul>
+    </div>
   </div>
 
   <div class="card">
     <h3>Leaderboard</h3>
-    <div class="box">🥇 Abhi - 120</div>
-    <div class="box">🥈 Rahul - 98</div>
+    <div class="box">🥇 Abhi - 120 pts</div>
+    <div class="box">🥈 Rahul - 98 pts</div>
   </div>
 
 </div>
 
-<script>
-let user = localStorage.getItem("user");
-if(!user) window.location.href="index.html";
-document.getElementById("userEmail").innerText = user;
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+const app = initializeApp({
+  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
+  authDomain:"stackx-9f92e.firebaseapp.com",
+  projectId:"stackx-9f92e"
+});
+
+const auth = getAuth(app);
+
+// ✅ LOGIN CHECK (FIXED)
+onAuthStateChanged(auth, (user) => {
+  if(user){
+    document.getElementById("userEmail").innerText = user.email;
+  } else {
+    window.location.href = "index.html";
+  }
+});
+
+// ✅ LOGOUT BUTTON
+document.getElementById("logoutBtn").onclick = () => {
+  signOut(auth);
+};
+</script>
+
+<script>
 let team=[];
+
 const players=["Virat","Rohit","Dhoni","Gill","Hardik","KL Rahul","Sky"];
 
 players.forEach(p=>{
-  let b=document.createElement("button");
-  b.innerText=p;
+  let btn=document.createElement("button");
+  btn.innerText=p;
 
-  b.onclick=()=>{
+  btn.onclick=()=>{
     if(team.includes(p)){
       team=team.filter(x=>x!==p);
-      b.classList.remove("selected");
+      btn.classList.remove("selected");
     }else{
       if(team.length<11){
         team.push(p);
-        b.classList.add("selected");
+        btn.classList.add("selected");
       }
     }
     update();
   };
 
-  document.getElementById("players").appendChild(b);
+  document.getElementById("players").appendChild(btn);
 });
 
 function update(){
-  document.getElementById("count").innerText = team.length+"/11";
-  document.getElementById("team").innerHTML = team.map(x=>"<li>"+x+"</li>").join("");
+  document.getElementById("count").innerText = team.length + " / 11";
+
+  document.getElementById("team").innerHTML =
+    team.map(p=>"<li>"+p+"</li>").join("");
 }
 </script>
 
