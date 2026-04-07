@@ -10,6 +10,7 @@
       color:white;
       font-family:Arial;
       text-align:center;
+      padding-bottom:70px; /* 🔥 nav space */
     }
 
     .box{
@@ -40,6 +41,23 @@
       background:#22c55e;
       color:white;
       margin-top:10px;
+    }
+
+    /* 🔥 NAV */
+    .nav{
+      position:fixed;
+      bottom:0;
+      width:100%;
+      background:#111827;
+      display:flex;
+      justify-content:space-around;
+      padding:10px;
+    }
+
+    .nav div{
+      text-align:center;
+      font-size:14px;
+      cursor:pointer;
     }
   </style>
 </head>
@@ -77,6 +95,13 @@
 <div class="box">
   <h3>🎁 Referral</h3>
   <p>Your Code: <b id="ref"></b></p>
+</div>
+
+<!-- 🔥 NAVIGATION -->
+<div class="nav">
+  <div onclick="goHome()">🏠 Home</div>
+  <div onclick="goProfile()">👤 Profile</div>
+  <div onclick="goWallet()">💰 Wallet</div>
 </div>
 
 <script type="module">
@@ -120,7 +145,7 @@ onAuthStateChanged(auth, async (user)=>{
     } else {
       await setDoc(userRef,{
         name:user.displayName || "",
-        balance:0,
+        balance:50, // 🎁 bonus
         wins:0,
         contests:[],
         ref:user.email.split("@")[0]
@@ -132,9 +157,7 @@ onAuthStateChanged(auth, async (user)=>{
 // 🔥 SAVE NAME
 window.saveName = async ()=>{
   let name = document.getElementById("nameInput").value;
-
   await setDoc(userRef,{ name },{ merge:true });
-
   alert("Name Updated 😈");
 };
 
@@ -143,6 +166,21 @@ window.refreshWallet = async ()=>{
   let snap = await getDoc(userRef);
   document.getElementById("bal").innerText = snap.data().balance || 0;
 };
+</script>
+
+<script>
+// 🔥 NAVIGATION
+function goHome(){
+  window.location.href = "home.html";
+}
+
+function goProfile(){
+  window.location.href = "profile.html";
+}
+
+function goWallet(){
+  window.location.href = "wallet.html";
+}
 </script>
 
 </body>
