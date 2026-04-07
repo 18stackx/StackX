@@ -1,36 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Panel</title>
+  <title>Admin Panel - StackX</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body{background:#0b0f1a;color:white;font-family:Arial;padding:10px;}
+    body{
+      margin:0;
+      font-family: Arial;
+      background:#0b0f1a;
+      color:white;
+    }
 
-    .box{
-      max-width:300px;
-      margin:auto;
-      margin-top:50px;
+    .header{
+      padding:15px;
+      background:#111827;
+      text-align:center;
+    }
+
+    .container{
+      padding:15px;
+    }
+
+    .card{
       background:#1f2937;
-      padding:20px;
-      border-radius:10px;
+      padding:15px;
+      border-radius:12px;
     }
 
     input{
       width:100%;
       padding:10px;
-      margin:5px 0;
-      border-radius:8px;
+      margin:8px 0;
       border:none;
+      border-radius:8px;
+      outline:none;
     }
 
     button{
       width:100%;
-      padding:10px;
-      background:#22c55e;
+      padding:12px;
       border:none;
       border-radius:8px;
+      background:#22c55e;
       color:white;
+      font-weight:bold;
       margin-top:10px;
     }
   </style>
@@ -38,56 +52,50 @@
 
 <body>
 
-<div id="loginBox" class="box">
-  <h3>Admin Login</h3>
-  <input type="text" id="user" placeholder="User ID">
-  <input type="password" id="pass" placeholder="Password">
-  <button onclick="login()">Login</button>
+<div class="header">
+  <h2>⚙️ Admin Panel</h2>
 </div>
 
-<div id="adminPanel" style="display:none;">
+<div class="container">
+  <div class="card">
 
-  <h2>Admin - Matches</h2>
+    <h3>Update Matches</h3>
 
-  <input id="m1" placeholder="Match 1">
-  <input id="m2" placeholder="Match 2">
-  <input id="m3" placeholder="Match 3">
-  <input id="m4" placeholder="Match 4">
-  <input id="m5" placeholder="Match 5">
+    <input id="m1" placeholder="Match 1 (RCB vs CSK)">
+    <input id="m2" placeholder="Match 2">
+    <input id="m3" placeholder="Match 3">
+    <input id="m4" placeholder="Match 4">
+    <input id="m5" placeholder="Match 5">
 
-  <button onclick="save()">Save Matches</button>
+    <button onclick="save()">Save Matches</button>
 
+  </div>
 </div>
 
-<script>
-const ADMIN_USER = "abhi";
-const ADMIN_PASS = "1234";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-function login(){
-  let u = document.getElementById("user").value;
-  let p = document.getElementById("pass").value;
+const app = initializeApp({
+  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
+  authDomain:"stackx-9f92e.firebaseapp.com",
+  projectId:"stackx-9f92e"
+});
 
-  if(u === ADMIN_USER && p === ADMIN_PASS){
-    document.getElementById("loginBox").style.display = "none";
-    document.getElementById("adminPanel").style.display = "block";
-  } else {
-    alert("Wrong ID/Password");
-  }
-}
+const db = getFirestore(app);
 
-// SAVE MATCHES
-function save(){
-  let data = {
-    m1:m1.value,
-    m2:m2.value,
-    m3:m3.value,
-    m4:m4.value,
-    m5:m5.value
-  };
+// 🔥 SAVE MATCHES
+window.save = async ()=>{
+  await setDoc(doc(db,"matches","today"),{
+    m1:document.getElementById("m1").value,
+    m2:document.getElementById("m2").value,
+    m3:document.getElementById("m3").value,
+    m4:document.getElementById("m4").value,
+    m5:document.getElementById("m5").value
+  });
 
-  localStorage.setItem("matches", JSON.stringify(data));
-  alert("Matches Saved 🔥");
-}
+  alert("Matches Updated 🔥");
+};
 </script>
 
 </body>
