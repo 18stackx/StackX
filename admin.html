@@ -58,11 +58,9 @@
     <input id="m1" placeholder="Match 1">
     <input id="m2" placeholder="Match 2">
     <input id="m3" placeholder="Match 3">
-    <input id="m4" placeholder="Match 4">
-    <input id="m5" placeholder="Match 5">
 
     <button id="saveBtn">Save Matches</button>
-    <button id="apiBtn">⚡ Fetch Matches (API)</button>
+    <button id="apiBtn">⚡ Fetch Matches + Players</button>
   </div>
 
   <!-- WALLET -->
@@ -78,9 +76,8 @@
 </div>
 
 <script>
-// 🔐 LOGIN FIX
+// 🔐 LOGIN
 document.getElementById("loginBtn").onclick = function(){
-
   let u = document.getElementById("user").value.trim();
   let p = document.getElementById("pass").value.trim();
 
@@ -105,43 +102,47 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 
-// 🔥 MANUAL MATCH SAVE
+// 🔥 MANUAL SAVE
 document.getElementById("saveBtn").onclick = async ()=>{
   await setDoc(doc(db,"matches","today"),{
     m1:m1.value,
     m2:m2.value,
-    m3:m3.value,
-    m4:m4.value,
-    m5:m5.value
+    m3:m3.value
   });
 
   alert("Matches Updated 🔥");
 };
 
-// ⚡ FINAL API (FIXED)
+// ⚡ MATCH + PLAYERS API
 document.getElementById("apiBtn").onclick = async ()=>{
   try{
 
     let res = await fetch("https://api.cricapi.com/v1/currentMatches?apikey=c51049f9-0d1d-45b8-80a6-c2d80e95da65&offset=0");
     let data = await res.json();
 
-    if(data.status !== "success"){
-      alert("API limit / key issue ❌");
-      console.log(data);
-      return;
-    }
-
     let matches = data.data || [];
 
     let m1 = matches[0]?.name || "";
     let m2 = matches[1]?.name || "";
     let m3 = matches[2]?.name || "";
-    let m4 = matches[3]?.name || "";
-    let m5 = matches[4]?.name || "";
 
-    await setDoc(doc(db,"matches","today"),{ m1,m2,m3,m4,m5 });
+    // 🔥 SAVE MATCHES
+    await setDoc(doc(db,"matches","today"),{ m1,m2,m3 });
 
-    alert("Matches Auto Updated 😈🔥");
+    // 🔥 DEMO PLAYERS (same for all — safe system)
+    let players = [
+      "Virat Kohli","Rohit Sharma","MS Dhoni",
+      "Hardik Pandya","KL Rahul","Jasprit Bumrah",
+      "Ravindra Jadeja","Shubman Gill","Surya Kumar Yadav",
+      "Rishabh Pant","Shreyas Iyer"
+    ];
+
+    // 🔥 SAVE PLAYERS MATCH-WISE
+    await setDoc(doc(db,"players","match1"),{ list:players });
+    await setDoc(doc(db,"players","match2"),{ list:players });
+    await setDoc(doc(db,"players","match3"),{ list:players });
+
+    alert("Matches + Players Updated 😈🔥");
 
   }catch(err){
     alert("API Error ❌");
@@ -149,7 +150,7 @@ document.getElementById("apiBtn").onclick = async ()=>{
   }
 };
 
-// 💰 WALLET UPDATE
+// 💰 WALLET
 document.getElementById("walletBtn").onclick = async ()=>{
   let email = document.getElementById("uemail").value.trim();
   let amt = parseInt(document.getElementById("amount").value);
