@@ -54,11 +54,10 @@
       display:flex;
       justify-content:space-around;
       padding:10px;
+      z-index:999;
     }
 
     .nav div{
-      text-align:center;
-      font-size:14px;
       cursor:pointer;
     }
   </style>
@@ -78,14 +77,17 @@
   <p>Pay to UPI ID:</p>
   <b>yourupi@upi</b>
 
+  <!-- 🔥 QR -->
+  <p>Scan & Pay:</p>
+  <img src="qr.png" width="180" style="border-radius:10px;margin-top:10px;">
+
   <input id="amt" placeholder="Enter Amount (min ₹300)">
   <input id="txn" placeholder="Transaction ID">
 
   <button onclick="submitAdd()">Submit Payment</button>
 
   <p class="note">
-    ⚠️ Minimum deposit ₹300.<br>
-    Pay → submit → message Telegram → verify → wallet update.
+    ⚠️ Minimum deposit ₹300.
   </p>
 </div>
 
@@ -96,11 +98,6 @@
   <input id="wamt" placeholder="Enter Amount (min ₹700)">
 
   <button onclick="submitWithdraw()">Request Withdraw</button>
-
-  <p class="note">
-    ⚠️ Minimum withdraw ₹700.<br>
-    After request → Telegram → manual transfer.
-  </p>
 </div>
 
 <!-- NAV -->
@@ -124,7 +121,7 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 🔥 AUTH + LOAD BALANCE
+// AUTH
 onAuthStateChanged(auth, async (user)=>{
   if(!user){
     window.location.href = "index.html";
@@ -138,7 +135,7 @@ onAuthStateChanged(auth, async (user)=>{
   }
 });
 
-// 🔥 ADD MONEY (REFERRAL SYSTEM)
+// ADD MONEY
 window.submitAdd = async function(){
 
   let amt = parseInt(document.getElementById("amt").value);
@@ -157,35 +154,23 @@ window.submitAdd = async function(){
   const user = auth.currentUser;
   const userRef = doc(db,"users",user.email);
 
-  let userSnap = await getDoc(userRef);
-  let data = userSnap.data() || {};
+  let snap = await getDoc(userRef);
+  let data = snap.data() || {};
 
-  // 🔥 deposit save
   await setDoc(userRef,{
-    deposit: (data.deposit || 0) + amt
-  },{ merge:true });
+    deposit:(data.deposit||0)+amt,
+    history:[
+      ...(data.history||[]),
+      {type:"deposit",amt:amt}
+    ]
+  },{merge:true});
 
-  // 🔥 referral bonus
-  if(data.refBy && data.refBy !== user.email.split("@")[0]){
-
-    let refUserRef = doc(db,"users",data.refBy);
-    let refSnap = await getDoc(refUserRef);
-
-    if(refSnap.exists()){
-      let oldBal = refSnap.data().balance || 0;
-      let bonus = Math.floor(amt * 0.10);
-
-      await setDoc(refUserRef,{
-        balance: oldBal + bonus
-      },{ merge:true });
-    }
-  }
-
-  alert("Payment Submitted ✅\nNow message on Telegram.");
+  alert("Payment Submitted ✅");
 };
 
-// 💸 WITHDRAW
-window.submitWithdraw = function(){
+// WITHDRAW
+window.submitWithdraw = async function(){
+
   let upi = document.getElementById("upi").value;
   let amt = parseInt(document.getElementById("wamt").value);
 
@@ -195,23 +180,39 @@ window.submitWithdraw = function(){
   }
 
   if(amt < 700){
-    alert("Minimum withdrawal is ₹700 ❌");
+    alert("Minimum withdrawal ₹700 ❌");
     return;
   }
 
-  alert("Withdraw Request Sent ✅\nNow message on Telegram.");
+  const user = auth.currentUser;
+  const userRef = doc(db,"users",user.email);
+
+  let snap = await getDoc(userRef);
+  let data = snap.data();
+
+  let balance = data.balance || 0;
+
+  if(balance < amt){
+    alert("Insufficient balance ❌");
+    return;
+  }
+
+  await setDoc(userRef,{
+    balance:balance-amt,
+    history:[
+      ...(data.history||[]),
+      {type:"withdraw",amt:amt}
+    ]
+  },{merge:true});
+
+  alert("Withdraw Request Sent ✅");
 };
 
-// NAV
-function goHome(){
-  window.location.href = "home.html";
-}
-function goProfile(){
-  window.location.href = "profile.html";
-}
-function goWallet(){
-  window.location.href = "wallet.html";
-}
+// NAV FIX
+window.goHome = ()=> location.href="home.html";
+window.goProfile = ()=> location.href="profile.html";
+window.goWallet = ()=> location.href="wallet.html";
+
 </script>
 
 </body>
