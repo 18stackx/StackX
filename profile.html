@@ -1,1 +1,149 @@
-j
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body{
+      background:#0b0f1a;
+      color:white;
+      font-family:Arial;
+      text-align:center;
+    }
+
+    .box{
+      background:#1f2937;
+      margin:15px;
+      padding:20px;
+      border-radius:10px;
+    }
+
+    img{
+      width:80px;
+      height:80px;
+      border-radius:50%;
+      margin-bottom:10px;
+    }
+
+    input{
+      padding:8px;
+      border-radius:8px;
+      border:none;
+      margin-top:5px;
+    }
+
+    button{
+      padding:8px 12px;
+      border:none;
+      border-radius:8px;
+      background:#22c55e;
+      color:white;
+      margin-top:10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>👤 Profile</h2>
+
+<div class="box">
+  <img id="photo" src="https://via.placeholder.com/80">
+  
+  <p><b>Email:</b> <span id="email"></span></p>
+
+  <p>
+    <b>Name:</b><br>
+    <input id="nameInput">
+    <br>
+    <button onclick="saveName()">Save Name</button>
+  </p>
+
+  <p><b>Wallet:</b> ₹<span id="bal">0</span></p>
+  <button onclick="refreshWallet()">🔄 Refresh</button>
+</div>
+
+<div class="box">
+  <h3>🏆 Earnings</h3>
+  <p>Total Wins: ₹<span id="wins">0</span></p>
+</div>
+
+<div class="box">
+  <h3>🎮 Joined Contests</h3>
+  <div id="contests">No contests yet</div>
+</div>
+
+<div class="box">
+  <h3>🎁 Referral</h3>
+  <p>Your Code: <b id="ref"></b></p>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
+  authDomain:"stackx-9f92e.firebaseapp.com",
+  projectId:"stackx-9f92e"
+});
+
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let userRef;
+
+// 🔥 LOAD DATA
+onAuthStateChanged(auth, async (user)=>{
+  if(user){
+
+    userRef = doc(db,"users",user.email);
+
+    document.getElementById("email").innerText = user.email;
+    document.getElementById("photo").src = user.photoURL || "https://via.placeholder.com/80";
+
+    let snap = await getDoc(userRef);
+
+    if(snap.exists()){
+      let data = snap.data();
+
+      document.getElementById("bal").innerText = data.balance || 0;
+      document.getElementById("nameInput").value = data.name || user.displayName || "";
+      document.getElementById("wins").innerText = data.wins || 0;
+
+      document.getElementById("contests").innerText = (data.contests || []).join(", ") || "No contests";
+
+      document.getElementById("ref").innerText = data.ref || user.email.split("@")[0];
+
+    } else {
+      await setDoc(userRef,{
+        name:user.displayName || "",
+        balance:0,
+        wins:0,
+        contests:[],
+        ref:user.email.split("@")[0]
+      });
+    }
+  }
+});
+
+// 🔥 SAVE NAME
+window.saveName = async ()=>{
+  let name = document.getElementById("nameInput").value;
+
+  await setDoc(userRef,{ name },{ merge:true });
+
+  alert("Name Updated 😈");
+};
+
+// 🔥 REFRESH WALLET
+window.refreshWallet = async ()=>{
+  let snap = await getDoc(userRef);
+  document.getElementById("bal").innerText = snap.data().balance || 0;
+};
+</script>
+
+</body>
+</html>
