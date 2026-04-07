@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wallet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body{
+      margin:0;
+      font-family: Arial;
+      background:#0b0f1a;
+      color:white;
+    }
+
+    .header{
+      text-align:center;
+      padding:20px;
+      background:#111827;
+    }
+
+    .container{
+      padding:15px;
+    }
+
+    .card{
+      background:#1f2937;
+      padding:20px;
+      margin-bottom:15px;
+      border-radius:12px;
+      text-align:center;
+    }
+
+    .balance{
+      font-size:30px;
+      font-weight:bold;
+      margin:10px 0;
+    }
+
+    input{
+      width:100%;
+      padding:12px;
+      margin-top:10px;
+      border:none;
+      border-radius:10px;
+    }
+
+    .btn{
+      width:100%;
+      padding:12px;
+      margin-top:10px;
+      border:none;
+      border-radius:10px;
+      font-weight:bold;
+      color:white;
+    }
+
+    .add{background:#22c55e;}
+    .withdraw{background:red;}
+
+    .nav{
+      position:fixed;
+      bottom:0;
+      width:100%;
+      display:flex;
+      background:#111827;
+    }
+
+    .nav button{
+      flex:1;
+      padding:12px;
+      border:none;
+      background:none;
+      color:white;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="header">
+  <h2>💰 Wallet</h2>
+</div>
+
+<div class="container">
+
+  <!-- BALANCE -->
+  <div class="card">
+    <div>Available Balance</div>
+    <div class="balance">₹100</div>
+  </div>
+
+  <!-- ADD MONEY -->
+  <div class="card">
+    <h3>Add Money</h3>
+    <input type="number" id="addAmt" placeholder="Enter amount">
+    <button class="btn add" onclick="addMoney()">Add</button>
+  </div>
+
+  <!-- WITHDRAW -->
+  <div class="card">
+    <h3>Withdraw</h3>
+    <input type="number" id="withdrawAmt" placeholder="Enter amount">
+    <input type="text" id="upi" placeholder="Enter UPI ID">
+    <button class="btn withdraw" onclick="withdraw()">Withdraw</button>
+  </div>
+
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button onclick="goHome()">🏠 Home</button>
+  <button onclick="goProfile()">👤 Profile</button>
+  <button onclick="goWallet()">💰 Wallet</button>
+</div>
+
+<script>
+function addMoney(){
+  let amt = document.getElementById("addAmt").value;
+  if(!amt) return alert("Enter amount");
+  alert("Add request sent: ₹" + amt);
+}
+
+function withdraw(){
+  let amt = document.getElementById("withdrawAmt").value;
+  let upi = document.getElementById("upi").value;
+
+  if(!amt || !upi){
+    alert("Fill all fields");
+    return;
+  }
+
+  alert("Withdraw request sent 🔥\n₹"+amt+"\nUPI: "+upi);
+}
+
+function goHome(){ window.location.href="home.html"; }
+function goProfile(){ window.location.href="profile.html"; }
+function goWallet(){ window.location.href="wallet.html"; }
+</script>
+
+</body>
+</html>
