@@ -1,31 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Panel - StackX</title>
+  <title>Admin Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body{
-      margin:0;
-      font-family: Arial;
-      background:#0b0f1a;
-      color:white;
-    }
-
-    .header{
-      padding:15px;
-      background:#111827;
-      text-align:center;
-    }
-
-    .container{
-      padding:15px;
-    }
+    body{background:#0b0f1a;color:white;font-family:Arial;margin:0;}
 
     .card{
       background:#1f2937;
-      padding:15px;
-      border-radius:12px;
+      padding:20px;
+      margin:20px;
+      border-radius:10px;
       max-width:400px;
       margin:auto;
       margin-top:40px;
@@ -46,7 +32,6 @@
       border-radius:8px;
       background:#22c55e;
       color:white;
-      font-weight:bold;
       margin-top:10px;
     }
   </style>
@@ -59,54 +44,58 @@
   <h3>🔐 Admin Login</h3>
   <input id="user" placeholder="User ID">
   <input id="pass" type="password" placeholder="Password">
-  <button onclick="login()">Login</button>
+  <button id="loginBtn">Login</button>
 </div>
 
-<!-- ADMIN PANEL -->
-<div id="adminPanel" style="display:none;">
-  <div class="header">
-    <h2>⚙️ Admin Panel</h2>
+<!-- PANEL -->
+<div id="panel" style="display:none;">
+
+  <!-- MATCH SECTION -->
+  <div class="card">
+    <h3>Update Matches</h3>
+
+    <input id="m1" placeholder="Match 1">
+    <input id="m2" placeholder="Match 2">
+    <input id="m3" placeholder="Match 3">
+    <input id="m4" placeholder="Match 4">
+    <input id="m5" placeholder="Match 5">
+
+    <button id="saveBtn">Save Matches</button>
   </div>
 
-  <div class="container">
-    <div class="card">
+  <!-- WALLET SECTION -->
+  <div class="card">
+    <h3>💰 Update User Wallet</h3>
 
-      <h3>Update Matches</h3>
+    <input id="uemail" placeholder="User Email">
+    <input id="amount" placeholder="Amount">
 
-      <input id="m1" placeholder="Match 1">
-      <input id="m2" placeholder="Match 2">
-      <input id="m3" placeholder="Match 3">
-      <input id="m4" placeholder="Match 4">
-      <input id="m5" placeholder="Match 5">
-
-      <button onclick="save()">Save Matches</button>
-
-    </div>
+    <button id="walletBtn">Update Balance</button>
   </div>
+
 </div>
 
 <script>
-// 🔐 LOGIN CHECK
+// 🔐 LOGIN
 const ADMIN_USER = "abhibababr";
 const ADMIN_PASS = "943188@.";
 
-function login(){
+document.getElementById("loginBtn").onclick = function(){
   let u = document.getElementById("user").value;
   let p = document.getElementById("pass").value;
 
   if(u === ADMIN_USER && p === ADMIN_PASS){
     document.getElementById("loginBox").style.display = "none";
-    document.getElementById("adminPanel").style.display = "block";
+    document.getElementById("panel").style.display = "block";
   } else {
-    alert("Wrong ID or Password ❌");
+    alert("Wrong ID/Password ❌");
   }
-}
+};
 </script>
 
-<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
@@ -117,27 +106,48 @@ const app = initializeApp({
 const db = getFirestore(app);
 
 // 🔥 SAVE MATCHES
-window.save = async ()=>{
+document.getElementById("saveBtn").onclick = async function(){
   await setDoc(doc(db,"matches","today"),{
-    m1:document.getElementById("m1").value,
-    m2:document.getElementById("m2").value,
-    m3:document.getElementById("m3").value,
-    m4:document.getElementById("m4").value,
-    m5:document.getElementById("m5").value
+    m1:m1.value,
+    m2:m2.value,
+    m3:m3.value,
+    m4:m4.value,
+    m5:m5.value
   });
 
   alert("Matches Updated 🔥");
+};
+
+// 💰 UPDATE WALLET
+document.getElementById("walletBtn").onclick = async function(){
+
+  let email = document.getElementById("uemail").value;
+  let amt = parseInt(document.getElementById("amount").value);
+
+  if(!email || !amt){
+    alert("Fill all fields");
+    return;
+  }
+
+  const ref = doc(db,"users",email);
+  const snap = await getDoc(ref);
+
+  if(snap.exists()){
+    let old = snap.data().balance || 0;
+
+    await updateDoc(ref,{
+      balance: old + amt
+    });
+
+  } else {
+    await setDoc(ref,{
+      balance: amt
+    });
+  }
+
+  alert("Wallet Updated 💰");
 };
 </script>
 
 </body>
 </html>
-
-<hr>
-
-<h3>💰 Update User Wallet</h3>
-
-<input id="uemail" placeholder="User Email">
-<input id="amount" placeholder="Amount">
-
-<button id="walletBtn">Update Balance</button>
