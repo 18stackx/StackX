@@ -7,18 +7,25 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
 
   <style>
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-      font-family:'Poppins',sans-serif;
-    }
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
 
     body{
       background:#0f0f1a;
       color:white;
       text-align:center;
       padding-bottom:80px;
+    }
+
+    /* 🔥 LOADER */
+    #loader{
+      position:fixed;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      font-size:18px;
+    }
+
+    body.hidden{
       display:none;
     }
 
@@ -54,19 +61,9 @@
       margin-top:15px;
     }
 
-    .header img{
-      width:40px;
-      border-radius:10px;
-    }
-
-    .trusted{
-      font-size:12px;
-      color:#22c55e;
-    }
-
-    h2{
-      margin-top:10px;
-    }
+    .header img{width:40px;border-radius:10px;}
+    .trusted{font-size:12px;color:#22c55e;}
+    h2{margin-top:10px;}
 
     .box{
       background:rgba(255,255,255,0.05);
@@ -76,15 +73,11 @@
       backdrop-filter:blur(10px);
     }
 
-    .historyBox{
-      display:none;
-      margin-top:10px;
-    }
+    .historyBox{display:none;margin-top:10px;}
 
     .historyItem{
       display:flex;
       justify-content:space-between;
-      align-items:center;
       padding:8px 0;
       border-bottom:1px solid rgba(255,255,255,0.1);
       font-size:13px;
@@ -134,7 +127,11 @@
   </style>
 </head>
 
-<body>
+<body class="hidden">
+
+<div id="loader">Loading...</div>
+
+<div id="main">
 
 <div class="header">
   <img src="logo.png">
@@ -169,6 +166,8 @@
   <button onclick="copyRef()">Copy Link</button>
 </div>
 
+</div>
+
 <a href="https://t.me/stackx_admin" target="_blank" class="tg">
   <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png">
 </a>
@@ -193,69 +192,66 @@ const app = initializeApp({
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// ✅ FINAL FIXED AUTH
 onAuthStateChanged(auth, async (user)=>{
 
   if(user){
 
-    document.body.style.display="block";
+    document.getElementById("loader").style.display="none";
+    document.body.classList.remove("hidden");
 
     const userRef = doc(db,"users",user.email);
 
-    document.getElementById("email").innerText = user.email;
-    document.getElementById("name").innerText = user.displayName || "User";
+    email.innerText = user.email;
+    name.innerText = user.displayName || "User";
 
     const snap = await getDoc(userRef);
 
     if(snap.exists()){
       const data = snap.data();
 
-      document.getElementById("bal").innerText = data.balance || 0;
+      bal.innerText = data.balance || 0;
 
-      document.getElementById("contests").innerText =
+      contests.innerText =
         (data.contests || []).join(", ") || "No contests";
 
-      // 🔥 REF LINK FIX
       const refCode = data.ref || user.email.split("@")[0];
       const link = window.location.origin + "?ref=" + refCode;
 
-      document.getElementById("ref").innerText = refCode;
-      document.getElementById("link").innerText = link;
+      ref.innerText = refCode;
+      linkEl = document.getElementById("link");
+      linkEl.innerText = link;
 
       window.refLink = link;
 
-      // 🔥 HISTORY FIX
       const historyDiv = document.getElementById("history");
 
       if(data.history && data.history.length > 0){
-
         historyDiv.innerHTML = data.history.map(h=>{
-
-          const typeText = h.type === "deposit" ? "Deposit" : "Withdraw";
-          const sign = h.type === "deposit" ? "+" : "-";
+          const sign = h.type==="deposit"?"+":"-";
+          const type = h.type==="deposit"?"Deposit":"Withdraw";
 
           return `
           <div class="historyItem">
             <div class="left">${h.time || "--"}</div>
-            <div class="center">${typeText}</div>
+            <div class="center">${type}</div>
             <div class="right ${h.type}">
               ${sign}₹${h.amt}
             </div>
           </div>`;
         }).join("");
-
       } else {
-        historyDiv.innerHTML = "No history";
+        historyDiv.innerHTML="No history";
       }
     }
 
   } else {
 
-    // 🔥 LOGOUT BUG FIX
     setTimeout(()=>{
       if(!auth.currentUser){
         window.location.href="index.html";
       }
-    },1500);
+    },2000);
 
   }
 
@@ -270,7 +266,7 @@ function toggleHistory(){
 
 function copyRef(){
   navigator.clipboard.writeText(window.refLink);
-  alert("Referral link copied 😈");
+  alert("Copied 😈");
 }
 
 window.goHome=()=>location.href="home.html";
