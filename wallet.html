@@ -35,6 +35,7 @@
       color:white;
       width:85%;
       margin-top:10px;
+      font-weight:bold;
     }
 
     .note{
@@ -61,15 +62,14 @@
   <p>Pay to UPI ID:</p>
   <b>yourupi@upi</b>
 
-  <input id="amt" placeholder="Enter Amount">
+  <input id="amt" placeholder="Enter Amount (min ₹300)">
   <input id="txn" placeholder="Transaction ID">
 
   <button onclick="submitAdd()">Submit Payment</button>
 
   <p class="note">
-    ⚠️ Pay above UPI ID and submit details.  
-    Then message on Telegram for verification.  
-    After verification, balance will be updated.
+    ⚠️ Minimum deposit ₹300.<br>
+    Pay to UPI → submit details → message on Telegram → after verification wallet updated.
   </p>
 </div>
 
@@ -78,13 +78,13 @@
   <h3>💸 Withdraw</h3>
 
   <input id="upi" placeholder="Your UPI ID">
-  <input id="wamt" placeholder="Enter Amount">
+  <input id="wamt" placeholder="Enter Amount (min ₹700)">
 
   <button onclick="submitWithdraw()">Request Withdraw</button>
 
   <p class="note">
-    ⚠️ After request, message on Telegram.  
-    Amount will be sent after verification.
+    ⚠️ Minimum withdraw ₹700.<br>
+    After request → message on Telegram → payment will be done manually.
   </p>
 </div>
 
@@ -102,23 +102,21 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let userEmail;
-
 // 🔥 LOAD BALANCE
 onAuthStateChanged(auth, async (user)=>{
   if(user){
-    userEmail = user.email;
-
     let snap = await getDoc(doc(db,"users",user.email));
     if(snap.exists()){
       document.getElementById("bal").innerText = snap.data().balance || 0;
     }
   }
 });
+</script>
 
+<script>
 // ➕ ADD MONEY
-window.submitAdd = ()=>{
-  let amt = document.getElementById("amt").value;
+function submitAdd(){
+  let amt = parseInt(document.getElementById("amt").value);
   let txn = document.getElementById("txn").value;
 
   if(!amt || !txn){
@@ -126,25 +124,31 @@ window.submitAdd = ()=>{
     return;
   }
 
-  alert("Submitted ✅\nNow message on Telegram with screenshot.");
+  if(amt < 300){
+    alert("Minimum deposit is ₹300 ❌");
+    return;
+  }
 
-  // 👉 future: store request in firebase
-};
+  alert("Payment Submitted ✅\nNow message on Telegram for verification.");
+}
 
 // 💸 WITHDRAW
-window.submitWithdraw = ()=>{
+function submitWithdraw(){
   let upi = document.getElementById("upi").value;
-  let amt = document.getElementById("wamt").value;
+  let amt = parseInt(document.getElementById("wamt").value);
 
   if(!upi || !amt){
     alert("Fill all details ❌");
     return;
   }
 
-  alert("Withdraw Request Sent ✅\nNow message on Telegram.");
+  if(amt < 700){
+    alert("Minimum withdrawal is ₹700 ❌");
+    return;
+  }
 
-  // 👉 future: store request in firebase
-};
+  alert("Withdraw Request Sent ✅\nNow message on Telegram.");
+}
 </script>
 
 </body>
