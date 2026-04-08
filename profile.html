@@ -45,15 +45,6 @@
     .red{color:#ff4d4d;}
     .yellow{color:#facc15;}
 
-    button{
-      padding:10px;
-      border:none;
-      border-radius:20px;
-      background:#ff2a2a;
-      color:white;
-      margin-top:10px;
-    }
-
     .nav{
       position:fixed;
       bottom:0;
@@ -86,14 +77,6 @@
   <div id="history" class="historyBox"></div>
 </div>
 
-<!-- 🎁 REFER -->
-<div class="box">
-  <h3>🎁 Refer & Earn</h3>
-  <p id="refCode"></p>
-  <p id="refLink"></p>
-  <button onclick="copyRef()">Copy Link</button>
-</div>
-
 </div>
 
 <div class="nav">
@@ -124,85 +107,83 @@ onAuthStateChanged(auth, async (user)=>{
     return;
   }
 
-  loader.style.display="none";
-  main.style.display="block";
+  document.getElementById("loader").style.display="none";
+  document.getElementById("main").style.display="block";
 
-  email.innerText = user.email;
-  name.innerText = user.displayName || "User";
+  document.getElementById("email").innerText = user.email;
+  document.getElementById("name").innerText = user.displayName || "User";
 
-  const ref = doc(db,"users",user.email);
-  const snap = await getDoc(ref);
+  try{
+    const ref = doc(db,"users",user.email);
+    const snap = await getDoc(ref);
 
-  if(!snap.exists()){
-    history.innerHTML = "No data";
-    return;
+    if(!snap.exists()){
+      document.getElementById("history").innerHTML = "No data ❌";
+      return;
+    }
+
+    let data = snap.data();
+
+    document.getElementById("bal").innerText = data.balance || 0;
+
+    let historyDiv = document.getElementById("history");
+
+    // 🔥 SAFE HISTORY CHECK
+    if(!data.history || !Array.isArray(data.history) || data.history.length === 0){
+      historyDiv.innerHTML = "No history 😴";
+      return;
+    }
+
+    let historyArr = [...data.history].reverse();
+
+    let html = "";
+
+    historyArr.forEach(h=>{
+
+      let text = "Bet 🎯";
+      let sign = "-";
+      let color = "yellow";
+
+      if(h.type === "deposit"){
+        text = "Deposit 💵";
+        sign = "+";
+        color = "green";
+      }
+      else if(h.type === "withdraw"){
+        text = "Withdraw 💸";
+        sign = "-";
+        color = "red";
+      }
+      else if(h.type === "win"){
+        text = "Win 🤑";
+        sign = "+";
+        color = "green";
+      }
+      else if(h.type === "loss"){
+        text = "Loss ❌";
+        sign = "-";
+        color = "red";
+      }
+      else if(h.type === "bet"){
+        text = "Bet 🎯";
+        sign = "-";
+        color = "yellow";
+      }
+
+      html += `
+      <div class="historyItem">
+        <div>${h.time || "--"}</div>
+        <div>${text}</div>
+        <div class="${color}">${sign}₹${h.amt}</div>
+      </div>`;
+    });
+
+    historyDiv.innerHTML = html;
+
+  }catch(err){
+    console.error(err);
+    document.getElementById("history").innerHTML = "Error loading history ❌";
   }
-
-  let data = snap.data();
-
-  bal.innerText = data.balance || 0;
-
-  // 🎁 REFER SYSTEM
-  let code = data.ref || user.email.split("@")[0];
-  let link = window.location.origin + "?ref=" + code;
-
-  refCode.innerText = "Code: " + code;
-  refLink.innerText = link;
-  window.myRef = link;
-
-  // 📜 HISTORY FIX
-  let historyDiv = document.getElementById("history");
-
-  if(!data.history || data.history.length === 0){
-    historyDiv.innerHTML = "No history 😴";
-    return;
-  }
-
-  let historyArr = [...data.history].reverse();
-
-  let html = "";
-
-  historyArr.forEach(h=>{
-
-    let text = "Bet 🎯";
-    let sign = "-";
-    let color = "yellow";
-
-    if(h.type === "deposit"){
-      text = "Deposit 💵";
-      sign = "+";
-      color = "green";
-    }
-    else if(h.type === "withdraw"){
-      text = "Withdraw 💸";
-      sign = "-";
-      color = "red";
-    }
-    else if(h.type === "win"){
-      text = "Win 🤑";
-      sign = "+";
-      color = "green";
-    }
-    else if(h.type === "loss"){
-      text = "Loss ❌";
-      sign = "-";
-      color = "red";
-    }
-    else if(h.type === "bet"){
-      text = "Bet 🎯";
-      sign = "-";
-      color = "yellow";
-    }
-
-    html += `
-    <div class="historyItem">
-      <div>${h.time || "--"}</div>
-      <div>${text}</div>
-      <div class="${color}">${sign}₹${h.amt}</div>
-    </div>`;
-  });
-
-  historyDiv.innerHTML = html;
 
 });
 </script>
@@ -211,11 +192,6 @@ onAuthStateChanged(auth, async (user)=>{
 function toggleHistory(){
   let box=document.getElementById("history");
   box.style.display = box.style.display==="block" ? "none" : "block";
-}
-
-function copyRef(){
-  navigator.clipboard.writeText(window.myRef);
-  alert("Copied 😈");
 }
 
 window.goHome=()=>location.href="home.html";
