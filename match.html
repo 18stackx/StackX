@@ -104,6 +104,9 @@
   <div id="predictions"></div>
 </div>
 
+<!-- 🔥 NEW BUTTON -->
+<button onclick="openHistory()">📊 My Prediction History</button>
+
 <div class="nav">
   <div onclick="goHome()">🏠</div>
   <div onclick="goProfile()">👤</div>
@@ -112,7 +115,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const app = initializeApp({
@@ -172,14 +175,12 @@ onSnapshot(refMatch,(snap)=>{
     odds1 = d.rcbOdds || 2;
     odds2 = d.cskOdds || 2;
 
-    // 🔥 TIME LOCK
     if(d.lockTime){
       let now = new Date();
       let lock = new Date(d.lockTime);
 
       if(now >= lock){
         betLocked = true;
-
         betBtn.innerText = "Bet Locked 🔒";
         betBtn.disabled = true;
         betBtn.style.background = "gray";
@@ -205,7 +206,6 @@ onSnapshot(predRef,(snapshot)=>{
     if(d.match === match && d.status === "live"){
 
       let div = document.createElement("div");
-
       let html = `<b>${d.question}</b><br>`;
 
       d.options.forEach(opt=>{
@@ -222,7 +222,7 @@ onSnapshot(predRef,(snapshot)=>{
   });
 });
 
-// 🔥 PLACE PREDICTION
+// 🔥 PLACE PREDICTION (UPDATED)
 window.placePrediction = async (id,option,ret)=>{
 
   let amt = parseInt(prompt("Enter amount"));
@@ -230,6 +230,22 @@ window.placePrediction = async (id,option,ret)=>{
 
   const user = auth.currentUser;
   if(!user) return alert("Login required");
+
+  // ✅ ONE BET CHECK
+  let betsSnap = await getDocs(collection(db,"predBets"));
+  let already = false;
+
+  betsSnap.forEach(docSnap=>{
+    let d = docSnap.data();
+    if(d.user === user.email && d.predictionId === id){
+      already = true;
+    }
+  });
+
+  if(already){
+    alert("Already bet placed ❌");
+    return;
+  }
 
   let userRef = doc(db,"users",user.email);
   let snap = await getDoc(userRef);
@@ -240,8 +256,19 @@ window.placePrediction = async (id,option,ret)=>{
     return;
   }
 
+  // 💰 CUT + HISTORY
   await updateDoc(userRef,{
-    balance:(data.balance||0)-amt
+    balance:(data.balance||0)-amt,
+    history:[
+      ...(data.history || []),
+      {
+        type:"bet",
+        amt:amt,
+        match:match,
+        question:id,
+        time:new Date().toLocaleString()
+      }
+    ]
   });
 
   await setDoc(doc(db,"predBets",user.email+"_"+Date.now()),{
@@ -250,16 +277,23 @@ window.placePrediction = async (id,option,ret)=>{
     amount:amt,
     return:ret,
     user:user.email,
-    status:"pending"
+    status:"pending",
+    time:new Date().toLocaleString()
   });
 
   alert("Prediction placed 🔥");
 };
 
+// 🔥 HISTORY PAGE OPEN
+window.openHistory = ()=>{
+  location.href = "prediction-history.html";
+};
+
+// बाकी code SAME 👇
+
 // 🔒 PROTECTION
 let loading = false;
 
-// PLACE BET
 window.placeBet = async function(){
 
   if(betLocked){
