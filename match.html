@@ -60,6 +60,12 @@
       margin-top:5px;
     }
 
+    .pool{
+      font-size:12px;
+      color:#facc15;
+      margin-top:3px;
+    }
+
     .nav{
       position:fixed;
       bottom:0;
@@ -78,16 +84,16 @@
 
 <div class="box">
   <h3>Select Winner</h3>
+
   <div id="team1" class="teamBtn"></div>
   <div id="team2" class="teamBtn"></div>
+
 </div>
 
 <div class="box">
   <h3>💰 Bet Amount</h3>
-
   <input id="amt" placeholder="Enter Amount">
   <p id="minBet"></p>
-
   <button id="betBtn" onclick="placeBet()">Place Bet</button>
 </div>
 
@@ -99,7 +105,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const app = initializeApp({
@@ -123,8 +129,17 @@ document.getElementById("matchTitle").innerText = match;
 
 let [t1,t2] = match.split(" vs ");
 
-team1.innerHTML = t1 + `<div id="odds1" class="odds"></div>`;
-team2.innerHTML = t2 + `<div id="odds2" class="odds"></div>`;
+team1.innerHTML = `
+  ${t1}
+  <div id="odds1" class="odds"></div>
+  <div id="pool1" class="pool"></div>
+`;
+
+team2.innerHTML = `
+  ${t2}
+  <div id="odds2" class="odds"></div>
+  <div id="pool2" class="pool"></div>
+`;
 
 let selected = null;
 
@@ -140,30 +155,37 @@ team2.onclick = ()=>{
   team1.classList.remove("selected");
 };
 
-// LOAD DATA
+// 🔥 REAL TIME LISTENER
+let refMatch = doc(db,"matches",match);
+
 let min = 10;
 let odds1 = 2;
 let odds2 = 2;
 let pool1 = 0;
 let pool2 = 0;
 
-let refMatch = doc(db,"matches",match);
-let snap = await getDoc(refMatch);
+onSnapshot(refMatch,(snap)=>{
 
-if(snap.exists()){
-  let d = snap.data();
+  if(snap.exists()){
+    let d = snap.data();
 
-  min = d.minBet || 10;
-  odds1 = d.rcbOdds || 2;
-  odds2 = d.cskOdds || 2;
+    min = d.minBet || 10;
+    odds1 = d.rcbOdds || 2;
+    odds2 = d.cskOdds || 2;
 
-  pool1 = d.rcbPool || 0;
-  pool2 = d.cskPool || 0;
-}
+    pool1 = d.rcbPool || 0;
+    pool2 = d.cskPool || 0;
 
-document.getElementById("minBet").innerText = "Min Bet: ₹"+min;
-document.getElementById("odds1").innerText = "Odds: "+odds1+"x";
-document.getElementById("odds2").innerText = "Odds: "+odds2+"x";
+    document.getElementById("minBet").innerText = "Min Bet: ₹"+min;
+
+    document.getElementById("odds1").innerText = "Odds: "+odds1+"x";
+    document.getElementById("odds2").innerText = "Odds: "+odds2+"x";
+
+    document.getElementById("pool1").innerText = "Pool: ₹"+pool1;
+    document.getElementById("pool2").innerText = "Pool: ₹"+pool2;
+  }
+
+});
 
 // 🔒 PROTECTION
 let loading = false;
@@ -174,7 +196,7 @@ window.placeBet = async function(){
   if(loading) return;
   loading = true;
 
-  document.getElementById("betBtn").innerText = "Processing...";
+  betBtn.innerText = "Processing...";
 
   try{
 
@@ -201,11 +223,6 @@ window.placeBet = async function(){
     const userRef = doc(db,"users",user.email);
     const userSnap = await getDoc(userRef);
 
-    if(!userSnap.exists()){
-      alert("User not found ❌");
-      throw "stop";
-    }
-
     let userData = userSnap.data();
     let balance = userData.balance || 0;
 
@@ -214,16 +231,12 @@ window.placeBet = async function(){
       throw "stop";
     }
 
-    // ✅ BET ENTRY
+    // CUT MONEY
     await updateDoc(userRef,{
       balance: balance - amt,
       history:[
         ...(userData.history || []),
-        {
-          type:"bet",
-          amt:amt,
-          time:new Date().toLocaleString()
-        }
+        { type:"bet", amt:amt, time:new Date().toLocaleString() }
       ]
     });
 
@@ -235,23 +248,12 @@ window.placeBet = async function(){
       pool2 += amt;
     }
 
-    let total = pool1 + pool2;
-
-    if(total > 0){
-      odds1 = (total / (pool1 || 1)).toFixed(2);
-      odds2 = (total / (pool2 || 1)).toFixed(2);
-    }
-
     await updateDoc(refMatch,{
       rcbPool:pool1,
-      cskPool:pool2,
-      rcbOdds:parseFloat(odds1),
-      cskOdds:parseFloat(odds2)
+      cskPool:pool2
     });
 
-    let ref = doc(db,"bets",user.email+"_"+Date.now());
-
-    await setDoc(ref,{
+    await setDoc(doc(db,"bets",user.email+"_"+Date.now()),{
       match,
       team:selected,
       amount:amt,
@@ -262,17 +264,16 @@ window.placeBet = async function(){
     });
 
     alert("Bet Placed 😈🔥");
-    location.reload();
 
-  }catch(err){
-    if(err !== "stop"){
-      console.error(err);
+  }catch(e){
+    if(e !== "stop"){
+      console.error(e);
       alert("Error ❌");
     }
   }
 
   loading = false;
-  document.getElementById("betBtn").innerText = "Place Bet";
+  betBtn.innerText = "Place Bet";
 };
 
 // NAV
