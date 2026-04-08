@@ -1,206 +1,380 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Match</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!DOCTYPE html>  
+<html>  
+<head>  
+  <title>Match</title>  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  
 
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">  
 
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+  <style>  
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}  
 
-    body{
-      background:#0f0f1a;
-      color:white;
-      padding-bottom:80px;
-      text-align:center;
-    }
+    body{  
+      background:#0f0f1a;  
+      color:white;  
+      padding-bottom:80px;  
+      text-align:center;  
+    }  
 
-    .box{
-      background:rgba(255,255,255,0.05);
-      margin:15px;
-      padding:20px;
-      border-radius:20px;
-    }
+    .box{  
+      background:rgba(255,255,255,0.05);  
+      margin:15px;  
+      padding:20px;  
+      border-radius:20px;  
+    }  
 
-    button{
-      width:90%;
-      padding:12px;
-      margin:10px;
-      border:none;
-      border-radius:30px;
-      background:#ff2a2a;
-      color:white;
-      font-weight:600;
-    }
+    button{  
+      width:90%;  
+      padding:12px;  
+      margin:10px;  
+      border:none;  
+      border-radius:30px;  
+      background:#ff2a2a;  
+      color:white;  
+      font-weight:600;  
+    }  
 
-    input{
-      width:85%;
-      padding:12px;
-      border-radius:10px;
-      border:none;
-      margin-top:10px;
-    }
+    input{  
+      width:85%;  
+      padding:12px;  
+      border-radius:10px;  
+      border:none;  
+      margin-top:10px;  
+    }  
 
-    .teamBtn{
-      background:#111827;
-      margin:10px;
-      padding:15px;
-      border-radius:12px;
-      cursor:pointer;
-    }
+    .teamBtn{  
+      background:#111827;  
+      margin:10px;  
+      padding:15px;  
+      border-radius:12px;  
+      cursor:pointer;  
+    }  
 
-    .selected{
-      background:#22c55e;
-    }
+    .selected{  
+      background:#22c55e;  
+    }  
 
-    .odds{
-      font-size:12px;
-      color:#9ca3af;
-      margin-top:5px;
-    }
+    .odds{  
+      font-size:12px;  
+      color:#9ca3af;  
+      margin-top:5px;  
+    }  
 
-    .nav{
-      position:fixed;
-      bottom:0;
-      width:100%;
-      background:rgba(0,0,0,0.7);
-      display:flex;
-      justify-content:space-around;
-      padding:12px;
-    }
+    .nav{  
+      position:fixed;  
+      bottom:0;  
+      width:100%;  
+      background:rgba(0,0,0,0.7);  
+      display:flex;  
+      justify-content:space-around;  
+      padding:12px;  
+    }  
 
-    .optionBtn{
-      background:#111827;
-      margin:10px;
-      padding:12px;
-      border-radius:10px;
-      cursor:pointer;
-    }
-  </style>
-</head>
+    .optionBtn{  
+      background:#111827;  
+      margin:10px;  
+      padding:12px;  
+      border-radius:10px;  
+      cursor:pointer;  
+    }  
+  </style>  
+</head>  
 
-<body>
+<body>  
 
-<h2 id="matchTitle"></h2>
+<h2 id="matchTitle"></h2>  
 
-<div class="box">
-  <h3>Select Winner</h3>
+<div class="box">  
+  <h3>Select Winner</h3>  
 
-  <div id="team1" class="teamBtn"></div>
-  <div id="team2" class="teamBtn"></div>
+  <div id="team1" class="teamBtn"></div>  
+  <div id="team2" class="teamBtn"></div>  
+</div>  
 
-</div>
+<div class="box">  
+  <h3>💰 Bet Amount</h3>  
+  <input id="amt" placeholder="Enter Amount">  
+  <p id="minBet"></p>  
+  <button id="betBtn" onclick="placeBet()">Place Bet</button>  
+</div>  
 
-<div class="box">
-  <h3>💰 Bet Amount</h3>
-  <input id="amt" placeholder="Enter Amount">
-  <p id="minBet"></p>
-  <button id="betBtn" onclick="placeBet()">Place Bet</button>
-</div>
-
-<div class="box">
-  <h3>🎯 Live Questions</h3>
-  <div id="predictions"></div>
-</div>
+<div class="box">  
+  <h3>🎯 Live Questions</h3>  
+  <div id="predictions"></div>  
+</div>  
 
 <button onclick="openHistory()">📊 My Prediction History</button>
 
-<div class="nav">
-  <div onclick="goHome()">🏠</div>
-  <div onclick="goProfile()">👤</div>
-  <div onclick="goWallet()">💰</div>
-</div>
+<div class="nav">  
+  <div onclick="goHome()">🏠</div>  
+  <div onclick="goProfile()">👤</div>  
+  <div onclick="goWallet()">💰</div>  
+</div>  
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+<script type="module">  
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";  
+import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";  
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";  
 
-const app = initializeApp({
-  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
-  authDomain:"stackx-9f92e.firebaseapp.com",
-  projectId:"stackx-9f92e"
-});
+const app = initializeApp({  
+  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",  
+  authDomain:"stackx-9f92e.firebaseapp.com",  
+  projectId:"stackx-9f92e"  
+});  
 
-const db = getFirestore(app);
-const auth = getAuth(app);
+const db = getFirestore(app);  
+const auth = getAuth(app);  
 
-// MATCH LOAD
-let match = localStorage.getItem("matchName");
+// MATCH LOAD  
+let match = localStorage.getItem("matchName");  
 
-if(!match){
-  alert("Match not found ❌");
-  location.href="home.html";
-}
+if(!match){  
+  alert("Match not found ❌");  
+  location.href="home.html";  
+}  
 
-document.getElementById("matchTitle").innerText = match;
+document.getElementById("matchTitle").innerText = match;  
 
-let [t1,t2] = match.split(" vs ");
+let [t1,t2] = match.split(" vs ");  
 
-team1.innerHTML = `${t1}<div id="odds1" class="odds"></div>`;
-team2.innerHTML = `${t2}<div id="odds2" class="odds"></div>`;
+team1.innerHTML = `${t1}<div id="odds1" class="odds"></div>`;  
+team2.innerHTML = `${t2}<div id="odds2" class="odds"></div>`;  
 
-let selected = null;
+let selected = null;  
 
-team1.onclick = ()=>{
-  selected = t1;
-  team1.classList.add("selected");
-  team2.classList.remove("selected");
-};
+team1.onclick = ()=>{  
+  selected = t1;  
+  team1.classList.add("selected");  
+  team2.classList.remove("selected");  
+};  
 
-team2.onclick = ()=>{
-  selected = t2;
-  team2.classList.add("selected");
-  team1.classList.remove("selected");
-};
+team2.onclick = ()=>{  
+  selected = t2;  
+  team2.classList.add("selected");  
+  team1.classList.remove("selected");  
+};  
 
-// 🔥 ODDS + TIME LOCK (FIXED)
-let refMatch = doc(db,"matches",match);
+// 🔥 ODDS + TIME LOCK  
+let refMatch = doc(db,"matches",match);  
 
-let min = 10;
-let odds1 = 2;
-let odds2 = 2;
-let betLocked = false;
+let min = 10;  
+let odds1 = 2;  
+let odds2 = 2;  
+let betLocked = false;  
 
-const odds1El = document.getElementById("odds1");
-const odds2El = document.getElementById("odds2");
+const odds1El = document.getElementById("odds1");  
+const odds2El = document.getElementById("odds2");  
 
-onSnapshot(refMatch,(snap)=>{
-  if(snap.exists()){
-    let d = snap.data();
+onSnapshot(refMatch,(snap)=>{  
+  if(snap.exists()){  
+    let d = snap.data();  
 
-    min = d.minBet || 10;
-    odds1 = d.rcbOdds || 2;
-    odds2 = d.cskOdds || 2;
+    min = d.minBet || 10;  
+    odds1 = d.rcbOdds || 2;  
+    odds2 = d.cskOdds || 2;  
 
-    // ✅ RESET EVERY TIME (IMPORTANT)
+    // ✅ RESET (important fix)
     betLocked = false;
     betBtn.disabled = false;
     betBtn.innerText = "Place Bet";
     betBtn.style.background = "#ff2a2a";
 
-    // ✅ FIXED TIME PARSE
-    if(d.lockTime){
-      let now = new Date();
-      let lock = new Date(d.lockTime + ":00"); // FIX
+    if(d.lockTime){  
+      let now = new Date();  
+      let lock = new Date(d.lockTime + ":00"); // ✅ FIX  
 
-      if(now >= lock){
-        betLocked = true;
-        betBtn.innerText = "Bet Locked 🔒";
-        betBtn.disabled = true;
-        betBtn.style.background = "gray";
-      }
-    }
+      if(now >= lock){  
+        betLocked = true;  
+        betBtn.innerText = "Bet Locked 🔒";  
+        betBtn.disabled = true;  
+        betBtn.style.background = "gray";  
+      }  
+    }  
 
-    minBet.innerText = "Min Bet: ₹"+min;
-    odds1El.innerText = "Odds: "+odds1+"x";
-    odds2El.innerText = "Odds: "+odds2+"x";
-  }
-});
+    minBet.innerText = "Min Bet: ₹"+min;  
+    odds1El.innerText = "Odds: "+odds1+"x";  
+    odds2El.innerText = "Odds: "+odds2+"x";  
+  }  
+});  
 
-// बाकी code untouched 👇 (same as yours)
-</script>
+// 🔥 LIVE QUESTIONS  
+const predRef = collection(db,"predictions");  
 
-</body>
+onSnapshot(predRef,(snapshot)=>{  
+  let container = document.getElementById("predictions");  
+  container.innerHTML = "";  
+
+  snapshot.forEach(docSnap=>{  
+    let d = docSnap.data();  
+
+    if(d.match === match && d.status === "live"){  
+
+      let div = document.createElement("div");  
+      let html = `<b>${d.question}</b><br>`;  
+
+      d.options.forEach(opt=>{  
+        html += `  
+          <div class="optionBtn" onclick="placePrediction('${docSnap.id}','${opt.name}',${opt.return})">  
+            ${opt.name} (${opt.return}x)  
+          </div>  
+        `;  
+      });  
+
+      div.innerHTML = html;  
+      container.appendChild(div);  
+    }  
+  });  
+});  
+
+// 🔥 PLACE PREDICTION (UPDATED)  
+window.placePrediction = async (id,option,ret)=>{  
+
+  let amt = parseInt(prompt("Enter amount"));  
+  if(!amt) return;  
+
+  const user = auth.currentUser;  
+  if(!user) return alert("Login required");  
+
+  let betsSnap = await getDocs(collection(db,"predBets"));  
+  let already = false;  
+
+  betsSnap.forEach(docSnap=>{  
+    let d = docSnap.data();  
+    if(d.user === user.email && d.predictionId === id){  
+      already = true;  
+    }  
+  });  
+
+  if(already){  
+    alert("Already bet placed ❌");  
+    return;  
+  }  
+
+  let userRef = doc(db,"users",user.email);  
+  let snap = await getDoc(userRef);  
+  let data = snap.data();  
+
+  if((data.balance||0) < amt){  
+    alert("Low balance ❌");  
+    return;  
+  }  
+
+  await updateDoc(userRef,{  
+    balance:(data.balance||0)-amt,  
+    history:[  
+      ...(data.history || []),  
+      {  
+        type:"bet",  
+        amt:amt,  
+        match:match,  
+        question:id,  
+        time:new Date().toLocaleString()  
+      }  
+    ]  
+  });  
+
+  await setDoc(doc(db,"predBets",user.email+"_"+Date.now()),{  
+    predictionId:id,  
+    option,  
+    amount:amt,  
+    return:ret,  
+    user:user.email,  
+    status:"pending",  
+    time:new Date().toLocaleString()  
+  });  
+
+  alert("Prediction placed 🔥");  
+};  
+
+window.openHistory = ()=>{  
+  location.href = "prediction-history.html";  
+};  
+
+let loading = false;  
+
+window.placeBet = async function(){  
+
+  if(betLocked){  
+    alert("Match started ❌ Betting closed");  
+    return;  
+  }  
+
+  if(loading) return;  
+  loading = true;  
+
+  betBtn.innerText = "Processing...";  
+
+  try{  
+
+    let amt = parseInt(document.getElementById("amt").value);  
+
+    if(!selected){  
+      alert("Select team ❌");  
+      throw "stop";  
+    }  
+
+    if(!amt || amt < min){  
+      alert("Minimum ₹"+min);  
+      throw "stop";  
+    }  
+
+    const user = auth.currentUser;  
+
+    if(!user){  
+      alert("Login required ❌");  
+      location.href="index.html";  
+      return;  
+    }  
+
+    const userRef = doc(db,"users",user.email);  
+    const userSnap = await getDoc(userRef);  
+
+    let userData = userSnap.data();  
+    let balance = userData.balance || 0;  
+
+    if(balance < amt){  
+      alert("Insufficient Balance ❌");  
+      throw "stop";  
+    }  
+
+    await updateDoc(userRef,{  
+      balance: balance - amt,  
+      history:[  
+        ...(userData.history || []),  
+        { type:"bet", amt:amt, time:new Date().toLocaleString() }  
+      ]  
+    });  
+
+    let multiplier = selected === t1 ? odds1 : odds2;  
+
+    await setDoc(doc(db,"bets",user.email+"_"+Date.now()),{  
+      match,  
+      team:selected,  
+      amount:amt,  
+      multiplier:parseFloat(multiplier),  
+      user:user.email,  
+      status:"pending",  
+      time:new Date().toLocaleString()  
+    });  
+
+    alert("Bet Placed 😈🔥");  
+
+  }catch(e){  
+    if(e !== "stop"){  
+      console.error(e);  
+      alert("Error ❌");  
+    }  
+  }  
+
+  loading = false;  
+  betBtn.innerText = "Place Bet";  
+};  
+
+window.goHome = ()=> location.href="home.html";  
+window.goProfile = ()=> location.href="profile.html";  
+window.goWallet = ()=> location.href="wallet.html";  
+
+</script>  
+
+</body>  
 </html>
