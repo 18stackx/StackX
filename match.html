@@ -69,6 +69,14 @@
       justify-content:space-around;
       padding:12px;
     }
+
+    .optionBtn{
+      background:#111827;
+      margin:10px;
+      padding:12px;
+      border-radius:10px;
+      cursor:pointer;
+    }
   </style>
 </head>
 
@@ -91,6 +99,12 @@
   <button id="betBtn" onclick="placeBet()">Place Bet</button>
 </div>
 
+<!-- 🔥 NEW: PREDICTION SYSTEM -->
+<div class="box">
+  <h3>🎯 Live Questions</h3>
+  <div id="predictions"></div>
+</div>
+
 <div class="nav">
   <div onclick="goHome()">🏠</div>
   <div onclick="goProfile()">👤</div>
@@ -99,7 +113,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const app = initializeApp({
@@ -140,34 +154,103 @@ team2.onclick = ()=>{
   team1.classList.remove("selected");
 };
 
-// 🔥 REAL TIME ODDS ONLY (NO POOL)
+// 🔥 ODDS
 let refMatch = doc(db,"matches",match);
 
 let min = 10;
 let odds1 = 2;
 let odds2 = 2;
 
-onSnapshot(refMatch,(snap)=>{
+const odds1El = document.getElementById("odds1");
+const odds2El = document.getElementById("odds2");
 
+onSnapshot(refMatch,(snap)=>{
   if(snap.exists()){
     let d = snap.data();
-
     min = d.minBet || 10;
     odds1 = d.rcbOdds || 2;
     odds2 = d.cskOdds || 2;
 
-    document.getElementById("minBet").innerText = "Min Bet: ₹"+min;
-
-    document.getElementById("odds1").innerText = "Odds: "+odds1+"x";
-    document.getElementById("odds2").innerText = "Odds: "+odds2+"x";
+    minBet.innerText = "Min Bet: ₹"+min;
+    odds1El.innerText = "Odds: "+odds1+"x";
+    odds2El.innerText = "Odds: "+odds2+"x";
   }
+});
+
+// 🔥🔥 LIVE QUESTIONS (REAL TIME)
+const predRef = collection(db,"predictions");
+
+onSnapshot(predRef,(snapshot)=>{
+
+  let container = document.getElementById("predictions");
+  container.innerHTML = "";
+
+  snapshot.forEach(docSnap=>{
+
+    let d = docSnap.data();
+
+    if(d.match === match && d.status === "live"){
+
+      let div = document.createElement("div");
+
+      let html = `<b>${d.question}</b><br>`;
+
+      d.options.forEach(opt=>{
+        html += `
+          <div class="optionBtn" onclick="placePrediction('${docSnap.id}','${opt.name}',${opt.return})">
+            ${opt.name} (${opt.return}x)
+          </div>
+        `;
+      });
+
+      div.innerHTML = html;
+      container.appendChild(div);
+    }
+
+  });
 
 });
+
+// 🔥 PLACE PREDICTION BET
+window.placePrediction = async (id,option,ret)=>{
+
+  let amt = parseInt(prompt("Enter amount"));
+
+  if(!amt) return;
+
+  const user = auth.currentUser;
+  if(!user) return alert("Login required");
+
+  let userRef = doc(db,"users",user.email);
+  let snap = await getDoc(userRef);
+
+  let data = snap.data();
+
+  if((data.balance||0) < amt){
+    alert("Low balance ❌");
+    return;
+  }
+
+  await updateDoc(userRef,{
+    balance:(data.balance||0)-amt
+  });
+
+  await setDoc(doc(db,"predBets",user.email+"_"+Date.now()),{
+    predictionId:id,
+    option,
+    amount:amt,
+    return:ret,
+    user:user.email,
+    status:"pending"
+  });
+
+  alert("Prediction placed 🔥");
+};
 
 // 🔒 PROTECTION
 let loading = false;
 
-// PLACE BET
+// PLACE BET (UNCHANGED)
 window.placeBet = async function(){
 
   if(loading) return;
@@ -208,7 +291,6 @@ window.placeBet = async function(){
       throw "stop";
     }
 
-    // 💸 CUT MONEY
     await updateDoc(userRef,{
       balance: balance - amt,
       history:[
@@ -219,7 +301,6 @@ window.placeBet = async function(){
 
     let multiplier = selected === t1 ? odds1 : odds2;
 
-    // 🔥 SAVE BET ONLY
     await setDoc(doc(db,"bets",user.email+"_"+Date.now()),{
       match,
       team:selected,
