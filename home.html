@@ -15,15 +15,40 @@
       padding-bottom:80px;
     }
 
+    /* 🔥 GLOW BG SAME AS PROFILE */
+    body::before{
+      content:'';
+      position:fixed;
+      width:600px;
+      height:600px;
+      background:radial-gradient(circle, rgba(255,0,80,0.25), transparent 70%);
+      top:-200px;
+      left:-200px;
+      filter:blur(120px);
+      z-index:-1;
+    }
+
+    body::after{
+      content:'';
+      position:fixed;
+      width:600px;
+      height:600px;
+      background:radial-gradient(circle, rgba(0,150,255,0.25), transparent 70%);
+      bottom:-200px;
+      right:-200px;
+      filter:blur(120px);
+      z-index:-1;
+    }
+
     .header{
       display:flex;
-      align-items:center;
       justify-content:center;
+      align-items:center;
       gap:10px;
       margin-top:15px;
     }
 
-    .header img{width:42px;border-radius:12px;}
+    .header img{width:40px;border-radius:10px;}
     .trusted{font-size:12px;color:#22c55e;}
 
     h2{text-align:center;margin-top:10px;}
@@ -33,6 +58,7 @@
       margin:15px;
       padding:20px;
       border-radius:20px;
+      backdrop-filter:blur(10px);
     }
 
     .match{
@@ -41,6 +67,21 @@
       margin:10px 0;
       border-radius:15px;
       cursor:pointer;
+      transition:0.3s;
+    }
+
+    .match:hover{
+      background:rgba(255,255,255,0.08);
+      transform:translateY(-5px);
+    }
+
+    .playBtn{
+      margin-top:10px;
+      padding:8px 12px;
+      border:none;
+      border-radius:20px;
+      background:#ff2a2a;
+      color:white;
     }
 
     .nav{
@@ -53,14 +94,10 @@
       padding:12px;
     }
 
-    .supportBox{
-      position:fixed;
-      bottom:100px;
-      left:10px;
-      text-align:center;
-    }
-
     .tg{
+      position:fixed;
+      bottom:90px;
+      right:15px;
       background:#0088cc;
       width:50px;
       height:50px;
@@ -90,20 +127,15 @@
   <h3>💰 Wallet: ₹<span id="balance">--</span></h3>
 </div>
 
-<!-- 🔥 MATCHES CONTAINER -->
 <div class="box">
   <h3>🔥 Live Matches</h3>
   <div id="matches"></div>
 </div>
 
-<!-- SUPPORT -->
-<div class="supportBox">
-  <a href="https://t.me/stackx_admin" target="_blank" class="tg">
-    <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png">
-  </a>
-</div>
+<a href="https://t.me/stackx_admin" target="_blank" class="tg">
+  <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png">
+</a>
 
-<!-- NAV -->
 <div class="nav">
   <div onclick="goHome()">🏠</div>
   <div onclick="goProfile()">👤</div>
@@ -112,7 +144,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const app = initializeApp({
@@ -124,44 +156,37 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 🔥 LOAD MATCHES (UPTO 10)
+// 🔥 MATCH LOAD (FIXED)
 async function loadMatches(){
 
-  let snap = await getDocs(collection(db,"matches"));
+  let snap = await getDoc(doc(db,"matches","today"));
 
   let container = document.getElementById("matches");
   container.innerHTML = "";
 
-  let count = 0;
+  if(snap.exists()){
+    let data = snap.data();
 
-  snap.forEach(docSnap=>{
+    for(let i=1;i<=10;i++){
 
-    if(count >= 10) return; // 🔥 max 10 match
+      let match = data["m"+i];
 
-    let d = docSnap.data();
+      if(!match) continue;
 
-    if(d.status !== "live") return;
+      let div = document.createElement("div");
+      div.className = "match";
 
-    let div = document.createElement("div");
-    div.className = "match";
+      div.innerHTML = `
+        <b>${match}</b><br>
+        <button class="playBtn" onclick="openMatch('${match}')">Play Now 🔥</button>
+      `;
 
-    div.innerHTML = `
-      <b>${d.team1} vs ${d.team2}</b><br><br>
-      ${d.team1}: ${d.prob1}%<br>
-      ${d.team2}: ${d.prob2}%<br><br>
-
-      <button onclick="openMatch('${docSnap.id}','${d.team1} vs ${d.team2}')">
-        Play Now 🔥
-      </button>
-    `;
-
-    container.appendChild(div);
-    count++;
-  });
-
+      container.appendChild(div);
+    }
+  }
 }
 
-// 🔥 WALLET LOAD
+// 🔥 WALLET
 onAuthStateChanged(auth, async (user)=>{
   if(user){
     let snap = await getDoc(doc(db,"users",user.email));
@@ -175,14 +200,11 @@ loadMatches();
 </script>
 
 <script>
-// 🔥 MATCH OPEN
-function openMatch(id,name){
-  localStorage.setItem("matchId",id);
+function openMatch(name){
   localStorage.setItem("matchName",name);
   window.location.href="match.html";
 }
 
-// NAV
 window.goHome=()=>location.href="home.html";
 window.goProfile=()=>location.href="profile.html";
 window.goWallet=()=>location.href="wallet.html";
