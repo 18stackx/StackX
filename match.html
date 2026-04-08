@@ -78,7 +78,6 @@
 
 <div class="box">
   <h3>Select Winner</h3>
-
   <div id="team1" class="teamBtn"></div>
   <div id="team2" class="teamBtn"></div>
 </div>
@@ -89,7 +88,6 @@
   <input id="amt" placeholder="Enter Amount">
 
   <p id="minBet"></p>
-  <p id="return"></p>
 
   <button onclick="placeBet()">Place Bet</button>
 </div>
@@ -143,7 +141,7 @@ team2.onclick = ()=>{
   team1.classList.remove("selected");
 };
 
-// 🔥 LOAD ADMIN DATA
+// 🔥 LOAD DATA
 let min = 10;
 let odds1 = 2;
 let odds2 = 2;
@@ -164,12 +162,11 @@ if(snap.exists()){
   pool2 = d.cskPool || 0;
 }
 
-// UI
 document.getElementById("minBet").innerText = "Min Bet: ₹"+min;
 document.getElementById("odds1").innerText = "Odds: "+odds1+"x";
 document.getElementById("odds2").innerText = "Odds: "+odds2+"x";
 
-// 🔥 PLACE BET + LIVE ODDS UPDATE
+// 🔥 PLACE BET
 window.placeBet = async function(){
 
   let amt = parseInt(document.getElementById("amt").value);
@@ -192,6 +189,37 @@ window.placeBet = async function(){
     return;
   }
 
+  // 🔥 USER DATA
+  const userRef = doc(db,"users",user.email);
+  const userSnap = await getDoc(userRef);
+
+  if(!userSnap.exists()){
+    alert("User not found ❌");
+    return;
+  }
+
+  let userData = userSnap.data();
+  let balance = userData.balance || 0;
+
+  // ❌ CHECK BALANCE
+  if(balance < amt){
+    alert("Insufficient Balance ❌");
+    return;
+  }
+
+  // ✅ CUT MONEY
+  await updateDoc(userRef,{
+    balance: balance - amt,
+    history:[
+      ...(userData.history || []),
+      {
+        type:"withdraw",
+        amt:amt,
+        time:new Date().toLocaleString()
+      }
+    ]
+  });
+
   let multiplier = selected === t1 ? odds1 : odds2;
 
   // 🔥 UPDATE POOL
@@ -201,7 +229,7 @@ window.placeBet = async function(){
     pool2 += amt;
   }
 
-  // 🔥 AUTO ODDS CHANGE (DEMAND BASED 😈)
+  // 🔥 ODDS CHANGE
   let total = pool1 + pool2;
 
   if(total > 0){
@@ -209,7 +237,6 @@ window.placeBet = async function(){
     odds2 = (total / (pool2 || 1)).toFixed(2);
   }
 
-  // 🔥 SAVE MATCH UPDATE
   await updateDoc(refMatch,{
     rcbPool:pool1,
     cskPool:pool2,
@@ -232,7 +259,7 @@ window.placeBet = async function(){
 
   alert("Bet Placed 😈🔥");
 
-  location.reload(); // refresh for new odds
+  location.reload();
 };
 
 // NAV
