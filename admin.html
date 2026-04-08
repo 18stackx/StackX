@@ -1,244 +1,252 @@
-<script type="module">  
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";  
-import { getFirestore, doc, setDoc, getDoc, updateDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";  
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";  
-  
-const app = initializeApp({  
-  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",  
-  authDomain:"stackx-9f92e.firebaseapp.com",  
-  projectId:"stackx-9f92e"  
-});  
-  
-const db = getFirestore(app);  
-const auth = getAuth(app);  
-  
-// 🔐 ADMIN AUTH  
-onAuthStateChanged(auth, async (user)=>{  
-  
-  if(!user){  
-    alert("Login required ❌");  
-    location.href="index.html";  
-    return;  
-  }  
-  
-  if(user.email !== "18stackx@gmail.com"){  
-    alert("Access Denied ❌");  
-    location.href="home.html";  
-    return;  
-  }  
-  
-  document.getElementById("panel").style.display="block";  
-  loadStats();  
-});  
-  
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
+  authDomain:"stackx-9f92e.firebaseapp.com",
+  projectId:"stackx-9f92e"
+});
+
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// 🔐 ADMIN AUTH
+onAuthStateChanged(auth, async (user)=>{
+
+  if(!user){
+    alert("Login required ❌");
+    location.href="index.html";
+    return;
+  }
+
+  if(user.email !== "18stackx@gmail.com"){
+    alert("Access Denied ❌");
+    location.href="home.html";
+    return;
+  }
+
+  document.getElementById("panel").style.display="block";
+
+  loadStats();
+});
+
 // 📊 LOAD STATS (🔥 FIXED)
-async function loadStats(){  
-  
-  let snap = await getDoc(doc(db,"admin","stats"));  
-  
-  if(snap.exists()){  
-    let d = snap.data();  
-  
-    document.getElementById("profit").innerText = d.profit || 0;  
-    document.getElementById("totalBets").innerText = d.totalBets || 0;  
-    document.getElementById("todayProfit").innerText = d.todayProfit || 0;  
-  }  
-  
-  let usersSnap = await getDocs(collection(db,"users"));  
-  document.getElementById("totalUsers").innerText = usersSnap.size;  
-}  
-  
-// 🔥 SAVE MATCHES  
-window.saveMatches = async ()=>{  
-  let data = {};  
-  for(let i=1;i<=10;i++){  
-    let val = document.getElementById("m"+i).value.trim();  
-    if(val) data["m"+i] = val;  
-  }  
-  
-  await setDoc(doc(db,"matches","today"),data,{merge:true});  
-  alert("Matches Updated 🔥");  
-};  
-  
-// 🔥 SAVE ODDS  
-window.saveBetSettings = async ()=>{  
-  
-  let match = document.getElementById("bmatch").value.trim();  
-  let minBet = parseInt(document.getElementById("min").value);  
-  let t1 = parseFloat(document.getElementById("t1odds").value);  
-  let t2 = parseFloat(document.getElementById("t2odds").value);  
-  
-  if(!match || isNaN(minBet) || isNaN(t1) || isNaN(t2)){  
-    alert("Fill properly ❌");  
-    return;  
-  }  
-  
-  await setDoc(doc(db,"matches",match),{  
-    minBet,  
-    rcbOdds:t1,  
-    cskOdds:t2,  
-    rcbPool:0,  
-    cskPool:0  
-  },{merge:true});  
-  
-  alert("Saved 😈");  
-};  
-  
-// 🔒 DOUBLE CLICK PROTECTION  
-let declaring = false;  
-  
-// 🏆 RESULT + PROFIT TRACK  
-window.declareResult = async ()=>{  
-  
-  if(declaring) return;  
-  declaring = true;  
-  
-  try{  
-  
-    let match = document.getElementById("rmatch").value.trim();  
-    let winner = document.getElementById("winnerInput").value.trim();  
-  
-    if(!match || !winner){  
-      alert("Fill all ❌");  
-      declaring = false;  
-      return;  
-    }  
-  
-    let betsSnap = await getDocs(collection(db,"bets"));  
-  
-    let count = 0;  
-    let totalBet = 0;  
-    let totalPayout = 0;  
-  
-    for(let b of betsSnap.docs){  
-  
-      let data = b.data();  
-  
-      if(data.match === match && data.status !== "done"){  
-  
-        totalBet += data.amount;  
-  
-        let userRef = doc(db,"users",data.user);  
-        let userSnap = await getDoc(userRef);  
-  
-        if(!userSnap.exists()) continue;  
-  
-        let userData = userSnap.data();  
-        let balance = userData.balance || 0;  
-  
-        if(data.team === winner){  
-  
-          let winAmt = Math.floor(data.amount * data.multiplier);  
-          totalPayout += winAmt;  
-  
-          await updateDoc(userRef,{  
-            balance: balance + winAmt,  
-            history:[  
-              ...(userData.history||[]),  
-              { type:"win", amt:winAmt, time:new Date().toLocaleString() }  
-            ]  
-          });  
-  
-        } else {  
-  
-          await updateDoc(userRef,{  
-            history:[  
-              ...(userData.history||[]),  
-              { type:"loss", amt:data.amount, time:new Date().toLocaleString() }  
-            ]  
-          });  
-  
-        }  
-  
-        await updateDoc(doc(db,"bets",b.id),{  
-          status:"done",  
-          winner  
-        });  
-  
-        count++;  
-      }  
-    }  
-  
-    let profitCalc = totalBet - totalPayout;  
-  
-    let today = new Date().toLocaleDateString();  
-    let ref = doc(db,"admin","stats");  
-    let snap = await getDoc(ref);  
-  
-    if(snap.exists()){  
-      let d = snap.data();  
-  
-      await updateDoc(ref,{  
-        profit:(d.profit||0)+profitCalc,  
-        totalBets:(d.totalBets||0)+count,  
-        todayProfit: d.date===today ? (d.todayProfit||0)+profitCalc : profitCalc,  
-        date:today  
-      });  
-  
-    } else {  
-      await setDoc(ref,{  
-        profit:profitCalc,  
-        totalBets:count,  
-        todayProfit:profitCalc,  
-        date:today  
-      });  
-    }  
-  
-    alert("Result Done 😈🔥 Profit: ₹"+profitCalc);  
-    loadStats();  
-  
-  }catch(err){  
-    console.error(err);  
-    alert("Error ❌");  
-  }  
-  
-  declaring = false;  
-};  
-  
-// 💰 WALLET (🔥 FIXED HISTORY)  
-document.getElementById("walletBtn").onclick = async ()=>{  
-  
-  let email = document.getElementById("uemail").value.trim();  
-  let amt = parseInt(document.getElementById("amount").value);  
-  
-  if(!email || isNaN(amt)){  
-    alert("Invalid input ❌");  
-    return;  
-  }  
-  
-  const ref = doc(db,"users",email);  
-  const snap = await getDoc(ref);  
-  
-  let type = amt > 0 ? "deposit" : "withdraw";  
-  
-  if(snap.exists()){  
-  
-    let data = snap.data();  
-    let newBal = (data.balance || 0) + amt;  
-  
-    if(newBal < 0) return alert("Low balance");  
-  
-    await updateDoc(ref,{  
-      balance:newBal,  
-      history:[  
-        ...(data.history||[]),  
-        { type:type, amt:Math.abs(amt), time:new Date().toLocaleString() }  
-      ]  
-    });  
-  
-  } else {  
-  
-    if(amt < 0) return alert("User not found");  
-  
-    await setDoc(ref,{  
-      balance:amt,  
-      history:[  
-        { type:"deposit", amt:amt, time:new Date().toLocaleString() }  
-      ]  
-    });  
-  }  
-  
-  alert("Wallet Updated 💰");  
-};  
-  
+async function loadStats(){
+
+  try{
+    let snap = await getDoc(doc(db,"admin","stats"));
+
+    if(snap.exists()){
+      let d = snap.data();
+
+      document.getElementById("profit").innerText = d.profit || 0;
+      document.getElementById("totalBets").innerText = d.totalBets || 0;
+      document.getElementById("todayProfit").innerText = d.todayProfit || 0;
+    }
+
+    let usersSnap = await getDocs(collection(db,"users"));
+    document.getElementById("totalUsers").innerText = usersSnap.size;
+
+  }catch(err){
+    console.log("Stats error:",err);
+  }
+}
+
+// 🔥 SAVE MATCHES
+window.saveMatches = async ()=>{
+  try{
+    let data = {};
+    for(let i=1;i<=10;i++){
+      let val = document.getElementById("m"+i).value.trim();
+      if(val) data["m"+i] = val;
+    }
+
+    await setDoc(doc(db,"matches","today"),data,{merge:true});
+    alert("Matches Updated 🔥");
+
+  }catch(err){
+    alert("Error ❌");
+  }
+};
+
+// 🔥 SAVE ODDS (🔥 FIXED)
+window.saveBetSettings = async ()=>{
+
+  let match = document.getElementById("bmatch").value.trim();
+  let minBet = parseInt(document.getElementById("min").value);
+  let t1 = parseFloat(document.getElementById("t1odds").value);
+  let t2 = parseFloat(document.getElementById("t2odds").value);
+
+  if(!match || isNaN(minBet) || isNaN(t1) || isNaN(t2)){
+    alert("Fill properly ❌");
+    return;
+  }
+
+  await setDoc(doc(db,"matches",match),{
+    minBet,
+    rcbOdds:t1,
+    cskOdds:t2,
+    rcbPool:0,
+    cskPool:0
+  },{merge:true});
+
+  alert("Saved 😈");
+};
+
+// 🏆 RESULT SYSTEM (🔥 SAFE VERSION)
+let declaring = false;
+
+window.declareResult = async ()=>{
+
+  if(declaring) return;
+  declaring = true;
+
+  try{
+
+    let match = document.getElementById("rmatch").value.trim();
+    let winner = document.getElementById("winnerInput").value.trim();
+
+    if(!match || !winner){
+      alert("Fill all ❌");
+      declaring = false;
+      return;
+    }
+
+    let betsSnap = await getDocs(collection(db,"bets"));
+
+    let totalBet = 0;
+    let totalPayout = 0;
+    let count = 0;
+
+    for(let b of betsSnap.docs){
+
+      let data = b.data();
+
+      if(data.match === match && data.status !== "done"){
+
+        totalBet += data.amount;
+
+        let userRef = doc(db,"users",data.user);
+        let userSnap = await getDoc(userRef);
+
+        if(!userSnap.exists()) continue;
+
+        let userData = userSnap.data();
+        let balance = userData.balance || 0;
+
+        if(data.team === winner){
+
+          let winAmt = Math.floor(data.amount * data.multiplier);
+          totalPayout += winAmt;
+
+          await updateDoc(userRef,{
+            balance: balance + winAmt,
+            history:[
+              ...(userData.history||[]),
+              {type:"win", amt:winAmt, time:new Date().toLocaleString()}
+            ]
+          });
+
+        } else {
+
+          await updateDoc(userRef,{
+            history:[
+              ...(userData.history||[]),
+              {type:"loss", amt:data.amount, time:new Date().toLocaleString()}
+            ]
+          });
+
+        }
+
+        await updateDoc(doc(db,"bets",b.id),{
+          status:"done",
+          winner
+        });
+
+        count++;
+      }
+    }
+
+    let profitCalc = totalBet - totalPayout;
+
+    let ref = doc(db,"admin","stats");
+    let snap = await getDoc(ref);
+
+    if(snap.exists()){
+      let d = snap.data();
+
+      await updateDoc(ref,{
+        profit:(d.profit||0)+profitCalc,
+        totalBets:(d.totalBets||0)+count,
+        todayProfit:(d.todayProfit||0)+profitCalc
+      });
+
+    } else {
+      await setDoc(ref,{
+        profit:profitCalc,
+        totalBets:count,
+        todayProfit:profitCalc
+      });
+    }
+
+    alert("Result Done 😈🔥 Profit: ₹"+profitCalc);
+
+    loadStats();
+
+  }catch(err){
+    console.log(err);
+    alert("Error ❌");
+  }
+
+  declaring = false;
+};
+
+// 💰 WALLET (🔥 HISTORY FIXED)
+document.getElementById("walletBtn").onclick = async ()=>{
+
+  let email = document.getElementById("uemail").value.trim();
+  let amt = parseInt(document.getElementById("amount").value);
+
+  if(!email || isNaN(amt)){
+    alert("Invalid ❌");
+    return;
+  }
+
+  const ref = doc(db,"users",email);
+  const snap = await getDoc(ref);
+
+  let type = amt > 0 ? "deposit" : "withdraw";
+
+  if(snap.exists()){
+
+    let data = snap.data();
+    let newBal = (data.balance||0)+amt;
+
+    if(newBal < 0) return alert("Low balance");
+
+    await updateDoc(ref,{
+      balance:newBal,
+      history:[
+        ...(data.history||[]),
+        {type:type, amt:Math.abs(amt), time:new Date().toLocaleString()}
+      ]
+    });
+
+  } else {
+
+    if(amt < 0) return alert("User not found");
+
+    await setDoc(ref,{
+      balance:amt,
+      history:[
+        {type:"deposit", amt:amt, time:new Date().toLocaleString()}
+      ]
+    });
+  }
+
+  alert("Wallet Updated 💰");
+};
+
 </script>
