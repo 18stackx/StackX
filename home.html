@@ -58,6 +58,13 @@
       color:white;
     }
 
+    .rulesText{
+      font-size:13px;
+      line-height:1.7;
+      text-align:left;
+      color:#d1d5db;
+    }
+
     .nav{
       position:fixed;
       bottom:0;
@@ -100,14 +107,38 @@
   <div id="completedMatches"></div>
 </div>
 
-<!-- RULES -->
+<!-- 📜 RULES FULL -->
 <div class="box">
-  <h3>📜 Rules</h3>
-  <p style="font-size:13px;line-height:1.6;">
-    • Bets are final<br>
-    • Winnings after result<br>
-    • Odds change anytime<br>
-    • 18+ only
+  <h3>📜 Rules & Fair Play</h3>
+
+  <p class="rulesText">
+
+  • 🎯 All bets are final once placed. Cancellation is not allowed under any condition.<br><br>
+
+  • 💰 Bet amount is deducted instantly from your wallet at the time of placing the bet.<br><br>
+
+  • 🏆 Winnings are credited only after the admin officially declares the result.<br><br>
+
+  • ⚠️ In case of match cancellation, draw, or technical issues → refund may be processed manually.<br><br>
+
+  • 📊 Odds are controlled by admin and may change anytime before placing a bet. Once placed, your odds are locked.<br><br>
+
+  • 💸 Maximum return is capped (up to 3x of bet amount).<br><br>
+
+  • 🔻 A platform fee (approx. 10%) is deducted from winning amount.<br><br>
+
+  • 🚫 Multiple accounts, abuse, or suspicious activity will lead to instant account ban without notice.<br><br>
+
+  • 🔐 All decisions taken by the platform/admin will be final in case of disputes.<br><br>
+
+  • 💳 Withdrawals are usually processed within a short time but may take longer in some cases.<br><br>
+
+  • 🎮 This platform is intended for entertainment and skill-based prediction only.<br><br>
+
+  • 🔞 Users must be 18 years or older to participate.<br><br>
+
+  • 🚫 This platform does not support or promote illegal gambling activities.
+
   </p>
 </div>
 
@@ -132,9 +163,7 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 🔥 LOAD LIVE MATCHES
 async function loadMatches(){
-
   let snap = await getDoc(doc(db,"matches","today"));
   let container = document.getElementById("matches");
   container.innerHTML = "";
@@ -166,20 +195,16 @@ async function loadMatches(){
   }
 }
 
-// 🏁 COMPLETED MATCHES
 async function loadCompleted(){
-
   let container = document.getElementById("completedMatches");
   container.innerHTML = "";
 
   let snap = await getDocs(collection(db,"matches"));
 
   snap.forEach(docSnap=>{
-
     let d = docSnap.data();
 
     if(d.status === "completed"){
-
       let div = document.createElement("div");
       div.className = "match";
 
@@ -197,7 +222,6 @@ async function loadCompleted(){
   }
 }
 
-// WALLET
 onAuthStateChanged(auth, async (user)=>{
   if(user){
     let snap = await getDoc(doc(db,"users",user.email));
@@ -212,7 +236,6 @@ loadCompleted();
 </script>
 
 <script>
-
 function getUsers(){
   return Math.floor(300 + Math.random()*700);
 }
@@ -231,7 +254,6 @@ window.goHome=()=>location.href="home.html";
 window.goProfile=()=>location.href="profile.html";
 window.goWallet=()=>location.href="wallet.html";
 window.goBets=()=>location.href="mybets.html";
-
 </script>
 
 </body>
