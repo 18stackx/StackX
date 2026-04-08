@@ -52,7 +52,7 @@
     <button onclick="saveMatches()">Save Matches</button>
   </div>
 
-  <!-- BET SETTINGS + ODDS -->
+  <!-- BET SETTINGS -->
   <div class="card">
     <h3>Match Betting Settings + Odds</h3>
 
@@ -67,7 +67,7 @@
 
   <!-- RESULT -->
   <div class="card">
-    <h3>🏆 Declare Result (Auto Payout)</h3>
+    <h3>🏆 Declare Result</h3>
 
     <input id="rmatch" placeholder="Match Name">
     <input id="winnerInput" placeholder="Winner Team">
@@ -119,49 +119,66 @@ onAuthStateChanged(auth, (user)=>{
   document.getElementById("panel").style.display="block";
 });
 
-// 🔥 SAVE MATCHES
+// ✅ FIXED MATCH SAVE
 window.saveMatches = async ()=>{
-  await setDoc(doc(db,"matches","today"),{
-    m1:m1.value,m2:m2.value,m3:m3.value,m4:m4.value,m5:m5.value,
-    m6:m6.value,m7:m7.value,m8:m8.value,m9:m9.value,m10:m10.value
-  });
-  alert("Matches Updated 🔥");
-};
 
-// 🔥 SAVE BET SETTINGS + ODDS
-window.saveBetSettings = async ()=>{
+  const data = {};
 
-  let match = bmatch.value;
-  let minBet = parseInt(min.value);
+  for(let i=1;i<=10;i++){
+    let val = document.getElementById("m"+i).value.trim();
+    if(val) data["m"+i] = val;
+  }
 
-  let t1Odds = parseFloat(t1odds.value);
-  let t2Odds = parseFloat(t2odds.value);
-
-  if(!match || !minBet || !t1Odds || !t2Odds){
-    alert("Fill all ❌");
+  if(!data.m1){
+    alert("At least Match 1 required ❌");
     return;
   }
 
-  await setDoc(doc(db,"matches",match),{
-    minBet:minBet,
-
-    // 🔥 ODDS SYSTEM
-    rcbOdds:t1Odds,
-    cskOdds:t2Odds,
-
-    // 🔥 POOL RESET
-    rcbPool:0,
-    cskPool:0
-  });
-
-  alert("Odds + Settings Saved 😈🔥");
+  try{
+    await setDoc(doc(db,"matches","today"), data, { merge:true });
+    alert("Matches Updated 🔥");
+  }catch(err){
+    console.error(err);
+    alert("Error ❌");
+  }
 };
 
-// 🏆 AUTO PAYOUT
+// ✅ FIXED BET SETTINGS + ODDS
+window.saveBetSettings = async ()=>{
+
+  let match = document.getElementById("bmatch").value.trim();
+  let minBet = parseInt(document.getElementById("min").value);
+
+  let t1Odds = parseFloat(document.getElementById("t1odds").value);
+  let t2Odds = parseFloat(document.getElementById("t2odds").value);
+
+  if(!match || isNaN(minBet) || isNaN(t1Odds) || isNaN(t2Odds)){
+    alert("Fill all fields properly ❌");
+    return;
+  }
+
+  try{
+    await setDoc(doc(db,"matches",match),{
+      minBet,
+      rcbOdds:t1Odds,
+      cskOdds:t2Odds,
+      rcbPool:0,
+      cskPool:0
+    },{ merge:true });
+
+    alert("Odds + Settings Saved 😈🔥");
+
+  }catch(err){
+    console.error(err);
+    alert("Error saving odds ❌");
+  }
+};
+
+// 🏆 AUTO PAYOUT (FINAL)
 window.declareResult = async ()=>{
 
-  let match = rmatch.value.trim();
-  let winner = winnerInput.value.trim();
+  let match = document.getElementById("rmatch").value.trim();
+  let winner = document.getElementById("winnerInput").value.trim();
 
   if(!match || !winner){
     alert("Fill all ❌");
@@ -229,7 +246,7 @@ window.declareResult = async ()=>{
   alert("Result Declared 😈🔥\nProcessed Bets: "+count);
 };
 
-// 💰 WALLET
+// 💰 WALLET (UNCHANGED)
 walletBtn.onclick = async ()=>{
   let email=uemail.value.trim();
   let amt=parseInt(amount.value);
@@ -248,6 +265,7 @@ walletBtn.onclick = async ()=>{
 
   alert("Wallet Updated 💰");
 };
+
 </script>
 
 </body>
