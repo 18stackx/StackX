@@ -97,7 +97,7 @@
     <button onclick="declareResult()">Declare</button>
   </div>
 
-  <!-- 🔥 ADDED QUESTION SYSTEM -->
+  <!-- 🔥 UPDATED QUESTION SYSTEM -->
   <div class="card">
     <h3>🎯 Prediction System</h3>
 
@@ -112,6 +112,9 @@
 
     <input id="opt3" placeholder="Option 3">
     <input id="ret3" placeholder="Return">
+
+    <!-- 🔥 NEW TIME -->
+    <input id="pLockTime" type="datetime-local">
 
     <button onclick="savePrediction()">Add Question</button>
 
@@ -158,22 +161,22 @@ onAuthStateChanged(auth,(user)=>{
   loadLiveMatches();
 });
 
-// 📊 STATS
+// 📊 STATS (same)
 async function loadStats(){
   let snap = await getDoc(doc(db,"admin","stats"));
 
   if(snap.exists()){
     let d = snap.data();
-    document.getElementById("profit").innerText = d.profit || 0;
-    document.getElementById("totalBets").innerText = d.totalBets || 0;
-    document.getElementById("todayProfit").innerText = d.todayProfit || 0;
+    profit.innerText = d.profit || 0;
+    totalBets.innerText = d.totalBets || 0;
+    todayProfit.innerText = d.todayProfit || 0;
   }
 
   let u = await getDocs(collection(db,"users"));
-  document.getElementById("totalUsers").innerText = u.size;
+  totalUsers.innerText = u.size;
 }
 
-// 🔥 LIVE MATCHES
+// 🔥 LIVE MATCHES (same)
 async function loadLiveMatches(){
   let container = document.getElementById("liveMatches");
   container.innerHTML = "";
@@ -200,93 +203,12 @@ async function loadLiveMatches(){
   });
 }
 
-// SELECT MATCH
-window.selectMatch = (match)=>{
-  document.getElementById("rmatch").value = match;
-};
-
-// 🔥 SAVE MATCH LIST
-window.saveMatches = async ()=>{
-  let data = {};
-  for(let i=1;i<=10;i++){
-    let val = document.getElementById("m"+i).value.trim();
-    if(val) data["m"+i] = val;
-  }
-  await setDoc(doc(db,"matches","today"),data,{merge:true});
-  alert("Saved 🔥");
-};
-
-// 🔥 BET SETTINGS
-window.saveBetSettings = async ()=>{
-
-  let match = document.getElementById("bmatch").value.trim();
-  let minBet = parseInt(document.getElementById("minBetInput").value);
-  let t1 = Math.min(parseFloat(document.getElementById("t1odds").value),3);
-  let t2 = Math.min(parseFloat(document.getElementById("t2odds").value),3);
-  let lockTime = document.getElementById("lockTime").value;
-
-  if(!match || isNaN(minBet) || isNaN(t1) || isNaN(t2)){
-    alert("Fill properly ❌");
-    return;
-  }
-
-  await setDoc(doc(db,"matches",match),{
-    minBet,
-    rcbOdds:t1,
-    cskOdds:t2,
-    rcbPool:0,
-    cskPool:0,
-    status:"live",
-    winner:null,
-    date:new Date().toLocaleDateString('en-IN'),
-    lockTime:lockTime
-  },{merge:true});
-
-  alert("Match Live 😈");
-};
-
-// 🏆 RESULT
-window.declareResult = async ()=>{
-
-  let match = document.getElementById("rmatch").value.trim();
-  let winner = document.getElementById("winnerInput").value.trim();
-
-  let betsSnap = await getDocs(collection(db,"bets"));
-
-  for(let b of betsSnap.docs){
-    let data = b.data();
-
-    if(data.match === match && data.status !== "done"){
-
-      let userRef = doc(db,"users",data.user);
-      let userSnap = await getDoc(userRef);
-      let userData = userSnap.data();
-
-      if(data.team === winner){
-        let winAmt = Math.floor(data.amount * data.multiplier * 0.9);
-
-        await updateDoc(userRef,{
-          balance:(userData.balance||0)+winAmt
-        });
-      }
-
-      await updateDoc(doc(db,"bets",b.id),{status:"done"});
-    }
-  }
-
-  await updateDoc(doc(db,"matches",match),{
-    status:"completed",
-    winner:winner
-  });
-
-  alert("Result Done 🔥");
-};
-
-// 🔥 SAVE QUESTION
+// 🔥 SAVE QUESTION (TIME LOCK ADDED)
 window.savePrediction = async ()=>{
 
-  let match = document.getElementById("pMatch").value.trim();
-  let question = document.getElementById("pQuestion").value.trim();
+  let match = pMatch.value.trim();
+  let question = pQuestion.value.trim();
+  let lockTime = pLockTime.value;
 
   let options = [
     {name:opt1.value, return:Math.min(parseFloat(ret1.value),3)},
@@ -301,17 +223,18 @@ window.savePrediction = async ()=>{
     question,
     options,
     status:"live",
-    correct:null
+    correct:null,
+    lockTime:lockTime // 🔥 important
   });
 
   alert("Question Added 🔥 ID: "+id);
 };
 
-// 🔥 DECLARE PREDICTION RESULT
+// 🔥 DECLARE RESULT (HISTORY FIXED)
 window.declarePrediction = async ()=>{
 
-  let id = document.getElementById("predId").value.trim();
-  let correct = document.getElementById("correctOpt").value.trim();
+  let id = predId.value.trim();
+  let correct = correctOpt.value.trim();
 
   let betsSnap = await getDocs(collection(db,"predBets"));
 
@@ -333,8 +256,22 @@ window.declarePrediction = async ()=>{
         let winAmt = Math.floor(data.amount * data.return * 0.9);
 
         await updateDoc(userRef,{
-          balance:(userData.balance||0)+winAmt
+          balance:(userData.balance||0)+winAmt,
+          history:[
+            ...(userData.history||[]),
+            {type:"win",amt:winAmt,time:new Date().toLocaleString()}
+          ]
         });
+
+      } else {
+
+        await updateDoc(userRef,{
+          history:[
+            ...(userData.history||[]),
+            {type:"loss",amt:data.amount,time:new Date().toLocaleString()}
+          ]
+        });
+
       }
 
       await updateDoc(doc(db,"predBets",b.id),{status:"done"});
@@ -347,31 +284,6 @@ window.declarePrediction = async ()=>{
   });
 
   alert("Prediction Done 😈");
-};
-
-// 💰 WALLET
-document.getElementById("walletBtn").onclick = async ()=>{
-
-  let email = document.getElementById("uemail").value.trim();
-  let amt = parseInt(document.getElementById("amount").value);
-
-  if(!email || isNaN(amt)){
-    alert("Invalid ❌");
-    return;
-  }
-
-  let ref = doc(db,"users",email);
-  let snap = await getDoc(ref);
-
-  if(snap.exists()){
-    let data = snap.data();
-
-    await updateDoc(ref,{
-      balance:(data.balance||0)+amt
-    });
-  }
-
-  alert("Wallet Updated 💰");
 };
 
 </script>
