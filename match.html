@@ -88,7 +88,7 @@
   <input id="amt" placeholder="Enter Amount">
   <p id="minBet"></p>
 
-  <button onclick="placeBet()">Place Bet</button>
+  <button id="betBtn" onclick="placeBet()">Place Bet</button>
 </div>
 
 <div class="nav">
@@ -111,7 +111,7 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 🔥 LOAD MATCH
+// LOAD MATCH
 let match = localStorage.getItem("matchName");
 
 if(!match){
@@ -140,7 +140,7 @@ team2.onclick = ()=>{
   team1.classList.remove("selected");
 };
 
-// 🔥 LOAD DATA
+// LOAD DATA
 let min = 10;
 let odds1 = 2;
 let odds2 = 2;
@@ -165,107 +165,114 @@ document.getElementById("minBet").innerText = "Min Bet: ₹"+min;
 document.getElementById("odds1").innerText = "Odds: "+odds1+"x";
 document.getElementById("odds2").innerText = "Odds: "+odds2+"x";
 
-// 🔒 DOUBLE CLICK PROTECTION
+// 🔒 PROTECTION
 let loading = false;
 
-// 🔥 PLACE BET
+// PLACE BET
 window.placeBet = async function(){
 
   if(loading) return;
   loading = true;
 
-  let amt = parseInt(document.getElementById("amt").value);
+  document.getElementById("betBtn").innerText = "Processing...";
 
-  if(!selected){
-    alert("Select team ❌");
-    loading = false;
-    return;
+  try{
+
+    let amt = parseInt(document.getElementById("amt").value);
+
+    if(!selected){
+      alert("Select team ❌");
+      throw "stop";
+    }
+
+    if(!amt || amt < min){
+      alert("Minimum ₹"+min);
+      throw "stop";
+    }
+
+    const user = auth.currentUser;
+
+    if(!user){
+      alert("Login required ❌");
+      location.href="index.html";
+      return;
+    }
+
+    const userRef = doc(db,"users",user.email);
+    const userSnap = await getDoc(userRef);
+
+    if(!userSnap.exists()){
+      alert("User not found ❌");
+      throw "stop";
+    }
+
+    let userData = userSnap.data();
+    let balance = userData.balance || 0;
+
+    if(balance < amt){
+      alert("Insufficient Balance ❌");
+      throw "stop";
+    }
+
+    // ✅ BET ENTRY
+    await updateDoc(userRef,{
+      balance: balance - amt,
+      history:[
+        ...(userData.history || []),
+        {
+          type:"bet",
+          amt:amt,
+          time:new Date().toLocaleString()
+        }
+      ]
+    });
+
+    let multiplier = selected === t1 ? odds1 : odds2;
+
+    if(selected === t1){
+      pool1 += amt;
+    } else {
+      pool2 += amt;
+    }
+
+    let total = pool1 + pool2;
+
+    if(total > 0){
+      odds1 = (total / (pool1 || 1)).toFixed(2);
+      odds2 = (total / (pool2 || 1)).toFixed(2);
+    }
+
+    await updateDoc(refMatch,{
+      rcbPool:pool1,
+      cskPool:pool2,
+      rcbOdds:parseFloat(odds1),
+      cskOdds:parseFloat(odds2)
+    });
+
+    let ref = doc(db,"bets",user.email+"_"+Date.now());
+
+    await setDoc(ref,{
+      match,
+      team:selected,
+      amount:amt,
+      multiplier:parseFloat(multiplier),
+      user:user.email,
+      status:"pending",
+      time:new Date().toLocaleString()
+    });
+
+    alert("Bet Placed 😈🔥");
+    location.reload();
+
+  }catch(err){
+    if(err !== "stop"){
+      console.error(err);
+      alert("Error ❌");
+    }
   }
 
-  if(!amt || amt < min){
-    alert("Minimum ₹"+min);
-    loading = false;
-    return;
-  }
-
-  const user = auth.currentUser;
-
-  if(!user){
-    alert("Login required ❌");
-    location.href="index.html";
-    return;
-  }
-
-  const userRef = doc(db,"users",user.email);
-  const userSnap = await getDoc(userRef);
-
-  if(!userSnap.exists()){
-    alert("User not found ❌");
-    loading = false;
-    return;
-  }
-
-  let userData = userSnap.data();
-  let balance = userData.balance || 0;
-
-  if(balance < amt){
-    alert("Insufficient Balance ❌");
-    loading = false;
-    return;
-  }
-
-  // ✅ CUT MONEY + HISTORY FIX
-  await updateDoc(userRef,{
-    balance: balance - amt,
-    history:[
-      ...(userData.history || []),
-      {
-        type:"bet",   // 🔥 FIXED
-        amt:amt,
-        time:new Date().toLocaleString()
-      }
-    ]
-  });
-
-  let multiplier = selected === t1 ? odds1 : odds2;
-
-  // 🔥 POOL UPDATE
-  if(selected === t1){
-    pool1 += amt;
-  } else {
-    pool2 += amt;
-  }
-
-  let total = pool1 + pool2;
-
-  if(total > 0){
-    odds1 = (total / (pool1 || 1)).toFixed(2);
-    odds2 = (total / (pool2 || 1)).toFixed(2);
-  }
-
-  await updateDoc(refMatch,{
-    rcbPool:pool1,
-    cskPool:pool2,
-    rcbOdds:parseFloat(odds1),
-    cskOdds:parseFloat(odds2)
-  });
-
-  // 🔥 SAVE BET
-  let ref = doc(db,"bets",user.email+"_"+Date.now());
-
-  await setDoc(ref,{
-    match,
-    team:selected,
-    amount:amt,
-    multiplier:parseFloat(multiplier),
-    user:user.email,
-    status:"pending",
-    time:new Date().toLocaleString()
-  });
-
-  alert("Bet Placed 😈🔥");
-
-  location.reload();
+  loading = false;
+  document.getElementById("betBtn").innerText = "Place Bet";
 };
 
 // NAV
