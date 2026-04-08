@@ -15,30 +15,6 @@
       padding-bottom:80px;
     }
 
-    body::before{
-      content:'';
-      position:fixed;
-      width:600px;
-      height:600px;
-      background:radial-gradient(circle, rgba(255,0,80,0.25), transparent 70%);
-      top:-200px;
-      left:-200px;
-      filter:blur(120px);
-      z-index:-1;
-    }
-
-    body::after{
-      content:'';
-      position:fixed;
-      width:600px;
-      height:600px;
-      background:radial-gradient(circle, rgba(0,150,255,0.25), transparent 70%);
-      bottom:-200px;
-      right:-200px;
-      filter:blur(120px);
-      z-index:-1;
-    }
-
     .header{
       display:flex;
       justify-content:center;
@@ -64,8 +40,6 @@
       margin:15px;
       padding:20px;
       border-radius:20px;
-      backdrop-filter:blur(10px);
-      border:1px solid rgba(255,255,255,0.05);
     }
 
     .match{
@@ -73,13 +47,6 @@
       padding:15px;
       margin:10px 0;
       border-radius:15px;
-      cursor:pointer;
-      transition:0.3s;
-    }
-
-    .match:hover{
-      background:rgba(255,255,255,0.08);
-      transform:translateY(-5px);
     }
 
     .playBtn{
@@ -91,14 +58,6 @@
       color:white;
     }
 
-    .rulesText{
-      font-size:13px;
-      line-height:1.7;
-      text-align:left;
-      color:#d1d5db;
-      letter-spacing:0.3px;
-    }
-
     .nav{
       position:fixed;
       bottom:0;
@@ -108,21 +67,6 @@
       justify-content:space-around;
       padding:12px;
     }
-
-    .tg{
-      position:fixed;
-      bottom:90px;
-      right:15px;
-      background:#0088cc;
-      width:50px;
-      height:50px;
-      border-radius:50%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .tg img{width:28px;}
   </style>
 </head>
 
@@ -138,51 +82,34 @@
 
 <h2>🏏 Cricket Fantasy</h2>
 
-<div id="onlineUsers">🔥 Loading users...</div>
+<div id="onlineUsers">🔥 Loading...</div>
 
 <div class="box">
   <h3>💰 Wallet: ₹<span id="balance">--</span></h3>
 </div>
 
+<!-- 🔥 LIVE MATCHES -->
 <div class="box">
   <h3>🔥 Live Matches</h3>
   <div id="matches"></div>
 </div>
 
-<!-- ✅ RULES ADDED -->
+<!-- 🏁 COMPLETED MATCHES -->
 <div class="box">
-  <h3>📜 Rules & Fair Play</h3>
-
-  <p class="rulesText">
-
-  • 🎯 All bets are final once placed. No cancellation allowed.<br><br>
-
-  • 💰 Bet amount will be deducted instantly from wallet.<br><br>
-
-  • 🏆 Winnings will be credited only after admin declares result.<br><br>
-
-  • ⚠️ In case of match cancellation / draw → refund may be processed manually.<br><br>
-
-  • 🚫 Any misuse, multiple accounts or fraud → account will be blocked without notice.<br><br>
-
-  • 📊 Odds are dynamic and can change anytime before placing bet.<br><br>
-
-  • 🔐 Platform decisions will be final in case of disputes.<br><br>
-
-  • 💳 Withdrawal requests are usually processed within 30 minutes.<br><br>
-
-  • 🎮 This is a skill-based fantasy platform for entertainment purposes only.<br><br>
-
-  • 🔞 Users must be 18+ to participate.<br><br>
-
-  • 🚫 This platform does not promote real gambling.
-
-  </p>
+  <h3>🏁 Completed Matches</h3>
+  <div id="completedMatches"></div>
 </div>
 
-<a href="https://t.me/stackx_admin" target="_blank" class="tg">
-  <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png">
-</a>
+<!-- RULES -->
+<div class="box">
+  <h3>📜 Rules</h3>
+  <p style="font-size:13px;line-height:1.6;">
+    • Bets are final<br>
+    • Winnings after result<br>
+    • Odds change anytime<br>
+    • 18+ only
+  </p>
+</div>
 
 <div class="nav">
   <div onclick="goHome()">🏠</div>
@@ -193,7 +120,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const app = initializeApp({
@@ -205,7 +132,9 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+// 🔥 LOAD LIVE MATCHES
 async function loadMatches(){
+
   let snap = await getDoc(doc(db,"matches","today"));
   let container = document.getElementById("matches");
   container.innerHTML = "";
@@ -217,12 +146,19 @@ async function loadMatches(){
       let match = data["m"+i];
       if(!match) continue;
 
+      let matchRef = await getDoc(doc(db,"matches",match));
+      if(!matchRef.exists()) continue;
+
+      let d = matchRef.data();
+
+      if(d.status === "completed") continue;
+
       let div = document.createElement("div");
       div.className = "match";
 
       div.innerHTML = `
         <b>${match}</b><br>
-        <button class="playBtn" onclick="openMatch('${match}')">Play Now 🔥</button>
+        <button class="playBtn" onclick="openMatch('${match}')">Play</button>
       `;
 
       container.appendChild(div);
@@ -230,6 +166,38 @@ async function loadMatches(){
   }
 }
 
+// 🏁 COMPLETED MATCHES
+async function loadCompleted(){
+
+  let container = document.getElementById("completedMatches");
+  container.innerHTML = "";
+
+  let snap = await getDocs(collection(db,"matches"));
+
+  snap.forEach(docSnap=>{
+
+    let d = docSnap.data();
+
+    if(d.status === "completed"){
+
+      let div = document.createElement("div");
+      div.className = "match";
+
+      div.innerHTML = `
+        <b>${docSnap.id}</b><br>
+        Winner: ${d.winner} 🏆
+      `;
+
+      container.appendChild(div);
+    }
+  });
+
+  if(container.innerHTML===""){
+    container.innerHTML="No matches yet 😴";
+  }
+}
+
+// WALLET
 onAuthStateChanged(auth, async (user)=>{
   if(user){
     let snap = await getDoc(doc(db,"users",user.email));
@@ -240,45 +208,19 @@ onAuthStateChanged(auth, async (user)=>{
 });
 
 loadMatches();
+loadCompleted();
 </script>
 
 <script>
 
 function getUsers(){
-  let hour = new Date().getHours();
-  let users = 0;
-
-  if(hour >= 6 && hour < 12){
-    users = 300 + Math.random()*200;
-  }
-  else if(hour >= 12 && hour < 18){
-    users = 500 + Math.random()*100;
-  }
-  else if(hour >= 18 && hour < 22){
-    users = 800 + Math.random()*1200;
-  }
-  else{
-    if(hour >= 22){
-      users = 1000 + Math.random()*500;
-    }
-    else if(hour >= 0 && hour < 3){
-      users = 300 + Math.random()*200;
-    }
-    else{
-      users = 50 + Math.random()*100;
-    }
-  }
-
-  return Math.floor(users);
+  return Math.floor(300 + Math.random()*700);
 }
 
 setInterval(()=>{
   document.getElementById("onlineUsers").innerText =
     "🔥 " + getUsers() + " users online";
 },3000);
-
-document.getElementById("onlineUsers").innerText =
-  "🔥 " + getUsers() + " users online";
 
 function openMatch(name){
   localStorage.setItem("matchName",name);
