@@ -52,15 +52,17 @@
     <button onclick="saveMatches()">Save Matches</button>
   </div>
 
-  <!-- BET SETTINGS -->
+  <!-- BET SETTINGS + ODDS -->
   <div class="card">
-    <h3>Match Betting Settings</h3>
+    <h3>Match Betting Settings + Odds</h3>
 
     <input id="bmatch" placeholder="Match Name (RCB vs CSK)">
     <input id="min" placeholder="Minimum Bet ₹">
-    <input id="multi" placeholder="Multiplier">
 
-    <button onclick="saveBetSettings()">Save Bet Settings</button>
+    <input id="t1odds" placeholder="Team1 Odds (e.g. 2)">
+    <input id="t2odds" placeholder="Team2 Odds (e.g. 2)">
+
+    <button onclick="saveBetSettings()">Save Bet + Odds</button>
   </div>
 
   <!-- RESULT -->
@@ -126,20 +128,40 @@ window.saveMatches = async ()=>{
   alert("Matches Updated 🔥");
 };
 
-// 🔥 SAVE BET SETTINGS
+// 🔥 SAVE BET SETTINGS + ODDS
 window.saveBetSettings = async ()=>{
-  await setDoc(doc(db,"matches",bmatch.value),{
-    minBet:parseInt(min.value),
-    multiplier:parseFloat(multi.value)
+
+  let match = bmatch.value;
+  let minBet = parseInt(min.value);
+
+  let t1Odds = parseFloat(t1odds.value);
+  let t2Odds = parseFloat(t2odds.value);
+
+  if(!match || !minBet || !t1Odds || !t2Odds){
+    alert("Fill all ❌");
+    return;
+  }
+
+  await setDoc(doc(db,"matches",match),{
+    minBet:minBet,
+
+    // 🔥 ODDS SYSTEM
+    rcbOdds:t1Odds,
+    cskOdds:t2Odds,
+
+    // 🔥 POOL RESET
+    rcbPool:0,
+    cskPool:0
   });
-  alert("Settings Saved 😈");
+
+  alert("Odds + Settings Saved 😈🔥");
 };
 
-// 🏆 AUTO PAYOUT (FINAL FIXED)
+// 🏆 AUTO PAYOUT
 window.declareResult = async ()=>{
 
-  let match = document.getElementById("rmatch").value.trim();
-  let winner = document.getElementById("winnerInput").value.trim();
+  let match = rmatch.value.trim();
+  let winner = winnerInput.value.trim();
 
   if(!match || !winner){
     alert("Fill all ❌");
@@ -154,7 +176,6 @@ window.declareResult = async ()=>{
 
     let data = b.data();
 
-    // ✅ ONLY PENDING BETS
     if(data.match === match && data.status !== "done"){
 
       let userRef = doc(db,"users",data.user);
@@ -196,10 +217,9 @@ window.declareResult = async ()=>{
 
       }
 
-      // 🔥 FINAL FIX (MOST IMPORTANT)
       await updateDoc(doc(db,"bets",b.id),{
         status:"done",
-        winner:winner   // ✅ THIS WAS MISSING
+        winner:winner
       });
 
       count++;
