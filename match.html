@@ -60,12 +60,6 @@
       margin-top:5px;
     }
 
-    .pool{
-      font-size:12px;
-      color:#facc15;
-      margin-top:3px;
-    }
-
     .nav{
       position:fixed;
       bottom:0;
@@ -117,7 +111,7 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// LOAD MATCH
+// MATCH LOAD
 let match = localStorage.getItem("matchName");
 
 if(!match){
@@ -129,17 +123,8 @@ document.getElementById("matchTitle").innerText = match;
 
 let [t1,t2] = match.split(" vs ");
 
-team1.innerHTML = `
-  ${t1}
-  <div id="odds1" class="odds"></div>
-  <div id="pool1" class="pool"></div>
-`;
-
-team2.innerHTML = `
-  ${t2}
-  <div id="odds2" class="odds"></div>
-  <div id="pool2" class="pool"></div>
-`;
+team1.innerHTML = `${t1}<div id="odds1" class="odds"></div>`;
+team2.innerHTML = `${t2}<div id="odds2" class="odds"></div>`;
 
 let selected = null;
 
@@ -155,14 +140,12 @@ team2.onclick = ()=>{
   team1.classList.remove("selected");
 };
 
-// 🔥 REAL TIME LISTENER
+// 🔥 REAL TIME ODDS ONLY (NO POOL)
 let refMatch = doc(db,"matches",match);
 
 let min = 10;
 let odds1 = 2;
 let odds2 = 2;
-let pool1 = 0;
-let pool2 = 0;
 
 onSnapshot(refMatch,(snap)=>{
 
@@ -173,16 +156,10 @@ onSnapshot(refMatch,(snap)=>{
     odds1 = d.rcbOdds || 2;
     odds2 = d.cskOdds || 2;
 
-    pool1 = d.rcbPool || 0;
-    pool2 = d.cskPool || 0;
-
     document.getElementById("minBet").innerText = "Min Bet: ₹"+min;
 
     document.getElementById("odds1").innerText = "Odds: "+odds1+"x";
     document.getElementById("odds2").innerText = "Odds: "+odds2+"x";
-
-    document.getElementById("pool1").innerText = "Pool: ₹"+pool1;
-    document.getElementById("pool2").innerText = "Pool: ₹"+pool2;
   }
 
 });
@@ -231,7 +208,7 @@ window.placeBet = async function(){
       throw "stop";
     }
 
-    // CUT MONEY
+    // 💸 CUT MONEY
     await updateDoc(userRef,{
       balance: balance - amt,
       history:[
@@ -242,17 +219,7 @@ window.placeBet = async function(){
 
     let multiplier = selected === t1 ? odds1 : odds2;
 
-    if(selected === t1){
-      pool1 += amt;
-    } else {
-      pool2 += amt;
-    }
-
-    await updateDoc(refMatch,{
-      rcbPool:pool1,
-      cskPool:pool2
-    });
-
+    // 🔥 SAVE BET ONLY
     await setDoc(doc(db,"bets",user.email+"_"+Date.now()),{
       match,
       team:selected,
