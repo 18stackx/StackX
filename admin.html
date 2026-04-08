@@ -60,7 +60,6 @@
 
 <div id="panel" style="display:none;">
 
-  <!-- DASHBOARD -->
   <div class="card">
     <h3>📊 Admin Dashboard</h3>
     <div class="stat">💰 Profit <span id="profit">0</span></div>
@@ -69,13 +68,11 @@
     <div class="stat">📅 Today <span id="todayProfit">0</span></div>
   </div>
 
-  <!-- LIVE MATCHES -->
   <div class="card">
     <h3>🔥 Live Matches</h3>
     <div id="liveMatches"></div>
   </div>
 
-  <!-- MATCH SAVE -->
   <div class="card">
     <h3>Matches</h3>
     <input id="m1"><input id="m2"><input id="m3"><input id="m4"><input id="m5">
@@ -83,7 +80,6 @@
     <button onclick="saveMatches()">Save</button>
   </div>
 
-  <!-- BET SETTINGS -->
   <div class="card">
     <h3>Bet Settings</h3>
     <input id="bmatch" placeholder="Match (RCB vs CSK)">
@@ -93,7 +89,6 @@
     <button onclick="saveBetSettings()">Save</button>
   </div>
 
-  <!-- RESULT -->
   <div class="card">
     <h3>Result</h3>
     <input id="rmatch" placeholder="Match">
@@ -101,7 +96,6 @@
     <button onclick="declareResult()">Declare</button>
   </div>
 
-  <!-- WALLET -->
   <div class="card">
     <h3>Wallet</h3>
     <input id="uemail" placeholder="Email">
@@ -125,7 +119,7 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// LOGIN FIXED
+// LOGIN
 onAuthStateChanged(auth,(user)=>{
 
   if(!user || user.email !== "18stackx@gmail.com"){
@@ -138,7 +132,7 @@ onAuthStateChanged(auth,(user)=>{
   loadLiveMatches();
 });
 
-// STATS FIXED
+// STATS
 async function loadStats(){
 
   let snap = await getDoc(doc(db,"admin","stats"));
@@ -155,7 +149,7 @@ async function loadStats(){
   document.getElementById("totalUsers").innerText = u.size;
 }
 
-// LIVE MATCHES FIXED
+// LIVE MATCHES (date added)
 async function loadLiveMatches(){
 
   let container = document.getElementById("liveMatches");
@@ -175,6 +169,7 @@ async function loadLiveMatches(){
 
       div.innerHTML = `
         <b>${match}</b><br>
+        📅 ${d.date || "Today"}<br>
         ₹${d.rcbPool||0} vs ₹${d.cskPool||0}<br>
         <button onclick="selectMatch('${match}')">Select</button>
       `;
@@ -185,7 +180,7 @@ async function loadLiveMatches(){
   });
 }
 
-// SELECT MATCH FIXED
+// SELECT MATCH
 window.selectMatch = (match)=>{
   document.getElementById("rmatch").value = match;
 };
@@ -201,7 +196,7 @@ window.saveMatches = async ()=>{
   alert("Saved 🔥");
 };
 
-// BET SETTINGS FIXED
+// BET SETTINGS (date added)
 window.saveBetSettings = async ()=>{
 
   let match = document.getElementById("bmatch").value.trim();
@@ -221,13 +216,14 @@ window.saveBetSettings = async ()=>{
     rcbPool:0,
     cskPool:0,
     status:"live",
-    winner:null
+    winner:null,
+    date:new Date().toLocaleDateString('en-IN') // ✅ added
   },{merge:true});
 
   alert("Saved 😈");
 };
 
-// RESULT FIXED 🔥
+// RESULT (date added)
 window.declareResult = async ()=>{
 
   try{
@@ -290,7 +286,8 @@ window.declareResult = async ()=>{
 
     await updateDoc(doc(db,"matches",match),{
       status:"completed",
-      winner:winner
+      winner:winner,
+      completedDate:new Date().toLocaleDateString('en-IN') // ✅ added
     });
 
     await setDoc(doc(db,"admin","stats"),{
@@ -310,7 +307,7 @@ window.declareResult = async ()=>{
   }
 };
 
-// WALLET FIXED
+// WALLET
 document.getElementById("walletBtn").onclick = async ()=>{
 
   let email = document.getElementById("uemail").value.trim();
