@@ -53,17 +53,14 @@
 
 <div id="panel" style="display:none;">
 
-  <!-- 📊 DASHBOARD -->
   <div class="card">
     <h3>📊 Admin Dashboard</h3>
-
     <div class="stat">💰 Profit <span id="profit">0</span></div>
     <div class="stat">📊 Bets <span id="totalBets">0</span></div>
     <div class="stat">🧑 Users <span id="totalUsers">0</span></div>
     <div class="stat">📅 Today <span id="todayProfit">0</span></div>
   </div>
 
-  <!-- MATCH -->
   <div class="card">
     <h3>Matches</h3>
     <input id="m1"><input id="m2"><input id="m3"><input id="m4"><input id="m5">
@@ -71,29 +68,26 @@
     <button onclick="saveMatches()">Save</button>
   </div>
 
-  <!-- BET -->
   <div class="card">
     <h3>Bet Settings</h3>
-    <input id="bmatch" placeholder="Match">
+    <input id="bmatch" placeholder="Match (RCB vs CSK)">
     <input id="min" placeholder="Min Bet">
     <input id="t1odds" placeholder="Team1 Odds">
     <input id="t2odds" placeholder="Team2 Odds">
     <button onclick="saveBetSettings()">Save</button>
   </div>
 
-  <!-- RESULT -->
   <div class="card">
     <h3>Result</h3>
-    <input id="rmatch" placeholder="Match">
-    <input id="winnerInput" placeholder="Winner">
+    <input id="rmatch" placeholder="Match (same as above)">
+    <input id="winnerInput" placeholder="Winner (RCB)">
     <button onclick="declareResult()">Declare</button>
   </div>
 
-  <!-- WALLET -->
   <div class="card">
     <h3>Wallet</h3>
-    <input id="uemail" placeholder="Email">
-    <input id="amount" placeholder="Amount">
+    <input id="uemail" placeholder="User Email">
+    <input id="amount" placeholder="Amount (+/-)">
     <button id="walletBtn">Update</button>
   </div>
 
@@ -133,22 +127,17 @@ onAuthStateChanged(auth,(user)=>{
 // 📊 STATS
 async function loadStats(){
 
-  const profit = document.getElementById("profit");
-  const bets = document.getElementById("totalBets");
-  const users = document.getElementById("totalUsers");
-  const today = document.getElementById("todayProfit");
-
   let snap = await getDoc(doc(db,"admin","stats"));
 
   if(snap.exists()){
     let d = snap.data();
-    profit.innerText = d.profit || 0;
-    bets.innerText = d.totalBets || 0;
-    today.innerText = d.todayProfit || 0;
+    document.getElementById("profit").innerText = d.profit || 0;
+    document.getElementById("totalBets").innerText = d.totalBets || 0;
+    document.getElementById("todayProfit").innerText = d.todayProfit || 0;
   }
 
   let u = await getDocs(collection(db,"users"));
-  users.innerText = u.size;
+  document.getElementById("totalUsers").innerText = u.size;
 }
 
 // MATCH SAVE
@@ -158,14 +147,13 @@ window.saveMatches = async ()=>{
     let val = document.getElementById("m"+i).value.trim();
     if(val) data["m"+i] = val;
   }
-
   await setDoc(doc(db,"matches","today"),data,{merge:true});
   alert("Saved 🔥");
 };
 
 // BET SETTINGS
 window.saveBetSettings = async ()=>{
-  let match = document.getElementById("bmatch").value;
+  let match = document.getElementById("bmatch").value.trim();
   let min = parseInt(document.getElementById("min").value);
   let t1 = parseFloat(document.getElementById("t1odds").value);
   let t2 = parseFloat(document.getElementById("t2odds").value);
@@ -181,22 +169,86 @@ window.saveBetSettings = async ()=>{
   alert("Saved 😈");
 };
 
-// RESULT (simple)
-window.declareResult = ()=>{
-  alert("Result system working 😈");
+// 🏆 RESULT SYSTEM
+window.declareResult = async ()=>{
+
+  let match = document.getElementById("rmatch").value.trim();
+  let winner = document.getElementById("winnerInput").value.trim();
+
+  let betsSnap = await getDocs(collection(db,"bets"));
+
+  let totalBet = 0;
+  let totalPayout = 0;
+  let count = 0;
+
+  for(let b of betsSnap.docs){
+
+    let data = b.data();
+
+    if(data.match === match && data.status !== "done"){
+
+      totalBet += data.amount;
+
+      let userRef = doc(db,"users",data.user);
+      let userSnap = await getDoc(userRef);
+
+      let userData = userSnap.data();
+      let balance = userData.balance || 0;
+
+      if(data.team === winner){
+
+        let winAmt = Math.floor(data.amount * data.multiplier);
+        totalPayout += winAmt;
+
+        await updateDoc(userRef,{
+          balance: balance + winAmt,
+          history:[...(userData.history||[]),{type:"win",amt:winAmt,time:new Date().toLocaleString()}]
+        });
+
+      } else {
+
+        await updateDoc(userRef,{
+          history:[...(userData.history||[]),{type:"loss",amt:data.amount,time:new Date().toLocaleString()}]
+        });
+
+      }
+
+      await updateDoc(doc(db,"bets",b.id),{status:"done",winner});
+      count++;
+    }
+  }
+
+  let profit = totalBet - totalPayout;
+
+  await setDoc(doc(db,"admin","stats"),{
+    profit,
+    totalBets:count,
+    todayProfit:profit
+  },{merge:true});
+
+  alert("Result Done 😈🔥 Profit ₹"+profit);
+  loadStats();
 };
 
 // WALLET
 document.getElementById("walletBtn").onclick = async ()=>{
+
   let email = document.getElementById("uemail").value;
   let amt = parseInt(document.getElementById("amount").value);
 
   const ref = doc(db,"users",email);
   const snap = await getDoc(ref);
 
+  let type = amt>0 ? "deposit":"withdraw";
+
   if(snap.exists()){
-    let bal = (snap.data().balance||0)+amt;
-    await updateDoc(ref,{balance:bal});
+    let data = snap.data();
+    let newBal = (data.balance||0)+amt;
+
+    await updateDoc(ref,{
+      balance:newBal,
+      history:[...(data.history||[]),{type,amt:Math.abs(amt),time:new Date().toLocaleString()}]
+    });
   }
 
   alert("Updated 💰");
