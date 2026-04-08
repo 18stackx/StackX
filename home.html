@@ -149,7 +149,6 @@ const auth = getAuth(app);
 // BONUS
 onAuthStateChanged(auth, async (user)=>{
   if(user){
-
     const userRef = doc(db,"users",user.email);
     const snap = await getDoc(userRef);
 
@@ -159,17 +158,15 @@ onAuthStateChanged(auth, async (user)=>{
         history:[{type:"bonus",amt:70,time:new Date().toLocaleString()}]
       });
 
-      document.getElementById("balance").innerText = 70;
+      balance.innerText = 70;
       alert("🎁 ₹70 Welcome Bonus Added!");
-
     } else {
-      document.getElementById("balance").innerText =
-        snap.data().balance || 0;
+      balance.innerText = snap.data().balance || 0;
     }
   }
 });
 
-// ✅ FIXED LOAD MATCHES (NEW SYSTEM)
+// 🔥 FIXED MATCH LOAD (CORRECT)
 async function loadMatches(){
   let snap = await getDoc(doc(db,"matches","today"));
   let container = document.getElementById("matches");
@@ -178,7 +175,9 @@ async function loadMatches(){
   if(snap.exists()){
     let data = snap.data();
 
-    for(let match in data){
+    for(let key in data){
+
+      let match = data[key]; // ✅ FIX
 
       let matchRef = await getDoc(doc(db,"matches",match));
       if(!matchRef.exists()) continue;
@@ -212,7 +211,7 @@ async function loadMatches(){
   }
 }
 
-// COMPLETED MATCHES SAME
+// COMPLETED SAME
 async function loadCompleted(){
   let container = document.getElementById("completedMatches");
   container.innerHTML = "";
@@ -251,8 +250,7 @@ function getUsers(){
 }
 
 setInterval(()=>{
-  document.getElementById("onlineUsers").innerText =
-    "🔥 " + getUsers() + " users online";
+  onlineUsers.innerText = "🔥 " + getUsers() + " users online";
 },3000);
 
 function openMatch(name){
