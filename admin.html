@@ -72,8 +72,8 @@
     <h3>Bet Settings</h3>
     <input id="bmatch" placeholder="Match (RCB vs CSK)">
     <input id="min" placeholder="Min Bet">
-    <input id="t1odds" placeholder="Team1 Odds">
-    <input id="t2odds" placeholder="Team2 Odds">
+    <input id="t1odds" placeholder="Team1 Odds (max 3)">
+    <input id="t2odds" placeholder="Team2 Odds (max 3)">
     <button onclick="saveBetSettings()">Save</button>
   </div>
 
@@ -151,12 +151,17 @@ window.saveMatches = async ()=>{
   alert("Saved 🔥");
 };
 
-// BET SETTINGS
+// BET SETTINGS (🔥 MAX 3x LIMIT)
 window.saveBetSettings = async ()=>{
   let match = document.getElementById("bmatch").value.trim();
   let min = parseInt(document.getElementById("min").value);
   let t1 = parseFloat(document.getElementById("t1odds").value);
   let t2 = parseFloat(document.getElementById("t2odds").value);
+
+  if(t1 > 3 || t2 > 3){
+    alert("Max 3x allowed ❌");
+    return;
+  }
 
   await setDoc(doc(db,"matches",match),{
     minBet:min,
@@ -169,7 +174,7 @@ window.saveBetSettings = async ()=>{
   alert("Saved 😈");
 };
 
-// 🏆 RESULT SYSTEM
+// 🏆 RESULT SYSTEM (🔥 SAFE + 10% COMMISSION)
 window.declareResult = async ()=>{
 
   let match = document.getElementById("rmatch").value.trim();
@@ -195,9 +200,12 @@ window.declareResult = async ()=>{
       let userData = userSnap.data();
       let balance = userData.balance || 0;
 
+      // 🔒 SAFE ODDS LIMIT
+      let safeOdds = Math.min(data.multiplier, 3);
+
       if(data.team === winner){
 
-        let winAmt = Math.floor(data.amount * data.multiplier);
+        let winAmt = Math.floor(data.amount * safeOdds * 0.9); // 10% commission
         totalPayout += winAmt;
 
         await updateDoc(userRef,{
@@ -230,7 +238,7 @@ window.declareResult = async ()=>{
   loadStats();
 };
 
-// WALLET
+// WALLET (HISTORY FIX)
 document.getElementById("walletBtn").onclick = async ()=>{
 
   let email = document.getElementById("uemail").value;
