@@ -169,7 +169,7 @@ onAuthStateChanged(auth, async (user)=>{
   }
 });
 
-// 🔥 LIVE MATCHES (LIVE BADGE ADDED)
+// ✅ FIXED LOAD MATCHES (NEW SYSTEM)
 async function loadMatches(){
   let snap = await getDoc(doc(db,"matches","today"));
   let container = document.getElementById("matches");
@@ -178,9 +178,7 @@ async function loadMatches(){
   if(snap.exists()){
     let data = snap.data();
 
-    for(let i=1;i<=10;i++){
-      let match = data["m"+i];
-      if(!match) continue;
+    for(let match in data){
 
       let matchRef = await getDoc(doc(db,"matches",match));
       if(!matchRef.exists()) continue;
@@ -189,7 +187,6 @@ async function loadMatches(){
 
       if(d.status === "completed") continue;
 
-      // 🔴 LIVE CHECK
       let isLive = false;
 
       if(d.lockTime){
@@ -215,7 +212,7 @@ async function loadMatches(){
   }
 }
 
-// COMPLETED MATCHES (DATE ADDED)
+// COMPLETED MATCHES SAME
 async function loadCompleted(){
   let container = document.getElementById("completedMatches");
   container.innerHTML = "";
