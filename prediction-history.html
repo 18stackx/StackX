@@ -1,1 +1,173 @@
-f
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prediction History</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+
+    body{
+      background:#0f0f1a;
+      color:white;
+      padding-bottom:80px;
+    }
+
+    h2{
+      text-align:center;
+      margin:15px;
+    }
+
+    input{
+      width:90%;
+      padding:10px;
+      margin:10px;
+      border:none;
+      border-radius:10px;
+    }
+
+    .box{
+      background:rgba(255,255,255,0.05);
+      margin:15px;
+      padding:15px;
+      border-radius:15px;
+    }
+
+    .card{
+      background:#111827;
+      padding:12px;
+      margin:10px 0;
+      border-radius:10px;
+    }
+
+    .nav{
+      position:fixed;
+      bottom:0;
+      width:100%;
+      background:rgba(0,0,0,0.7);
+      display:flex;
+      justify-content:space-around;
+      padding:12px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>🎯 Prediction History</h2>
+
+<input id="filterMatch" placeholder="Search match...">
+
+<div class="box">
+  <div id="history"></div>
+</div>
+
+<div class="nav">
+  <div onclick="goHome()">🏠</div>
+  <div onclick="goMatch()">🎮</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
+  authDomain:"stackx-9f92e.firebaseapp.com",
+  projectId:"stackx-9f92e"
+});
+
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// 🔥 LOAD HISTORY
+async function loadHistory(){
+
+  const user = auth.currentUser;
+  if(!user) return;
+
+  let container = document.getElementById("history");
+  container.innerHTML = "";
+
+  let filter = document.getElementById("filterMatch").value.toLowerCase();
+
+  let betsSnap = await getDocs(collection(db,"predBets"));
+  let predSnap = await getDocs(collection(db,"predictions"));
+
+  let predMap = {};
+
+  predSnap.forEach(doc=>{
+    predMap[doc.id] = doc.data();
+  });
+
+  betsSnap.forEach(docSnap=>{
+    let d = docSnap.data();
+
+    if(d.user === user.email){
+
+      let pred = predMap[d.predictionId];
+      if(!pred) return;
+
+      let matchName = pred.match || "";
+
+      if(filter && !matchName.toLowerCase().includes(filter)) return;
+
+      let status = "Pending";
+      let color = "#facc15";
+
+      if(pred.status === "completed"){
+        if(pred.correct === d.option){
+          status = "WIN";
+          color = "#22c55e";
+        } else {
+          status = "LOSS";
+          color = "#ef4444";
+        }
+      }
+
+      let profit = pred.correct === d.option 
+        ? Math.floor(d.amount * d.return * 0.9) - d.amount
+        : -d.amount;
+
+      let div = document.createElement("div");
+      div.className = "card";
+
+      div.innerHTML = `
+        <b>${matchName}</b><br>
+        ${pred.question}<br><br>
+
+        👉 ${d.option}<br>
+        💰 ₹${d.amount}<br>
+
+        📊 <span style="color:${color}">${status}</span><br>
+        📈 P/L: ₹${profit}<br>
+
+        📅 ${d.time || "-"}
+      `;
+
+      container.appendChild(div);
+    }
+  });
+
+  if(container.innerHTML===""){
+    container.innerHTML = "No history 😴";
+  }
+}
+
+loadHistory();
+
+// 🔁 FILTER
+document.getElementById("filterMatch").oninput = loadHistory;
+
+</script>
+
+<script>
+window.goHome = ()=> location.href="home.html";
+window.goMatch = ()=> location.href="match.html";
+</script>
+
+</body>
+</html>
