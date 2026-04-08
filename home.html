@@ -7,46 +7,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
 
   <style>
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-      font-family:'Poppins',sans-serif;
-    }
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
 
     body{
       background:#0f0f1a;
       color:white;
       padding-bottom:80px;
-      overflow-x:hidden;
     }
 
-    /* 🔥 GLOW BG */
-    body::before{
-      content:'';
-      position:fixed;
-      width:600px;
-      height:600px;
-      background:radial-gradient(circle, rgba(255,0,80,0.25), transparent 70%);
-      top:-200px;
-      left:-200px;
-      filter:blur(120px);
-      z-index:-1;
-    }
-
-    body::after{
-      content:'';
-      position:fixed;
-      width:600px;
-      height:600px;
-      background:radial-gradient(circle, rgba(0,150,255,0.25), transparent 70%);
-      bottom:-200px;
-      right:-200px;
-      filter:blur(120px);
-      z-index:-1;
-    }
-
-    /* 🔥 HEADER */
     .header{
       display:flex;
       align-items:center;
@@ -55,95 +23,41 @@
       margin-top:15px;
     }
 
-    .header img{
-      width:42px;
-      border-radius:12px;
-    }
+    .header img{width:42px;border-radius:12px;}
+    .trusted{font-size:12px;color:#22c55e;}
 
-    .trusted{
-      font-size:12px;
-      color:#22c55e;
-    }
+    h2{text-align:center;margin-top:10px;}
 
-    h2{
-      text-align:center;
-      margin-top:10px;
-      font-weight:600;
-    }
-
-    /* 🔥 BOX */
     .box{
       background:rgba(255,255,255,0.05);
       margin:15px;
       padding:20px;
       border-radius:20px;
-      backdrop-filter:blur(12px);
-      transition:0.3s;
     }
 
-    .box:hover{
-      background:rgba(255,255,255,0.07);
-    }
-
-    /* 🔥 WALLET CARD SPECIAL */
-    .walletCard{
-      border:1px solid rgba(255,0,80,0.2);
-      box-shadow:0 0 20px rgba(255,0,80,0.1);
-    }
-
-    /* 🔥 MATCH */
     .match{
       background:rgba(255,255,255,0.05);
       padding:15px;
       margin:10px 0;
       border-radius:15px;
       cursor:pointer;
-      transition:0.3s;
-      border:1px solid transparent;
     }
 
-    .match:hover{
-      transform:translateY(-6px);
-      background:rgba(255,255,255,0.08);
-      border:1px solid rgba(255,0,80,0.4);
-    }
-
-    /* 🔥 NAV */
     .nav{
       position:fixed;
       bottom:0;
       width:100%;
       background:rgba(0,0,0,0.7);
-      backdrop-filter:blur(12px);
       display:flex;
       justify-content:space-around;
       padding:12px;
-      z-index:999;
     }
 
-    .nav div{
-      cursor:pointer;
-      font-size:14px;
-      transition:0.2s;
-    }
-
-    .nav div:hover{
-      color:#ff2a2a;
-    }
-
-    /* 🔥 SUPPORT */
     .supportBox{
       position:fixed;
       bottom:100px;
       left:10px;
-      z-index:999;
       text-align:center;
-    }
-
-    .supportText{
-      font-size:12px;
-      margin-bottom:5px;
-      color:#9ca3af;
     }
 
     .tg{
@@ -154,28 +68,14 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      transition:0.3s;
     }
 
-    .tg:hover{
-      transform:scale(1.1);
-    }
-
-    .tg img{
-      width:28px;
-    }
-
-    .note{
-      font-size:13px;
-      color:#9ca3af;
-      line-height:1.6;
-    }
+    .tg img{width:28px;}
   </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <img src="logo.png">
   <div>
@@ -186,38 +86,18 @@
 
 <h2>🏏 Cricket Fantasy</h2>
 
-<div class="box walletCard">
+<div class="box">
   <h3>💰 Wallet: ₹<span id="balance">--</span></h3>
 </div>
 
+<!-- 🔥 MATCHES CONTAINER -->
 <div class="box">
   <h3>🔥 Live Matches</h3>
-
-  <div id="m1" class="match" onclick="openMatch('m1')">Loading...</div>
-  <div id="m2" class="match" onclick="openMatch('m2')">Loading...</div>
-  <div id="m3" class="match" onclick="openMatch('m3')">Loading...</div>
-</div>
-
-<div class="box">
-  <h3>📜 Terms & Conditions</h3>
-
-  <p class="note">
-    • Minimum deposit: ₹300<br>
-    • Minimum withdrawal: ₹700<br><br>
-
-    • Deposits are non-refundable<br>
-    • Bonus offers may change<br><br>
-
-    • Platform may charge fees<br>
-    • Withdraw within 24 hrs<br><br>
-
-    • Misuse = account restriction
-  </p>
+  <div id="matches"></div>
 </div>
 
 <!-- SUPPORT -->
 <div class="supportBox">
-  <div class="supportText">Support</div>
   <a href="https://t.me/stackx_admin" target="_blank" class="tg">
     <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png">
   </a>
@@ -232,7 +112,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const app = initializeApp({
@@ -244,21 +124,49 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+// 🔥 LOAD MATCHES (UPTO 10)
 async function loadMatches(){
-  let snap = await getDoc(doc(db,"matches","today"));
-  if(snap.exists()){
-    let data = snap.data();
-    m1.innerText=data.m1||"No Match";
-    m2.innerText=data.m2||"No Match";
-    m3.innerText=data.m3||"No Match";
-  }
+
+  let snap = await getDocs(collection(db,"matches"));
+
+  let container = document.getElementById("matches");
+  container.innerHTML = "";
+
+  let count = 0;
+
+  snap.forEach(docSnap=>{
+
+    if(count >= 10) return; // 🔥 max 10 match
+
+    let d = docSnap.data();
+
+    if(d.status !== "live") return;
+
+    let div = document.createElement("div");
+    div.className = "match";
+
+    div.innerHTML = `
+      <b>${d.team1} vs ${d.team2}</b><br><br>
+      ${d.team1}: ${d.prob1}%<br>
+      ${d.team2}: ${d.prob2}%<br><br>
+
+      <button onclick="openMatch('${docSnap.id}','${d.team1} vs ${d.team2}')">
+        Play Now 🔥
+      </button>
+    `;
+
+    container.appendChild(div);
+    count++;
+  });
+
 }
 
+// 🔥 WALLET LOAD
 onAuthStateChanged(auth, async (user)=>{
   if(user){
     let snap = await getDoc(doc(db,"users",user.email));
     if(snap.exists()){
-      balance.innerText=snap.data().balance||0;
+      document.getElementById("balance").innerText = snap.data().balance || 0;
     }
   }
 });
@@ -267,13 +175,14 @@ loadMatches();
 </script>
 
 <script>
-function openMatch(id){
-  let name=document.getElementById(id).innerText;
+// 🔥 MATCH OPEN
+function openMatch(id,name){
   localStorage.setItem("matchId",id);
   localStorage.setItem("matchName",name);
   window.location.href="match.html";
 }
 
+// NAV
 window.goHome=()=>location.href="home.html";
 window.goProfile=()=>location.href="profile.html";
 window.goWallet=()=>location.href="wallet.html";
