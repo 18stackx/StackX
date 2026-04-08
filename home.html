@@ -95,50 +95,33 @@
   <h3>💰 Wallet: ₹<span id="balance">--</span></h3>
 </div>
 
-<!-- 🔥 LIVE MATCHES -->
 <div class="box">
   <h3>🔥 Live Matches</h3>
   <div id="matches"></div>
 </div>
 
-<!-- 🏁 COMPLETED MATCHES -->
 <div class="box">
   <h3>🏁 Completed Matches</h3>
   <div id="completedMatches"></div>
 </div>
 
-<!-- 📜 RULES FULL -->
 <div class="box">
   <h3>📜 Rules & Fair Play</h3>
 
   <p class="rulesText">
-
   • 🎯 All bets are final once placed. Cancellation is not allowed under any condition.<br><br>
-
   • 💰 Bet amount is deducted instantly from your wallet at the time of placing the bet.<br><br>
-
   • 🏆 Winnings are credited only after the admin officially declares the result.<br><br>
-
   • ⚠️ In case of match cancellation, draw, or technical issues → refund may be processed manually.<br><br>
-
   • 📊 Odds are controlled by admin and may change anytime before placing a bet. Once placed, your odds are locked.<br><br>
-
   • 💸 Maximum return is capped (up to 3x of bet amount).<br><br>
-
   • 🔻 A platform fee (approx. 10%) is deducted from winning amount.<br><br>
-
   • 🚫 Multiple accounts, abuse, or suspicious activity will lead to instant account ban without notice.<br><br>
-
   • 🔐 All decisions taken by the platform/admin will be final in case of disputes.<br><br>
-
   • 💳 Withdrawals are usually processed within a short time but may take longer in some cases.<br><br>
-
   • 🎮 This platform is intended for entertainment and skill-based prediction only.<br><br>
-
   • 🔞 Users must be 18 years or older to participate.<br><br>
-
   • 🚫 This platform does not support or promote illegal gambling activities.
-
   </p>
 </div>
 
@@ -163,41 +146,30 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 🔥 BONUS + WALLET LOAD
+// BONUS
 onAuthStateChanged(auth, async (user)=>{
   if(user){
 
     const userRef = doc(db,"users",user.email);
     const snap = await getDoc(userRef);
 
-    // 🆕 NEW USER → BONUS
     if(!snap.exists()){
-
       await setDoc(userRef,{
         balance:70,
-        history:[
-          {
-            type:"bonus",
-            amt:70,
-            time:new Date().toLocaleString()
-          }
-        ]
+        history:[{type:"bonus",amt:70,time:new Date().toLocaleString()}]
       });
 
       document.getElementById("balance").innerText = 70;
-
       alert("🎁 ₹70 Welcome Bonus Added!");
 
     } else {
-
       document.getElementById("balance").innerText =
         snap.data().balance || 0;
-
     }
-
   }
 });
 
+// LIVE MATCHES (DATE ADDED)
 async function loadMatches(){
   let snap = await getDoc(doc(db,"matches","today"));
   let container = document.getElementById("matches");
@@ -222,6 +194,7 @@ async function loadMatches(){
 
       div.innerHTML = `
         <b>${match}</b><br>
+        📅 ${d.date || "Today"}<br>
         <button class="playBtn" onclick="openMatch('${match}')">Play</button>
       `;
 
@@ -230,6 +203,7 @@ async function loadMatches(){
   }
 }
 
+// COMPLETED MATCHES (DATE ADDED)
 async function loadCompleted(){
   let container = document.getElementById("completedMatches");
   container.innerHTML = "";
@@ -245,7 +219,8 @@ async function loadCompleted(){
 
       div.innerHTML = `
         <b>${docSnap.id}</b><br>
-        Winner: ${d.winner} 🏆
+        🏆 Winner: ${d.winner}<br>
+        📅 ${d.completedDate || d.date || "-"}
       `;
 
       container.appendChild(div);
