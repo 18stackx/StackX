@@ -5,49 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body{
-      background:#0b0f1a;
-      color:white;
-      font-family:Arial;
-      margin:0;
-    }
-    .card{
-      background:#1f2937;
-      padding:20px;
-      margin:20px;
-      border-radius:12px;
-      max-width:400px;
-      margin:auto;
-      margin-top:20px;
-    }
-    input{
-      width:100%;
-      padding:10px;
-      margin:8px 0;
-      border:none;
-      border-radius:8px;
-    }
-    button{
-      width:100%;
-      padding:12px;
-      border:none;
-      border-radius:8px;
-      background:#22c55e;
-      color:white;
-      margin-top:10px;
-      font-weight:bold;
-    }
-    .stat{
-      display:flex;
-      justify-content:space-between;
-      margin:8px 0;
-    }
-    .liveMatch{
-      background:#111;
-      padding:10px;
-      margin-top:10px;
-      border-radius:10px;
-    }
+    body{background:#0b0f1a;color:white;font-family:Arial;margin:0;}
+    .card{background:#1f2937;padding:20px;margin:20px;border-radius:12px;max-width:400px;margin:auto;margin-top:20px;}
+    input{width:100%;padding:10px;margin:8px 0;border:none;border-radius:8px;}
+    button{width:100%;padding:12px;border:none;border-radius:8px;background:#22c55e;color:white;margin-top:10px;font-weight:bold;}
+    .stat{display:flex;justify-content:space-between;margin:8px 0;}
+    .liveMatch{background:#111;padding:10px;margin-top:10px;border-radius:10px;}
   </style>
 </head>
 
@@ -69,41 +32,49 @@
   </div>
 
   <div class="card">
-    <h3>Matches</h3>
-    <input id="m1"><input id="m2"><input id="m3"><input id="m4"><input id="m5">
-    <input id="m6"><input id="m7"><input id="m8"><input id="m9"><input id="m10">
-    <button onclick="saveMatches()">Save</button>
+    <h3>📌 Add Matches (Home Page)</h3>
+    <input id="m1" placeholder="Match 1">
+    <input id="m2" placeholder="Match 2">
+    <input id="m3" placeholder="Match 3">
+    <input id="m4" placeholder="Match 4">
+    <input id="m5" placeholder="Match 5">
+    <input id="m6" placeholder="Match 6">
+    <input id="m7" placeholder="Match 7">
+    <input id="m8" placeholder="Match 8">
+    <input id="m9" placeholder="Match 9">
+    <input id="m10" placeholder="Match 10">
+    <button onclick="saveMatches()">Save Matches</button>
   </div>
 
   <div class="card">
-    <h3>Bet Settings</h3>
-    <input id="bmatch">
-    <input id="minBetInput">
-    <input id="t1odds">
-    <input id="t2odds">
+    <h3>⚙️ Bet Settings</h3>
+    <input id="bmatch" placeholder="Match Name">
+    <input id="minBetInput" placeholder="Min Bet">
+    <input id="t1odds" placeholder="Team1 Odds">
+    <input id="t2odds" placeholder="Team2 Odds">
     <input id="lockTime" type="datetime-local">
-    <button onclick="saveBetSettings()">Save</button>
+    <button onclick="saveBetSettings()">Start Match</button>
   </div>
 
   <div class="card">
-    <h3>Result</h3>
-    <input id="rmatch">
-    <input id="winnerInput">
+    <h3>🏆 Declare Result</h3>
+    <input id="rmatch" placeholder="Match">
+    <input id="winnerInput" placeholder="Winner">
     <button onclick="declareResult()">Declare</button>
   </div>
 
   <div class="card">
     <h3>🎯 Prediction System</h3>
 
-    <input id="pMatch">
-    <input id="pQuestion">
+    <input id="pMatch" placeholder="Match">
+    <input id="pQuestion" placeholder="Question">
 
-    <input id="opt1">
-    <input id="ret1">
-    <input id="opt2">
-    <input id="ret2">
-    <input id="opt3">
-    <input id="ret3">
+    <input id="opt1" placeholder="Option 1">
+    <input id="ret1" placeholder="Return">
+    <input id="opt2" placeholder="Option 2">
+    <input id="ret2" placeholder="Return">
+    <input id="opt3" placeholder="Option 3">
+    <input id="ret3" placeholder="Return">
 
     <input id="pLockTime" type="datetime-local">
 
@@ -111,15 +82,15 @@
 
     <hr>
 
-    <input id="predId">
-    <input id="correctOpt">
+    <input id="predId" placeholder="Prediction ID">
+    <input id="correctOpt" placeholder="Correct Option">
     <button onclick="declarePrediction()">Declare</button>
   </div>
 
   <div class="card">
-    <h3>Wallet</h3>
-    <input id="uemail">
-    <input id="amount">
+    <h3>💰 Wallet</h3>
+    <input id="uemail" placeholder="Email">
+    <input id="amount" placeholder="Amount">
     <button id="walletBtn">Update</button>
   </div>
 
@@ -145,12 +116,10 @@ onAuthStateChanged(auth,(user)=>{
     alert("Access Denied ❌");
     return;
   }
-  panel.style.display="block";
-  loadStats();
-  loadLiveMatches();
+  document.getElementById("panel").style.display="block";
 });
 
-// ✅ SAVE MATCH LIST (IMPORTANT)
+// SAVE MATCHES
 window.saveMatches = async ()=>{
   let data = {};
   for(let i=1;i<=10;i++){
@@ -161,12 +130,9 @@ window.saveMatches = async ()=>{
   alert("Saved 🔥");
 };
 
-// ✅ BET SETTINGS (FIXED)
+// BET SETTINGS
 window.saveBetSettings = async ()=>{
-
-  let match = bmatch.value.trim();
-
-  await setDoc(doc(db,"matches",match),{
+  await setDoc(doc(db,"matches",bmatch.value.trim()),{
     minBet:parseInt(minBetInput.value),
     rcbOdds:parseFloat(t1odds.value),
     cskOdds:parseFloat(t2odds.value),
@@ -174,11 +140,10 @@ window.saveBetSettings = async ()=>{
     lockTime:lockTime.value,
     date:new Date().toLocaleDateString('en-IN')
   },{merge:true});
-
   alert("Match Live 😈");
 };
 
-// ✅ RESULT
+// RESULT
 window.declareResult = async ()=>{
   let match = rmatch.value.trim();
   let winner = winnerInput.value.trim();
@@ -189,10 +154,8 @@ window.declareResult = async ()=>{
     let data = b.data();
 
     if(data.match === match && data.status !== "done"){
-
       let userRef = doc(db,"users",data.user);
-      let userSnap = await getDoc(userRef);
-      let u = userSnap.data();
+      let u = (await getDoc(userRef)).data();
 
       if(data.team === winner){
         let win = Math.floor(data.amount * data.multiplier * 0.9);
@@ -203,15 +166,62 @@ window.declareResult = async ()=>{
     }
   }
 
-  await updateDoc(doc(db,"matches",match),{
-    status:"completed",
-    winner
-  });
-
+  await updateDoc(doc(db,"matches",match),{status:"completed",winner});
   alert("Result Done 🔥");
 };
 
-// ✅ WALLET FIX
+// PREDICTION SAVE
+window.savePrediction = async ()=>{
+  let id = "pred_"+Date.now();
+
+  await setDoc(doc(db,"predictions",id),{
+    match:pMatch.value.trim(),
+    question:pQuestion.value.trim(),
+    options:[
+      {name:opt1.value,return:parseFloat(ret1.value)},
+      {name:opt2.value,return:parseFloat(ret2.value)},
+      {name:opt3.value,return:parseFloat(ret3.value)}
+    ],
+    lockTime:pLockTime.value,
+    status:"live"
+  });
+
+  alert("Question Added 🔥");
+};
+
+// DECLARE PREDICTION
+window.declarePrediction = async ()=>{
+  let id = predId.value.trim();
+  let correct = correctOpt.value.trim();
+
+  let betsSnap = await getDocs(collection(db,"predBets"));
+
+  for(let b of betsSnap.docs){
+    let data = b.data();
+
+    if(data.predictionId === id && data.status !== "done"){
+
+      let userRef = doc(db,"users",data.user);
+      let u = (await getDoc(userRef)).data();
+
+      if(data.option === correct){
+        let win = Math.floor(data.amount * data.return * 0.9);
+        await updateDoc(userRef,{balance:(u.balance||0)+win});
+      }
+
+      await updateDoc(doc(db,"predBets",b.id),{status:"done"});
+    }
+  }
+
+  await updateDoc(doc(db,"predictions",id),{
+    status:"completed",
+    correct
+  });
+
+  alert("Prediction Done 😈");
+};
+
+// WALLET
 walletBtn.onclick = async ()=>{
   let ref = doc(db,"users",uemail.value.trim());
   let snap = await getDoc(ref);
