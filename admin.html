@@ -86,6 +86,10 @@
     <input id="minBetInput" placeholder="Min Bet">
     <input id="t1odds" placeholder="Team1 Odds (max 3)">
     <input id="t2odds" placeholder="Team2 Odds (max 3)">
+
+    <!-- 🔥 NEW TIME LOCK -->
+    <input id="lockTime" type="datetime-local">
+
     <button onclick="saveBetSettings()">Save</button>
   </div>
 
@@ -157,6 +161,35 @@ onAuthStateChanged(auth,(user)=>{
   loadStats();
   loadLiveMatches();
 });
+
+// 🔥 BET SETTINGS WITH TIME LOCK
+window.saveBetSettings = async ()=>{
+
+  let match = document.getElementById("bmatch").value.trim();
+  let minBet = parseInt(document.getElementById("minBetInput").value);
+  let t1 = Math.min(parseFloat(document.getElementById("t1odds").value),3);
+  let t2 = Math.min(parseFloat(document.getElementById("t2odds").value),3);
+  let lockTime = document.getElementById("lockTime").value;
+
+  if(!match || isNaN(minBet) || isNaN(t1) || isNaN(t2)){
+    alert("Fill properly ❌");
+    return;
+  }
+
+  await setDoc(doc(db,"matches",match),{
+    minBet,
+    rcbOdds:t1,
+    cskOdds:t2,
+    rcbPool:0,
+    cskPool:0,
+    status:"live",
+    winner:null,
+    date:new Date().toLocaleDateString('en-IN'),
+    lockTime:lockTime // 🔥 ADDED
+  },{merge:true});
+
+  alert("Saved 😈");
+};
 
 // 🔥 QUESTION SAVE
 window.savePrediction = async ()=>{
