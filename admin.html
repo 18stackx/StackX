@@ -46,6 +46,13 @@
       justify-content:space-between;
       margin:8px 0;
     }
+
+    .liveMatch{
+      background:#111;
+      padding:10px;
+      margin-top:10px;
+      border-radius:10px;
+    }
   </style>
 </head>
 
@@ -53,6 +60,7 @@
 
 <div id="panel" style="display:none;">
 
+  <!-- 📊 DASHBOARD -->
   <div class="card">
     <h3>📊 Admin Dashboard</h3>
     <div class="stat">💰 Profit <span id="profit">0</span></div>
@@ -61,6 +69,13 @@
     <div class="stat">📅 Today <span id="todayProfit">0</span></div>
   </div>
 
+  <!-- 🔥 LIVE MATCHES -->
+  <div class="card">
+    <h3>🔥 Live Matches</h3>
+    <div id="liveMatches"></div>
+  </div>
+
+  <!-- MATCH SAVE -->
   <div class="card">
     <h3>Matches</h3>
     <input id="m1"><input id="m2"><input id="m3"><input id="m4"><input id="m5">
@@ -68,6 +83,7 @@
     <button onclick="saveMatches()">Save</button>
   </div>
 
+  <!-- BET SETTINGS -->
   <div class="card">
     <h3>Bet Settings</h3>
     <input id="bmatch" placeholder="Match (RCB vs CSK)">
@@ -77,17 +93,19 @@
     <button onclick="saveBetSettings()">Save</button>
   </div>
 
+  <!-- RESULT -->
   <div class="card">
     <h3>Result</h3>
-    <input id="rmatch" placeholder="Match (same as above)">
-    <input id="winnerInput" placeholder="Winner (RCB)">
+    <input id="rmatch" placeholder="Match">
+    <input id="winnerInput" placeholder="Winner">
     <button onclick="declareResult()">Declare</button>
   </div>
 
+  <!-- WALLET -->
   <div class="card">
     <h3>Wallet</h3>
-    <input id="uemail" placeholder="User Email">
-    <input id="amount" placeholder="Amount (+/-)">
+    <input id="uemail" placeholder="Email">
+    <input id="amount" placeholder="Amount">
     <button id="walletBtn">Update</button>
   </div>
 
@@ -107,21 +125,17 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 🔐 ADMIN LOGIN
+// 🔐 LOGIN
 onAuthStateChanged(auth,(user)=>{
 
-  if(!user){
-    alert("Login required ❌");
-    return;
-  }
-
-  if(user.email !== "18stackx@gmail.com"){
+  if(!user || user.email !== "18stackx@gmail.com"){
     alert("Access Denied ❌");
     return;
   }
 
-  document.getElementById("panel").style.display="block";
+  panel.style.display="block";
   loadStats();
+  loadLiveMatches();
 });
 
 // 📊 STATS
@@ -131,14 +145,49 @@ async function loadStats(){
 
   if(snap.exists()){
     let d = snap.data();
-    document.getElementById("profit").innerText = d.profit || 0;
-    document.getElementById("totalBets").innerText = d.totalBets || 0;
-    document.getElementById("todayProfit").innerText = d.todayProfit || 0;
+    profit.innerText = d.profit || 0;
+    totalBets.innerText = d.totalBets || 0;
+    todayProfit.innerText = d.todayProfit || 0;
   }
 
   let u = await getDocs(collection(db,"users"));
-  document.getElementById("totalUsers").innerText = u.size;
+  totalUsers.innerText = u.size;
 }
+
+// 🔥 LIVE MATCH LIST
+async function loadLiveMatches(){
+
+  let container = document.getElementById("liveMatches");
+  container.innerHTML = "";
+
+  let snap = await getDocs(collection(db,"matches"));
+
+  snap.forEach(docSnap=>{
+
+    let d = docSnap.data();
+    let match = docSnap.id;
+
+    if(d.status !== "completed"){
+
+      let div = document.createElement("div");
+      div.className = "liveMatch";
+
+      div.innerHTML = `
+        <b>${match}</b><br>
+        ₹${d.rcbPool||0} vs ₹${d.cskPool||0}<br>
+        <button onclick="selectMatch('${match}')">Select</button>
+      `;
+
+      container.appendChild(div);
+    }
+
+  });
+}
+
+// CLICK MATCH
+window.selectMatch = (match)=>{
+  rmatch.value = match;
+};
 
 // MATCH SAVE
 window.saveMatches = async ()=>{
@@ -151,34 +200,31 @@ window.saveMatches = async ()=>{
   alert("Saved 🔥");
 };
 
-// BET SETTINGS (🔥 MAX 3x LIMIT)
+// BET SETTINGS
 window.saveBetSettings = async ()=>{
-  let match = document.getElementById("bmatch").value.trim();
-  let min = parseInt(document.getElementById("min").value);
-  let t1 = parseFloat(document.getElementById("t1odds").value);
-  let t2 = parseFloat(document.getElementById("t2odds").value);
-
-  if(t1 > 3 || t2 > 3){
-    alert("Max 3x allowed ❌");
-    return;
-  }
+  let match = bmatch.value.trim();
+  let min = parseInt(min.value);
+  let t1 = Math.min(parseFloat(t1odds.value),3);
+  let t2 = Math.min(parseFloat(t2odds.value),3);
 
   await setDoc(doc(db,"matches",match),{
     minBet:min,
     rcbOdds:t1,
     cskOdds:t2,
     rcbPool:0,
-    cskPool:0
-  });
+    cskPool:0,
+    status:"live",
+    winner:null
+  },{merge:true});
 
   alert("Saved 😈");
 };
 
-// 🏆 RESULT SYSTEM (🔥 SAFE + 10% COMMISSION)
+// 🏆 RESULT
 window.declareResult = async ()=>{
 
-  let match = document.getElementById("rmatch").value.trim();
-  let winner = document.getElementById("winnerInput").value.trim();
+  let match = rmatch.value.trim();
+  let winner = winnerInput.value.trim();
 
   let betsSnap = await getDocs(collection(db,"bets"));
 
@@ -197,19 +243,19 @@ window.declareResult = async ()=>{
       let userRef = doc(db,"users",data.user);
       let userSnap = await getDoc(userRef);
 
-      let userData = userSnap.data();
-      let balance = userData.balance || 0;
+      if(!userSnap.exists()) continue;
 
-      // 🔒 SAFE ODDS LIMIT
-      let safeOdds = Math.min(data.multiplier, 3);
+      let userData = userSnap.data();
+
+      let safeOdds = Math.min(data.multiplier,3);
 
       if(data.team === winner){
 
-        let winAmt = Math.floor(data.amount * safeOdds * 0.9); // 10% commission
+        let winAmt = Math.floor(data.amount * safeOdds * 0.9);
         totalPayout += winAmt;
 
         await updateDoc(userRef,{
-          balance: balance + winAmt,
+          balance:(userData.balance||0)+winAmt,
           history:[...(userData.history||[]),{type:"win",amt:winAmt,time:new Date().toLocaleString()}]
         });
 
@@ -226,35 +272,41 @@ window.declareResult = async ()=>{
     }
   }
 
-  let profit = totalBet - totalPayout;
+  let profitCalc = totalBet - totalPayout;
+
+  await updateDoc(doc(db,"matches",match),{
+    status:"completed",
+    winner:winner
+  });
 
   await setDoc(doc(db,"admin","stats"),{
-    profit,
+    profit:profitCalc,
     totalBets:count,
-    todayProfit:profit
+    todayProfit:profitCalc
   },{merge:true});
 
-  alert("Result Done 😈🔥 Profit ₹"+profit);
+  alert("Done 😈 Profit ₹"+profitCalc);
+
   loadStats();
+  loadLiveMatches();
 };
 
-// WALLET (HISTORY FIX)
-document.getElementById("walletBtn").onclick = async ()=>{
+// WALLET
+walletBtn.onclick = async ()=>{
 
-  let email = document.getElementById("uemail").value;
-  let amt = parseInt(document.getElementById("amount").value);
+  let email = uemail.value;
+  let amt = parseInt(amount.value);
 
-  const ref = doc(db,"users",email);
-  const snap = await getDoc(ref);
+  let ref = doc(db,"users",email);
+  let snap = await getDoc(ref);
 
   let type = amt>0 ? "deposit":"withdraw";
 
   if(snap.exists()){
     let data = snap.data();
-    let newBal = (data.balance||0)+amt;
 
     await updateDoc(ref,{
-      balance:newBal,
+      balance:(data.balance||0)+amt,
       history:[...(data.history||[]),{type,amt:Math.abs(amt),time:new Date().toLocaleString()}]
     });
   }
