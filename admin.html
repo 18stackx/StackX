@@ -42,9 +42,19 @@
 
 <div id="panel" style="display:none;">
 
+  <!-- 📊 DASHBOARD -->
+  <div class="card">
+    <h3>📊 Admin Dashboard</h3>
+
+    <p>💰 Total Profit: ₹<span id="profit">0</span></p>
+    <p>📊 Total Bets: <span id="totalBets">0</span></p>
+    <p>🧑 Total Users: <span id="totalUsers">0</span></p>
+    <p>📅 Today Profit: ₹<span id="todayProfit">0</span></p>
+  </div>
+
   <!-- MATCH LIST -->
   <div class="card">
-    <h3>Update Matches (Max 10)</h3>
+    <h3>Update Matches</h3>
 
     <input id="m1"><input id="m2"><input id="m3"><input id="m4"><input id="m5">
     <input id="m6"><input id="m7"><input id="m8"><input id="m9"><input id="m10">
@@ -54,15 +64,15 @@
 
   <!-- BET SETTINGS -->
   <div class="card">
-    <h3>Match Betting Settings + Odds</h3>
+    <h3>Match Betting + Odds</h3>
 
-    <input id="bmatch" placeholder="Match Name (RCB vs CSK)">
+    <input id="bmatch" placeholder="Match Name">
     <input id="min" placeholder="Minimum Bet ₹">
 
-    <input id="t1odds" placeholder="Team1 Odds (e.g. 2)">
-    <input id="t2odds" placeholder="Team2 Odds (e.g. 2)">
+    <input id="t1odds" placeholder="Team1 Odds">
+    <input id="t2odds" placeholder="Team2 Odds">
 
-    <button onclick="saveBetSettings()">Save Bet + Odds</button>
+    <button onclick="saveBetSettings()">Save</button>
   </div>
 
   <!-- RESULT -->
@@ -72,17 +82,17 @@
     <input id="rmatch" placeholder="Match Name">
     <input id="winnerInput" placeholder="Winner Team">
 
-    <button onclick="declareResult()">Declare & Pay</button>
+    <button onclick="declareResult()">Declare</button>
   </div>
 
   <!-- WALLET -->
   <div class="card">
-    <h3>💰 Update User Wallet</h3>
+    <h3>💰 Wallet</h3>
 
     <input id="uemail" placeholder="User Email">
     <input id="amount" placeholder="Amount (+/-)">
 
-    <button id="walletBtn">Update Balance</button>
+    <button id="walletBtn">Update</button>
   </div>
 
 </div>
@@ -102,7 +112,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 // 🔐 ADMIN AUTH
-onAuthStateChanged(auth, (user)=>{
+onAuthStateChanged(auth, async (user)=>{
 
   if(!user){
     alert("Login required ❌");
@@ -117,68 +127,68 @@ onAuthStateChanged(auth, (user)=>{
   }
 
   document.getElementById("panel").style.display="block";
+
+  loadStats(); // 🔥 LOAD DASHBOARD
 });
 
-// ✅ FIXED MATCH SAVE
+// 📊 LOAD STATS
+async function loadStats(){
+
+  let snap = await getDoc(doc(db,"admin","stats"));
+
+  if(snap.exists()){
+    let d = snap.data();
+
+    profit.innerText = d.profit || 0;
+    totalBets.innerText = d.totalBets || 0;
+    todayProfit.innerText = d.todayProfit || 0;
+  }
+
+  let usersSnap = await getDocs(collection(db,"users"));
+  totalUsers.innerText = usersSnap.size;
+}
+
+// 🔥 SAVE MATCHES
 window.saveMatches = async ()=>{
-
-  const data = {};
-
+  let data = {};
   for(let i=1;i<=10;i++){
     let val = document.getElementById("m"+i).value.trim();
     if(val) data["m"+i] = val;
   }
 
-  if(!data.m1){
-    alert("At least Match 1 required ❌");
-    return;
-  }
-
-  try{
-    await setDoc(doc(db,"matches","today"), data, { merge:true });
-    alert("Matches Updated 🔥");
-  }catch(err){
-    console.error(err);
-    alert("Error ❌");
-  }
+  await setDoc(doc(db,"matches","today"),data,{merge:true});
+  alert("Matches Updated 🔥");
 };
 
-// ✅ FIXED BET SETTINGS + ODDS
+// 🔥 SAVE ODDS
 window.saveBetSettings = async ()=>{
 
-  let match = document.getElementById("bmatch").value.trim();
-  let minBet = parseInt(document.getElementById("min").value);
+  let match = bmatch.value.trim();
+  let minBet = parseInt(min.value);
+  let t1 = parseFloat(t1odds.value);
+  let t2 = parseFloat(t2odds.value);
 
-  let t1Odds = parseFloat(document.getElementById("t1odds").value);
-  let t2Odds = parseFloat(document.getElementById("t2odds").value);
-
-  if(!match || isNaN(minBet) || isNaN(t1Odds) || isNaN(t2Odds)){
-    alert("Fill all fields properly ❌");
+  if(!match || isNaN(minBet) || isNaN(t1) || isNaN(t2)){
+    alert("Fill properly ❌");
     return;
   }
 
-  try{
-    await setDoc(doc(db,"matches",match),{
-      minBet,
-      rcbOdds:t1Odds,
-      cskOdds:t2Odds,
-      rcbPool:0,
-      cskPool:0
-    },{ merge:true });
+  await setDoc(doc(db,"matches",match),{
+    minBet,
+    rcbOdds:t1,
+    cskOdds:t2,
+    rcbPool:0,
+    cskPool:0
+  },{merge:true});
 
-    alert("Odds + Settings Saved 😈🔥");
-
-  }catch(err){
-    console.error(err);
-    alert("Error saving odds ❌");
-  }
+  alert("Saved 😈");
 };
 
-// 🏆 AUTO PAYOUT (FINAL)
+// 🏆 RESULT + PROFIT TRACK
 window.declareResult = async ()=>{
 
-  let match = document.getElementById("rmatch").value.trim();
-  let winner = document.getElementById("winnerInput").value.trim();
+  let match = rmatch.value.trim();
+  let winner = winnerInput.value.trim();
 
   if(!match || !winner){
     alert("Fill all ❌");
@@ -188,12 +198,16 @@ window.declareResult = async ()=>{
   let betsSnap = await getDocs(collection(db,"bets"));
 
   let count = 0;
+  let totalBet = 0;
+  let totalPayout = 0;
 
   for(let b of betsSnap.docs){
 
     let data = b.data();
 
     if(data.match === match && data.status !== "done"){
+
+      totalBet += data.amount;
 
       let userRef = doc(db,"users",data.user);
       let userSnap = await getDoc(userRef);
@@ -206,16 +220,13 @@ window.declareResult = async ()=>{
       if(data.team === winner){
 
         let winAmt = Math.floor(data.amount * data.multiplier);
+        totalPayout += winAmt;
 
         await updateDoc(userRef,{
           balance: balance + winAmt,
           history:[
-            ...(userData.history || []),
-            {
-              type:"deposit",
-              amt:winAmt,
-              time:new Date().toLocaleString()
-            }
+            ...(userData.history||[]),
+            { type:"win", amt:winAmt, time:new Date().toLocaleString() }
           ]
         });
 
@@ -223,12 +234,8 @@ window.declareResult = async ()=>{
 
         await updateDoc(userRef,{
           history:[
-            ...(userData.history || []),
-            {
-              type:"withdraw",
-              amt:data.amount,
-              time:new Date().toLocaleString()
-            }
+            ...(userData.history||[]),
+            { type:"loss", amt:data.amount, time:new Date().toLocaleString() }
           ]
         });
 
@@ -236,17 +243,43 @@ window.declareResult = async ()=>{
 
       await updateDoc(doc(db,"bets",b.id),{
         status:"done",
-        winner:winner
+        winner
       });
 
       count++;
     }
   }
 
-  alert("Result Declared 😈🔥\nProcessed Bets: "+count);
+  let profit = totalBet - totalPayout;
+
+  let today = new Date().toLocaleDateString();
+  let ref = doc(db,"admin","stats");
+  let snap = await getDoc(ref);
+
+  if(snap.exists()){
+    let d = snap.data();
+
+    await updateDoc(ref,{
+      profit:(d.profit||0)+profit,
+      totalBets:(d.totalBets||0)+count,
+      todayProfit: d.date===today ? (d.todayProfit||0)+profit : profit,
+      date:today
+    });
+  } else {
+    await setDoc(ref,{
+      profit,
+      totalBets:count,
+      todayProfit:profit,
+      date:today
+    });
+  }
+
+  alert("Result Done 😈🔥 Profit: ₹"+profit);
+
+  loadStats(); // refresh dashboard
 };
 
-// 💰 WALLET (UNCHANGED)
+// 💰 WALLET
 walletBtn.onclick = async ()=>{
   let email=uemail.value.trim();
   let amt=parseInt(amount.value);
