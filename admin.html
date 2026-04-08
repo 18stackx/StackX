@@ -35,7 +35,7 @@
   <div class="card">
     <h3>📌 Add Matches (Home Page)</h3>
     <label>Example: RCB vs CSK</label>
-    <input id="m1" placeholder="Match 1">
+    <input id="m1" placeholder="Match 1 (RCB vs CSK)">
     <input id="m2" placeholder="Match 2">
     <input id="m3" placeholder="Match 3">
     <input id="m4" placeholder="Match 4">
@@ -54,16 +54,16 @@
     <label>Match Name (same as above)</label>
     <input id="bmatch" placeholder="RCB vs CSK">
 
-    <label>Minimum Bet Amount</label>
+    <label>Minimum Bet</label>
     <input id="minBetInput" placeholder="10">
 
-    <label>Team 1 Odds (max 3)</label>
+    <label>Team 1 Odds</label>
     <input id="t1odds" placeholder="2">
 
-    <label>Team 2 Odds (max 3)</label>
+    <label>Team 2 Odds</label>
     <input id="t2odds" placeholder="2">
 
-    <label>Bet Lock Time (match start time)</label>
+    <label>Lock Time (match start)</label>
     <input id="lockTime" type="datetime-local">
 
     <button onclick="saveBetSettings()">Start Match</button>
@@ -75,7 +75,7 @@
     <label>Match Name</label>
     <input id="rmatch" placeholder="RCB vs CSK">
 
-    <label>Winner Team Name</label>
+    <label>Winner</label>
     <input id="winnerInput" placeholder="RCB">
 
     <button onclick="declareResult()">Declare</button>
@@ -92,7 +92,7 @@
 
     <label>Option 1</label>
     <input id="opt1" placeholder="Virat Kohli">
-    <input id="ret1" placeholder="Return (e.g. 2)">
+    <input id="ret1" placeholder="Return (2x)">
 
     <label>Option 2</label>
     <input id="opt2" placeholder="Rohit Sharma">
@@ -109,10 +109,10 @@
 
     <hr>
 
-    <label>Select Question (auto load)</label>
+    <label>Select Question</label>
     <select id="predDropdown"></select>
 
-    <label>Correct Option (exact same text)</label>
+    <label>Correct Option</label>
     <input id="correctOpt" placeholder="Virat Kohli">
 
     <button onclick="declarePrediction()">Declare</button>
@@ -121,20 +121,211 @@
   <div class="card">
     <h3>💰 Wallet</h3>
 
-    <label>User Email</label>
+    <label>Email</label>
     <input id="uemail" placeholder="user@gmail.com">
 
-    <label>Amount (+ add / - deduct)</label>
-    <input id="amount" placeholder="100 or -50">
+    <label>Amount</label>
+    <input id="amount" placeholder="100">
 
     <button id="walletBtn">Update</button>
   </div>
 
 </div>
 
-<!-- ⚡ SCRIPT SAME (UNCHANGED) -->
 <script type="module">
-/* TERA PURA FIREBASE CODE SAME RAHEGA */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
+  authDomain:"stackx-9f92e.firebaseapp.com",
+  projectId:"stackx-9f92e"
+});
+
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// LOGIN
+onAuthStateChanged(auth,(user)=>{
+  if(!user || user.email !== "18stackx@gmail.com"){
+    alert("Access Denied ❌");
+    return;
+  }
+  panel.style.display="block";
+
+  loadStats();
+  loadLiveMatches();
+  loadPredictions();
+});
+
+// 🔥 DASHBOARD FIX
+async function loadStats(){
+  let u = await getDocs(collection(db,"users"));
+  totalUsers.innerText = u.size;
+}
+
+// 🔥 LIVE MATCHES FIX
+async function loadLiveMatches(){
+  let container = document.getElementById("liveMatches");
+  container.innerHTML = "";
+
+  let snap = await getDocs(collection(db,"matches"));
+
+  snap.forEach(docSnap=>{
+    let d = docSnap.data();
+    if(d.status === "live"){
+      let div = document.createElement("div");
+      div.className="liveMatch";
+      div.innerHTML = docSnap.id;
+      container.appendChild(div);
+    }
+  });
+}
+
+// 🔥 DROPDOWN LOAD
+async function loadPredictions(){
+  let dropdown = document.getElementById("predDropdown");
+  dropdown.innerHTML = "";
+
+  let snap = await getDocs(collection(db,"predictions"));
+
+  snap.forEach(docSnap=>{
+    let d = docSnap.data();
+
+    if(d.status === "live"){
+      let opt = document.createElement("option");
+      opt.value = docSnap.id;
+      opt.innerText = d.question + " ("+d.match+")";
+      dropdown.appendChild(opt);
+    }
+  });
+}
+
+// SAVE MATCHES
+window.saveMatches = async ()=>{
+  let data = {};
+  for(let i=1;i<=10;i++){
+    let val = document.getElementById("m"+i).value.trim();
+    if(val) data["m"+i] = val;
+  }
+  await setDoc(doc(db,"matches","today"),data);
+  alert("Saved 🔥");
+};
+
+// BET SETTINGS
+window.saveBetSettings = async ()=>{
+  await setDoc(doc(db,"matches",bmatch.value.trim()),{
+    minBet:parseInt(minBetInput.value),
+    rcbOdds:parseFloat(t1odds.value),
+    cskOdds:parseFloat(t2odds.value),
+    status:"live",
+    lockTime:lockTime.value,
+    date:new Date().toLocaleDateString('en-IN')
+  },{merge:true});
+  alert("Match Live 😈");
+
+  loadLiveMatches();
+};
+
+// RESULT
+window.declareResult = async ()=>{
+  let match = rmatch.value.trim();
+  let winner = winnerInput.value.trim();
+
+  let betsSnap = await getDocs(collection(db,"bets"));
+
+  for(let b of betsSnap.docs){
+    let data = b.data();
+
+    if(data.match === match && data.status !== "done"){
+      let userRef = doc(db,"users",data.user);
+      let u = (await getDoc(userRef)).data();
+
+      if(data.team === winner){
+        let win = Math.floor(data.amount * data.multiplier * 0.9);
+        await updateDoc(userRef,{balance:(u.balance||0)+win});
+      }
+
+      await updateDoc(doc(db,"bets",b.id),{status:"done"});
+    }
+  }
+
+  await updateDoc(doc(db,"matches",match),{status:"completed",winner});
+  alert("Result Done 🔥");
+
+  loadLiveMatches();
+};
+
+// SAVE QUESTION
+window.savePrediction = async ()=>{
+  let id = "pred_"+Date.now();
+
+  await setDoc(doc(db,"predictions",id),{
+    match:pMatch.value.trim(),
+    question:pQuestion.value.trim(),
+    options:[
+      {name:opt1.value,return:parseFloat(ret1.value)},
+      {name:opt2.value,return:parseFloat(ret2.value)},
+      {name:opt3.value,return:parseFloat(ret3.value)}
+    ],
+    lockTime:pLockTime.value,
+    status:"live"
+  });
+
+  alert("Question Added 🔥");
+  loadPredictions();
+};
+
+// DECLARE PREDICTION
+window.declarePrediction = async ()=>{
+  let id = document.getElementById("predDropdown").value;
+  let correct = correctOpt.value.trim();
+
+  let betsSnap = await getDocs(collection(db,"predBets"));
+
+  for(let b of betsSnap.docs){
+    let data = b.data();
+
+    if(data.predictionId === id && data.status !== "done"){
+
+      let userRef = doc(db,"users",data.user);
+      let u = (await getDoc(userRef)).data();
+
+      if(data.option === correct){
+        let win = Math.floor(data.amount * data.return * 0.9);
+        await updateDoc(userRef,{balance:(u.balance||0)+win});
+      }
+
+      await updateDoc(doc(db,"predBets",b.id),{status:"done"});
+    }
+  }
+
+  await updateDoc(doc(db,"predictions",id),{
+    status:"completed",
+    correct
+  });
+
+  alert("Prediction Done 😈");
+
+  loadPredictions();
+};
+
+// WALLET
+walletBtn.onclick = async ()=>{
+  let ref = doc(db,"users",uemail.value.trim());
+  let snap = await getDoc(ref);
+
+  if(snap.exists()){
+    let d = snap.data();
+    await updateDoc(ref,{
+      balance:(d.balance||0)+parseInt(amount.value)
+    });
+  }
+
+  alert("Wallet Updated 💰");
+};
+
 </script>
 
 </body>
