@@ -169,7 +169,7 @@ onAuthStateChanged(auth, async (user)=>{
   }
 });
 
-// LIVE MATCHES (DATE ADDED)
+// 🔥 LIVE MATCHES (LIVE BADGE ADDED)
 async function loadMatches(){
   let snap = await getDoc(doc(db,"matches","today"));
   let container = document.getElementById("matches");
@@ -189,12 +189,24 @@ async function loadMatches(){
 
       if(d.status === "completed") continue;
 
+      // 🔴 LIVE CHECK
+      let isLive = false;
+
+      if(d.lockTime){
+        let now = new Date();
+        let lock = new Date(d.lockTime);
+        if(now >= lock){
+          isLive = true;
+        }
+      }
+
       let div = document.createElement("div");
       div.className = "match";
 
       div.innerHTML = `
         <b>${match}</b><br>
         📅 ${d.date || "Today"}<br>
+        ${isLive ? "<span style='color:red;'>🔴 LIVE</span><br>" : ""}
         <button class="playBtn" onclick="openMatch('${match}')">Play</button>
       `;
 
