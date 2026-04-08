@@ -65,6 +65,7 @@
       padding:20px;
       border-radius:20px;
       backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,0.05);
     }
 
     .match{
@@ -88,6 +89,14 @@
       border-radius:20px;
       background:#ff2a2a;
       color:white;
+    }
+
+    .rulesText{
+      font-size:13px;
+      line-height:1.7;
+      text-align:left;
+      color:#d1d5db;
+      letter-spacing:0.3px;
     }
 
     .nav{
@@ -140,11 +149,41 @@
   <div id="matches"></div>
 </div>
 
+<!-- ✅ RULES ADDED -->
+<div class="box">
+  <h3>📜 Rules & Fair Play</h3>
+
+  <p class="rulesText">
+
+  • 🎯 All bets are final once placed. No cancellation allowed.<br><br>
+
+  • 💰 Bet amount will be deducted instantly from wallet.<br><br>
+
+  • 🏆 Winnings will be credited only after admin declares result.<br><br>
+
+  • ⚠️ In case of match cancellation / draw → refund may be processed manually.<br><br>
+
+  • 🚫 Any misuse, multiple accounts or fraud → account will be blocked without notice.<br><br>
+
+  • 📊 Odds are dynamic and can change anytime before placing bet.<br><br>
+
+  • 🔐 Platform decisions will be final in case of disputes.<br><br>
+
+  • 💳 Withdrawal requests are usually processed within 30 minutes.<br><br>
+
+  • 🎮 This is a skill-based fantasy platform for entertainment purposes only.<br><br>
+
+  • 🔞 Users must be 18+ to participate.<br><br>
+
+  • 🚫 This platform does not promote real gambling.
+
+  </p>
+</div>
+
 <a href="https://t.me/stackx_admin" target="_blank" class="tg">
   <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png">
 </a>
 
-<!-- 🔥 UPDATED NAV -->
 <div class="nav">
   <div onclick="goHome()">🏠</div>
   <div onclick="goBets()">📊</div>
@@ -166,7 +205,6 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// MATCH LOAD
 async function loadMatches(){
   let snap = await getDoc(doc(db,"matches","today"));
   let container = document.getElementById("matches");
@@ -192,7 +230,6 @@ async function loadMatches(){
   }
 }
 
-// WALLET
 onAuthStateChanged(auth, async (user)=>{
   if(user){
     let snap = await getDoc(doc(db,"users",user.email));
@@ -207,7 +244,6 @@ loadMatches();
 
 <script>
 
-// 🔥 LIVE USERS
 function getUsers(){
   let hour = new Date().getHours();
   let users = 0;
@@ -244,8 +280,6 @@ setInterval(()=>{
 document.getElementById("onlineUsers").innerText =
   "🔥 " + getUsers() + " users online";
 
-
-// NAV
 function openMatch(name){
   localStorage.setItem("matchName",name);
   window.location.href="match.html";
@@ -254,8 +288,6 @@ function openMatch(name){
 window.goHome=()=>location.href="home.html";
 window.goProfile=()=>location.href="profile.html";
 window.goWallet=()=>location.href="wallet.html";
-
-// 🔥 NEW BUTTON
 window.goBets=()=>location.href="mybets.html";
 
 </script>
