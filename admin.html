@@ -11,7 +11,6 @@
       font-family:Arial;
       margin:0;
     }
-
     .card{
       background:#1f2937;
       padding:20px;
@@ -21,7 +20,6 @@
       margin:auto;
       margin-top:20px;
     }
-
     input{
       width:100%;
       padding:10px;
@@ -29,7 +27,6 @@
       border:none;
       border-radius:8px;
     }
-
     button{
       width:100%;
       padding:12px;
@@ -40,13 +37,11 @@
       margin-top:10px;
       font-weight:bold;
     }
-
     .stat{
       display:flex;
       justify-content:space-between;
       margin:8px 0;
     }
-
     .liveMatch{
       background:#111;
       padding:10px;
@@ -82,54 +77,49 @@
 
   <div class="card">
     <h3>Bet Settings</h3>
-    <input id="bmatch" placeholder="Match (RCB vs CSK)">
-    <input id="minBetInput" placeholder="Min Bet">
-    <input id="t1odds" placeholder="Team1 Odds (max 3)">
-    <input id="t2odds" placeholder="Team2 Odds (max 3)">
+    <input id="bmatch">
+    <input id="minBetInput">
+    <input id="t1odds">
+    <input id="t2odds">
     <input id="lockTime" type="datetime-local">
     <button onclick="saveBetSettings()">Save</button>
   </div>
 
   <div class="card">
     <h3>Result</h3>
-    <input id="rmatch" placeholder="Match">
-    <input id="winnerInput" placeholder="Winner">
+    <input id="rmatch">
+    <input id="winnerInput">
     <button onclick="declareResult()">Declare</button>
   </div>
 
-  <!-- 🔥 UPDATED QUESTION SYSTEM -->
   <div class="card">
     <h3>🎯 Prediction System</h3>
 
-    <input id="pMatch" placeholder="Match">
-    <input id="pQuestion" placeholder="Question">
+    <input id="pMatch">
+    <input id="pQuestion">
 
-    <input id="opt1" placeholder="Option 1">
-    <input id="ret1" placeholder="Return (max 3x)">
+    <input id="opt1">
+    <input id="ret1">
+    <input id="opt2">
+    <input id="ret2">
+    <input id="opt3">
+    <input id="ret3">
 
-    <input id="opt2" placeholder="Option 2">
-    <input id="ret2" placeholder="Return">
-
-    <input id="opt3" placeholder="Option 3">
-    <input id="ret3" placeholder="Return">
-
-    <!-- 🔥 NEW TIME -->
     <input id="pLockTime" type="datetime-local">
 
     <button onclick="savePrediction()">Add Question</button>
 
-    <hr style="margin:15px 0;">
+    <hr>
 
-    <input id="predId" placeholder="Prediction ID">
-    <input id="correctOpt" placeholder="Correct Option">
-
-    <button onclick="declarePrediction()">Declare Result</button>
+    <input id="predId">
+    <input id="correctOpt">
+    <button onclick="declarePrediction()">Declare</button>
   </div>
 
   <div class="card">
     <h3>Wallet</h3>
-    <input id="uemail" placeholder="Email">
-    <input id="amount" placeholder="Amount">
+    <input id="uemail">
+    <input id="amount">
     <button id="walletBtn">Update</button>
   </div>
 
@@ -155,135 +145,85 @@ onAuthStateChanged(auth,(user)=>{
     alert("Access Denied ❌");
     return;
   }
-
-  document.getElementById("panel").style.display="block";
+  panel.style.display="block";
   loadStats();
   loadLiveMatches();
 });
 
-// 📊 STATS (same)
-async function loadStats(){
-  let snap = await getDoc(doc(db,"admin","stats"));
-
-  if(snap.exists()){
-    let d = snap.data();
-    profit.innerText = d.profit || 0;
-    totalBets.innerText = d.totalBets || 0;
-    todayProfit.innerText = d.todayProfit || 0;
+// ✅ SAVE MATCH LIST (IMPORTANT)
+window.saveMatches = async ()=>{
+  let data = {};
+  for(let i=1;i<=10;i++){
+    let val = document.getElementById("m"+i).value.trim();
+    if(val) data["m"+i] = val;
   }
-
-  let u = await getDocs(collection(db,"users"));
-  totalUsers.innerText = u.size;
-}
-
-// 🔥 LIVE MATCHES (same)
-async function loadLiveMatches(){
-  let container = document.getElementById("liveMatches");
-  container.innerHTML = "";
-
-  let snap = await getDocs(collection(db,"matches"));
-
-  snap.forEach(docSnap=>{
-    let d = docSnap.data();
-    let match = docSnap.id;
-
-    if(d.status !== "completed"){
-
-      let div = document.createElement("div");
-      div.className = "liveMatch";
-
-      div.innerHTML = `
-        <b>${match}</b><br>
-        ₹${d.rcbPool||0} vs ₹${d.cskPool||0}<br>
-        <button onclick="selectMatch('${match}')">Select</button>
-      `;
-
-      container.appendChild(div);
-    }
-  });
-}
-
-// 🔥 SAVE QUESTION (TIME LOCK ADDED)
-window.savePrediction = async ()=>{
-
-  let match = pMatch.value.trim();
-  let question = pQuestion.value.trim();
-  let lockTime = pLockTime.value;
-
-  let options = [
-    {name:opt1.value, return:Math.min(parseFloat(ret1.value),3)},
-    {name:opt2.value, return:Math.min(parseFloat(ret2.value),3)},
-    {name:opt3.value, return:Math.min(parseFloat(ret3.value),3)}
-  ];
-
-  let id = "pred_"+Date.now();
-
-  await setDoc(doc(db,"predictions",id),{
-    match,
-    question,
-    options,
-    status:"live",
-    correct:null,
-    lockTime:lockTime // 🔥 important
-  });
-
-  alert("Question Added 🔥 ID: "+id);
+  await setDoc(doc(db,"matches","today"),data,{merge:true});
+  alert("Saved 🔥");
 };
 
-// 🔥 DECLARE RESULT (HISTORY FIXED)
-window.declarePrediction = async ()=>{
+// ✅ BET SETTINGS (FIXED)
+window.saveBetSettings = async ()=>{
 
-  let id = predId.value.trim();
-  let correct = correctOpt.value.trim();
+  let match = bmatch.value.trim();
 
-  let betsSnap = await getDocs(collection(db,"predBets"));
+  await setDoc(doc(db,"matches",match),{
+    minBet:parseInt(minBetInput.value),
+    rcbOdds:parseFloat(t1odds.value),
+    cskOdds:parseFloat(t2odds.value),
+    status:"live",
+    lockTime:lockTime.value,
+    date:new Date().toLocaleDateString('en-IN')
+  },{merge:true});
+
+  alert("Match Live 😈");
+};
+
+// ✅ RESULT
+window.declareResult = async ()=>{
+  let match = rmatch.value.trim();
+  let winner = winnerInput.value.trim();
+
+  let betsSnap = await getDocs(collection(db,"bets"));
 
   for(let b of betsSnap.docs){
-
     let data = b.data();
 
-    if(data.predictionId === id && data.status !== "done"){
+    if(data.match === match && data.status !== "done"){
 
       let userRef = doc(db,"users",data.user);
       let userSnap = await getDoc(userRef);
+      let u = userSnap.data();
 
-      if(!userSnap.exists()) continue;
-
-      let userData = userSnap.data();
-
-      if(data.option === correct){
-
-        let winAmt = Math.floor(data.amount * data.return * 0.9);
-
-        await updateDoc(userRef,{
-          balance:(userData.balance||0)+winAmt,
-          history:[
-            ...(userData.history||[]),
-            {type:"win",amt:winAmt,time:new Date().toLocaleString()}
-          ]
-        });
-
-      } else {
-
-        await updateDoc(userRef,{
-          history:[
-            ...(userData.history||[]),
-            {type:"loss",amt:data.amount,time:new Date().toLocaleString()}
-          ]
-        });
-
+      if(data.team === winner){
+        let win = Math.floor(data.amount * data.multiplier * 0.9);
+        await updateDoc(userRef,{balance:(u.balance||0)+win});
       }
 
-      await updateDoc(doc(db,"predBets",b.id),{status:"done"});
+      await updateDoc(doc(db,"bets",b.id),{status:"done"});
     }
   }
 
-  await updateDoc(doc(db,"predictions",id),{
+  await updateDoc(doc(db,"matches",match),{
     status:"completed",
-    correct
+    winner
   });
 
-  alert("Prediction Done 😈");
+  alert("Result Done 🔥");
+};
+
+// ✅ WALLET FIX
+walletBtn.onclick = async ()=>{
+  let ref = doc(db,"users",uemail.value.trim());
+  let snap = await getDoc(ref);
+
+  if(snap.exists()){
+    let d = snap.data();
+    await updateDoc(ref,{
+      balance:(d.balance||0)+parseInt(amount.value)
+    });
+  }
+
+  alert("Wallet Updated 💰");
 };
 
 </script>
