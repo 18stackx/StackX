@@ -1,3 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Match</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+
+    body{
+      background:#0f0f1a;
+      color:white;
+      padding-bottom:80px;
+      text-align:center;
+    }
+
+    .box{
+      background:rgba(255,255,255,0.05);
+      margin:15px;
+      padding:20px;
+      border-radius:20px;
+    }
+
+    h2{margin-top:15px;}
+
+    button{
+      width:90%;
+      padding:12px;
+      margin:10px;
+      border:none;
+      border-radius:30px;
+      background:#ff2a2a;
+      color:white;
+      font-weight:600;
+    }
+
+    input{
+      width:85%;
+      padding:12px;
+      border-radius:10px;
+      border:none;
+      margin-top:10px;
+    }
+
+    .teamBtn{
+      background:#111827;
+      margin:10px;
+      padding:15px;
+      border-radius:12px;
+      cursor:pointer;
+    }
+
+    .selected{
+      background:#22c55e;
+    }
+
+    .nav{
+      position:fixed;
+      bottom:0;
+      width:100%;
+      background:rgba(0,0,0,0.7);
+      display:flex;
+      justify-content:space-around;
+      padding:12px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2 id="matchTitle"></h2>
+
+<div class="box">
+  <h3>Select Winner</h3>
+
+  <div id="team1" class="teamBtn"></div>
+  <div id="team2" class="teamBtn"></div>
+</div>
+
+<div class="box">
+  <h3>💰 Bet Amount</h3>
+
+  <input id="amt" placeholder="Enter Amount">
+
+  <p id="minBet"></p>
+  <p id="return"></p>
+
+  <button onclick="placeBet()">Place Bet</button>
+</div>
+
+<div class="nav">
+  <div onclick="goHome()">🏠</div>
+  <div onclick="goProfile()">👤</div>
+  <div onclick="goWallet()">💰</div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -14,6 +112,12 @@ const auth = getAuth(app);
 
 // 🔥 LOAD MATCH
 let match = localStorage.getItem("matchName");
+
+if(!match){
+  alert("Match not found ❌");
+  location.href="home.html";
+}
+
 document.getElementById("matchTitle").innerText = match;
 
 let [t1,t2] = match.split(" vs ");
@@ -36,8 +140,8 @@ team2.onclick = ()=>{
 };
 
 // 🔥 ADMIN DATA LOAD
-let min = 0;
-let multiplier = 1;
+let min = 10;
+let multiplier = 1.5;
 
 let snap = await getDoc(doc(db,"matches",match));
 
@@ -46,12 +150,12 @@ if(snap.exists()){
 
   min = data.minBet || 10;
   multiplier = data.multiplier || 1.5;
-
-  document.getElementById("minBet").innerText = "Min Bet: ₹"+min;
-  document.getElementById("return").innerText = "Return: "+multiplier+"x";
 }
 
-// 🔥 PLACE BET (UPDATED ✅)
+document.getElementById("minBet").innerText = "Min Bet: ₹"+min;
+document.getElementById("return").innerText = "Return: "+multiplier+"x";
+
+// 🔥 PLACE BET
 window.placeBet = async function(){
 
   let amt = parseInt(document.getElementById("amt").value);
@@ -70,21 +174,29 @@ window.placeBet = async function(){
 
   if(!user){
     alert("Login required ❌");
+    location.href="index.html";
     return;
   }
 
-  let ref = doc(db,"bets",user.email+"_"+Date.now());
+  try{
 
-  await setDoc(ref,{
-    match,
-    team:selected,
-    amount:amt,
-    multiplier,
-    user:user.email, // 🔥 THIS WAS MISSING
-    time:new Date().toLocaleString() // 🔥 TIME ADDED
-  });
+    let ref = doc(db,"bets",user.email+"_"+Date.now());
 
-  alert("Bet Placed 😈🔥");
+    await setDoc(ref,{
+      match,
+      team:selected,
+      amount:amt,
+      multiplier,
+      user:user.email, // ✅ FIXED
+      time:new Date().toLocaleString() // ✅ FIXED
+    });
+
+    alert("Bet Placed 😈🔥");
+
+  }catch(err){
+    console.log(err);
+    alert("Error placing bet ❌");
+  }
 };
 
 // NAV
@@ -93,3 +205,6 @@ window.goProfile = ()=> location.href="profile.html";
 window.goWallet = ()=> location.href="wallet.html";
 
 </script>
+
+</body>
+</html>
