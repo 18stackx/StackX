@@ -52,7 +52,6 @@
 
     h2{text-align:center;margin-top:10px;}
 
-    /* 🔥 LIVE USERS */
     #onlineUsers{
       text-align:center;
       font-size:13px;
@@ -130,7 +129,6 @@
 
 <h2>🏏 Cricket Fantasy</h2>
 
-<!-- 🔥 LIVE USERS -->
 <div id="onlineUsers">🔥 Loading users...</div>
 
 <div class="box">
@@ -146,8 +144,10 @@
   <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png">
 </a>
 
+<!-- 🔥 UPDATED NAV -->
 <div class="nav">
   <div onclick="goHome()">🏠</div>
+  <div onclick="goBets()">📊</div>
   <div onclick="goProfile()">👤</div>
   <div onclick="goWallet()">💰</div>
 </div>
@@ -166,7 +166,7 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 🔥 MATCH LOAD
+// MATCH LOAD
 async function loadMatches(){
   let snap = await getDoc(doc(db,"matches","today"));
   let container = document.getElementById("matches");
@@ -192,7 +192,7 @@ async function loadMatches(){
   }
 }
 
-// 🔥 WALLET
+// WALLET
 onAuthStateChanged(auth, async (user)=>{
   if(user){
     let snap = await getDoc(doc(db,"users",user.email));
@@ -207,9 +207,8 @@ loadMatches();
 
 <script>
 
-// 🔥 SMART LIVE USERS SYSTEM
+// 🔥 LIVE USERS
 function getUsers(){
-
   let hour = new Date().getHours();
   let users = 0;
 
@@ -237,13 +236,11 @@ function getUsers(){
   return Math.floor(users);
 }
 
-// 🔁 UPDATE EVERY 3 SEC
 setInterval(()=>{
   document.getElementById("onlineUsers").innerText =
     "🔥 " + getUsers() + " users online";
 },3000);
 
-// FIRST LOAD
 document.getElementById("onlineUsers").innerText =
   "🔥 " + getUsers() + " users online";
 
@@ -257,6 +254,9 @@ function openMatch(name){
 window.goHome=()=>location.href="home.html";
 window.goProfile=()=>location.href="profile.html";
 window.goWallet=()=>location.href="wallet.html";
+
+// 🔥 NEW BUTTON
+window.goBets=()=>location.href="mybets.html";
 
 </script>
 
