@@ -72,7 +72,7 @@
     <button onclick="saveBetSettings()">Save Bet Settings</button>
   </div>
 
-  <!-- 🏆 RESULT + AUTO PAYOUT -->
+  <!-- 🏆 RESULT -->
   <div class="card">
     <h3>🏆 Declare Result (Auto Payout)</h3>
 
@@ -118,7 +118,7 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 
-// MATCH SAVE
+// 🔥 SAVE MATCHES
 window.saveMatches = async ()=>{
   await setDoc(doc(db,"matches","today"),{
     m1:m1.value,m2:m2.value,m3:m3.value,m4:m4.value,m5:m5.value,
@@ -127,7 +127,7 @@ window.saveMatches = async ()=>{
   alert("Matches Updated 🔥");
 };
 
-// BET SETTINGS
+// 🔥 SAVE BET SETTINGS
 window.saveBetSettings = async ()=>{
   await setDoc(doc(db,"matches",bmatch.value),{
     minBet:parseInt(min.value),
@@ -136,43 +136,45 @@ window.saveBetSettings = async ()=>{
   alert("Settings Saved 😈");
 };
 
-// 🏆 AUTO PAYOUT SYSTEM
-window.declareResult = async ()=>{
+// 🏆 FINAL AUTO PAYOUT (UPGRADED)
+window.declareResult = async function(){
 
-  let match = rmatch.value;
-  let winner = winnerInput.value || winner.value;
+  let match = document.getElementById("rmatch").value.trim();
+  let winner = document.getElementById("winner").value.trim();
 
   if(!match || !winner){
     alert("Fill all ❌");
     return;
   }
 
-  let bets = await getDocs(collection(db,"bets"));
+  let betsSnap = await getDocs(collection(db,"bets"));
 
   let count = 0;
 
-  for(let b of bets.docs){
+  for(let b of betsSnap.docs){
 
-    let d = b.data();
+    let data = b.data();
 
-    if(d.match === match){
+    // ✅ ONLY PENDING BETS
+    if(data.match === match && data.status !== "done"){
 
-      let userRef = doc(db,"users",d.user);
+      let userRef = doc(db,"users",data.user);
       let userSnap = await getDoc(userRef);
 
       if(!userSnap.exists()) continue;
 
-      let udata = userSnap.data();
-      let bal = udata.balance || 0;
+      let userData = userSnap.data();
+      let balance = userData.balance || 0;
 
-      if(d.team === winner){
+      // ✅ WIN
+      if(data.team === winner){
 
-        let winAmt = Math.floor(d.amount * d.multiplier);
+        let winAmt = Math.floor(data.amount * data.multiplier);
 
         await updateDoc(userRef,{
-          balance: bal + winAmt,
+          balance: balance + winAmt,
           history:[
-            ...(udata.history||[]),
+            ...(userData.history || []),
             {
               type:"deposit",
               amt:winAmt,
@@ -183,12 +185,13 @@ window.declareResult = async ()=>{
 
       } else {
 
+        // ❌ LOSS
         await updateDoc(userRef,{
           history:[
-            ...(udata.history||[]),
+            ...(userData.history || []),
             {
               type:"withdraw",
-              amt:d.amount,
+              amt:data.amount,
               time:new Date().toLocaleString()
             }
           ]
@@ -196,14 +199,19 @@ window.declareResult = async ()=>{
 
       }
 
+      // 🔥 MARK DONE (MOST IMPORTANT)
+      await updateDoc(doc(db,"bets",b.id),{
+        status:"done"
+      });
+
       count++;
     }
   }
 
-  alert("Payout Done 😈🔥 Bets: "+count);
+  alert("Result Declared 😈🔥\nProcessed Bets: "+count);
 };
 
-// WALLET (UNCHANGED)
+// 💰 WALLET (UNCHANGED)
 walletBtn.onclick = async ()=>{
   let email=uemail.value.trim();
   let amt=parseInt(amount.value);
