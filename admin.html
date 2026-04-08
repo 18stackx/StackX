@@ -119,18 +119,22 @@ onAuthStateChanged(auth,(user)=>{
   document.getElementById("panel").style.display="block";
 });
 
-// SAVE MATCHES
+// ✅ FIXED SAVE MATCHES
 window.saveMatches = async ()=>{
   let data = {};
   for(let i=1;i<=10;i++){
     let val = document.getElementById("m"+i).value.trim();
     if(val) data["m"+i] = val;
   }
-  await setDoc(doc(db,"matches","today"),data,{merge:true});
+
+  // 🔥 FIX (NO MERGE)
+  await setDoc(doc(db,"matches","today"),data);
+
   alert("Saved 🔥");
 };
 
-// BET SETTINGS
+// बाकी code SAME (unchanged)
+
 window.saveBetSettings = async ()=>{
   await setDoc(doc(db,"matches",bmatch.value.trim()),{
     minBet:parseInt(minBetInput.value),
@@ -143,7 +147,6 @@ window.saveBetSettings = async ()=>{
   alert("Match Live 😈");
 };
 
-// RESULT
 window.declareResult = async ()=>{
   let match = rmatch.value.trim();
   let winner = winnerInput.value.trim();
@@ -170,7 +173,6 @@ window.declareResult = async ()=>{
   alert("Result Done 🔥");
 };
 
-// PREDICTION SAVE
 window.savePrediction = async ()=>{
   let id = "pred_"+Date.now();
 
@@ -189,7 +191,6 @@ window.savePrediction = async ()=>{
   alert("Question Added 🔥");
 };
 
-// DECLARE PREDICTION
 window.declarePrediction = async ()=>{
   let id = predId.value.trim();
   let correct = correctOpt.value.trim();
@@ -221,7 +222,6 @@ window.declarePrediction = async ()=>{
   alert("Prediction Done 😈");
 };
 
-// WALLET
 walletBtn.onclick = async ()=>{
   let ref = doc(db,"users",uemail.value.trim());
   let snap = await getDoc(ref);
