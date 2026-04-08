@@ -40,7 +40,6 @@
 
 <body>
 
-<!-- PANEL -->
 <div id="panel" style="display:none;">
 
   <!-- MATCH LIST -->
@@ -64,12 +63,12 @@
     <button onclick="saveBetSettings()">Save Bet Settings</button>
   </div>
 
-  <!-- 🏆 RESULT -->
+  <!-- RESULT -->
   <div class="card">
     <h3>🏆 Declare Result (Auto Payout)</h3>
 
     <input id="rmatch" placeholder="Match Name">
-    <input id="winner" placeholder="Winner Team">
+    <input id="winnerInput" placeholder="Winner Team">
 
     <button onclick="declareResult()">Declare & Pay</button>
   </div>
@@ -100,23 +99,21 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 🔐 ADMIN AUTH (FINAL)
+// 🔐 ADMIN AUTH
 onAuthStateChanged(auth, (user)=>{
 
   if(!user){
     alert("Login required ❌");
-    window.location.href="index.html";
+    location.href="index.html";
     return;
   }
 
-  // 🔥 ONLY YOUR EMAIL ALLOWED
   if(user.email !== "18stackx@gmail.com"){
     alert("Access Denied ❌");
-    window.location.href="home.html";
+    location.href="home.html";
     return;
   }
 
-  // ✅ SHOW PANEL
   document.getElementById("panel").style.display="block";
 });
 
@@ -138,11 +135,11 @@ window.saveBetSettings = async ()=>{
   alert("Settings Saved 😈");
 };
 
-// 🏆 AUTO PAYOUT
-window.declareResult = async function(){
+// 🏆 AUTO PAYOUT (FINAL FIXED)
+window.declareResult = async ()=>{
 
-  let match = rmatch.value.trim();
-  let winner = winner.value.trim();
+  let match = document.getElementById("rmatch").value.trim();
+  let winner = document.getElementById("winnerInput").value.trim();
 
   if(!match || !winner){
     alert("Fill all ❌");
@@ -157,6 +154,7 @@ window.declareResult = async function(){
 
     let data = b.data();
 
+    // ✅ ONLY PENDING BETS
     if(data.match === match && data.status !== "done"){
 
       let userRef = doc(db,"users",data.user);
@@ -198,18 +196,20 @@ window.declareResult = async function(){
 
       }
 
+      // 🔥 FINAL FIX (MOST IMPORTANT)
       await updateDoc(doc(db,"bets",b.id),{
-        status:"done"
+        status:"done",
+        winner:winner   // ✅ THIS WAS MISSING
       });
 
       count++;
     }
   }
 
-  alert("Result Declared 😈🔥 Bets: "+count);
+  alert("Result Declared 😈🔥\nProcessed Bets: "+count);
 };
 
-// 💰 WALLET (UNCHANGED)
+// 💰 WALLET
 walletBtn.onclick = async ()=>{
   let email=uemail.value.trim();
   let amt=parseInt(amount.value);
