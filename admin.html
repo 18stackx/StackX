@@ -7,7 +7,7 @@
   <style>
     body{background:#0b0f1a;color:white;font-family:Arial;margin:0;}
     .card{background:#1f2937;padding:20px;margin:20px;border-radius:12px;max-width:400px;margin:auto;margin-top:20px;}
-    input{width:100%;padding:10px;margin:8px 0;border:none;border-radius:8px;}
+    input,select{width:100%;padding:10px;margin:8px 0;border:none;border-radius:8px;}
     button{width:100%;padding:12px;border:none;border-radius:8px;background:#22c55e;color:white;margin-top:10px;font-weight:bold;}
     .stat{display:flex;justify-content:space-between;margin:8px 0;}
     .liveMatch{background:#111;padding:10px;margin-top:10px;border-radius:10px;}
@@ -33,48 +33,37 @@
 
   <div class="card">
     <h3>📌 Add Matches (Home Page)</h3>
-    <input id="m1" placeholder="Match 1">
-    <input id="m2" placeholder="Match 2">
-    <input id="m3" placeholder="Match 3">
-    <input id="m4" placeholder="Match 4">
-    <input id="m5" placeholder="Match 5">
-    <input id="m6" placeholder="Match 6">
-    <input id="m7" placeholder="Match 7">
-    <input id="m8" placeholder="Match 8">
-    <input id="m9" placeholder="Match 9">
-    <input id="m10" placeholder="Match 10">
+    <input id="m1"><input id="m2"><input id="m3"><input id="m4"><input id="m5">
+    <input id="m6"><input id="m7"><input id="m8"><input id="m9"><input id="m10">
     <button onclick="saveMatches()">Save Matches</button>
   </div>
 
   <div class="card">
     <h3>⚙️ Bet Settings</h3>
-    <input id="bmatch" placeholder="Match Name">
-    <input id="minBetInput" placeholder="Min Bet">
-    <input id="t1odds" placeholder="Team1 Odds">
-    <input id="t2odds" placeholder="Team2 Odds">
+    <input id="bmatch">
+    <input id="minBetInput">
+    <input id="t1odds">
+    <input id="t2odds">
     <input id="lockTime" type="datetime-local">
     <button onclick="saveBetSettings()">Start Match</button>
   </div>
 
   <div class="card">
     <h3>🏆 Declare Result</h3>
-    <input id="rmatch" placeholder="Match">
-    <input id="winnerInput" placeholder="Winner">
+    <input id="rmatch">
+    <input id="winnerInput">
     <button onclick="declareResult()">Declare</button>
   </div>
 
   <div class="card">
     <h3>🎯 Prediction System</h3>
 
-    <input id="pMatch" placeholder="Match">
-    <input id="pQuestion" placeholder="Question">
+    <input id="pMatch">
+    <input id="pQuestion">
 
-    <input id="opt1" placeholder="Option 1">
-    <input id="ret1" placeholder="Return">
-    <input id="opt2" placeholder="Option 2">
-    <input id="ret2" placeholder="Return">
-    <input id="opt3" placeholder="Option 3">
-    <input id="ret3" placeholder="Return">
+    <input id="opt1"><input id="ret1">
+    <input id="opt2"><input id="ret2">
+    <input id="opt3"><input id="ret3">
 
     <input id="pLockTime" type="datetime-local">
 
@@ -82,15 +71,17 @@
 
     <hr>
 
-    <input id="predId" placeholder="Prediction ID">
+    <!-- 🔥 DROPDOWN -->
+    <select id="predDropdown"></select>
+
     <input id="correctOpt" placeholder="Correct Option">
     <button onclick="declarePrediction()">Declare</button>
   </div>
 
   <div class="card">
     <h3>💰 Wallet</h3>
-    <input id="uemail" placeholder="Email">
-    <input id="amount" placeholder="Amount">
+    <input id="uemail">
+    <input id="amount">
     <button id="walletBtn">Update</button>
   </div>
 
@@ -116,25 +107,68 @@ onAuthStateChanged(auth,(user)=>{
     alert("Access Denied ❌");
     return;
   }
-  document.getElementById("panel").style.display="block";
+  panel.style.display="block";
+
+  loadStats();
+  loadLiveMatches();
+  loadPredictions();
 });
 
-// ✅ FIXED SAVE MATCHES
+// 🔥 DASHBOARD FIX
+async function loadStats(){
+  let u = await getDocs(collection(db,"users"));
+  totalUsers.innerText = u.size;
+}
+
+// 🔥 LIVE MATCHES FIX
+async function loadLiveMatches(){
+  let container = document.getElementById("liveMatches");
+  container.innerHTML = "";
+
+  let snap = await getDocs(collection(db,"matches"));
+
+  snap.forEach(docSnap=>{
+    let d = docSnap.data();
+    if(d.status === "live"){
+      let div = document.createElement("div");
+      div.className="liveMatch";
+      div.innerHTML = docSnap.id;
+      container.appendChild(div);
+    }
+  });
+}
+
+// 🔥 DROPDOWN LOAD
+async function loadPredictions(){
+  let dropdown = document.getElementById("predDropdown");
+  dropdown.innerHTML = "";
+
+  let snap = await getDocs(collection(db,"predictions"));
+
+  snap.forEach(docSnap=>{
+    let d = docSnap.data();
+
+    if(d.status === "live"){
+      let opt = document.createElement("option");
+      opt.value = docSnap.id;
+      opt.innerText = d.question + " ("+d.match+")";
+      dropdown.appendChild(opt);
+    }
+  });
+}
+
+// SAVE MATCHES
 window.saveMatches = async ()=>{
   let data = {};
   for(let i=1;i<=10;i++){
     let val = document.getElementById("m"+i).value.trim();
     if(val) data["m"+i] = val;
   }
-
-  // 🔥 FIX (NO MERGE)
   await setDoc(doc(db,"matches","today"),data);
-
   alert("Saved 🔥");
 };
 
-// बाकी code SAME (unchanged)
-
+// BET SETTINGS
 window.saveBetSettings = async ()=>{
   await setDoc(doc(db,"matches",bmatch.value.trim()),{
     minBet:parseInt(minBetInput.value),
@@ -145,8 +179,11 @@ window.saveBetSettings = async ()=>{
     date:new Date().toLocaleDateString('en-IN')
   },{merge:true});
   alert("Match Live 😈");
+
+  loadLiveMatches();
 };
 
+// RESULT
 window.declareResult = async ()=>{
   let match = rmatch.value.trim();
   let winner = winnerInput.value.trim();
@@ -171,8 +208,11 @@ window.declareResult = async ()=>{
 
   await updateDoc(doc(db,"matches",match),{status:"completed",winner});
   alert("Result Done 🔥");
+
+  loadLiveMatches();
 };
 
+// SAVE QUESTION
 window.savePrediction = async ()=>{
   let id = "pred_"+Date.now();
 
@@ -189,10 +229,12 @@ window.savePrediction = async ()=>{
   });
 
   alert("Question Added 🔥");
+  loadPredictions();
 };
 
+// DECLARE PREDICTION
 window.declarePrediction = async ()=>{
-  let id = predId.value.trim();
+  let id = document.getElementById("predDropdown").value;
   let correct = correctOpt.value.trim();
 
   let betsSnap = await getDocs(collection(db,"predBets"));
@@ -220,8 +262,11 @@ window.declarePrediction = async ()=>{
   });
 
   alert("Prediction Done 😈");
+
+  loadPredictions();
 };
 
+// WALLET
 walletBtn.onclick = async ()=>{
   let ref = doc(db,"users",uemail.value.trim());
   let snap = await getDoc(ref);
