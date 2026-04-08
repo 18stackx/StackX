@@ -1,102 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Admin Panel</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body{background:#0b0f1a;color:white;font-family:Arial;margin:0;}
-
-    .card{
-      background:#1f2937;
-      padding:20px;
-      margin:20px;
-      border-radius:10px;
-      max-width:400px;
-      margin:auto;
-      margin-top:30px;
-    }
-
-    input{
-      width:100%;
-      padding:10px;
-      margin:8px 0;
-      border:none;
-      border-radius:8px;
-    }
-
-    button{
-      width:100%;
-      padding:12px;
-      border:none;
-      border-radius:8px;
-      background:#22c55e;
-      color:white;
-      margin-top:10px;
-      font-weight:bold;
-    }
-  </style>
-</head>
-
-<body>
-
-<div id="panel" style="display:none;">
-
-  <!-- 📊 DASHBOARD -->
-  <div class="card">
-    <h3>📊 Admin Dashboard</h3>
-
-    <p>💰 Total Profit: ₹<span id="profit">0</span></p>
-    <p>📊 Total Bets: <span id="totalBets">0</span></p>
-    <p>🧑 Total Users: <span id="totalUsers">0</span></p>
-    <p>📅 Today Profit: ₹<span id="todayProfit">0</span></p>
-  </div>
-
-  <!-- MATCH LIST -->
-  <div class="card">
-    <h3>Update Matches</h3>
-
-    <input id="m1"><input id="m2"><input id="m3"><input id="m4"><input id="m5">
-    <input id="m6"><input id="m7"><input id="m8"><input id="m9"><input id="m10">
-
-    <button onclick="saveMatches()">Save Matches</button>
-  </div>
-
-  <!-- BET SETTINGS -->
-  <div class="card">
-    <h3>Match Betting + Odds</h3>
-
-    <input id="bmatch" placeholder="Match Name">
-    <input id="min" placeholder="Minimum Bet ₹">
-
-    <input id="t1odds" placeholder="Team1 Odds">
-    <input id="t2odds" placeholder="Team2 Odds">
-
-    <button onclick="saveBetSettings()">Save</button>
-  </div>
-
-  <!-- RESULT -->
-  <div class="card">
-    <h3>🏆 Declare Result</h3>
-
-    <input id="rmatch" placeholder="Match Name">
-    <input id="winnerInput" placeholder="Winner Team">
-
-    <button onclick="declareResult()">Declare</button>
-  </div>
-
-  <!-- WALLET -->
-  <div class="card">
-    <h3>💰 Wallet</h3>
-
-    <input id="uemail" placeholder="User Email">
-    <input id="amount" placeholder="Amount (+/-)">
-
-    <button id="walletBtn">Update</button>
-  </div>
-
-</div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, updateDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -127,8 +28,7 @@ onAuthStateChanged(auth, async (user)=>{
   }
 
   document.getElementById("panel").style.display="block";
-
-  loadStats(); // 🔥 LOAD DASHBOARD
+  loadStats();
 });
 
 // 📊 LOAD STATS
@@ -184,122 +84,178 @@ window.saveBetSettings = async ()=>{
   alert("Saved 😈");
 };
 
+// 🔒 DOUBLE CLICK PROTECTION
+let declaring = false;
+
 // 🏆 RESULT + PROFIT TRACK
 window.declareResult = async ()=>{
 
-  let match = rmatch.value.trim();
-  let winner = winnerInput.value.trim();
+  if(declaring) return;
+  declaring = true;
 
-  if(!match || !winner){
-    alert("Fill all ❌");
+  try{
+
+    let match = rmatch.value.trim();
+    let winner = winnerInput.value.trim();
+
+    if(!match || !winner){
+      alert("Fill all ❌");
+      declaring = false;
+      return;
+    }
+
+    let betsSnap = await getDocs(collection(db,"bets"));
+
+    let count = 0;
+    let totalBet = 0;
+    let totalPayout = 0;
+
+    for(let b of betsSnap.docs){
+
+      let data = b.data();
+
+      if(data.match === match && data.status !== "done"){
+
+        totalBet += data.amount;
+
+        let userRef = doc(db,"users",data.user);
+        let userSnap = await getDoc(userRef);
+
+        if(!userSnap.exists()) continue;
+
+        let userData = userSnap.data();
+        let balance = userData.balance || 0;
+
+        if(data.team === winner){
+
+          let winAmt = Math.floor(data.amount * data.multiplier);
+          totalPayout += winAmt;
+
+          await updateDoc(userRef,{
+            balance: balance + winAmt,
+            history:[
+              ...(userData.history||[]),
+              {
+                type:"win",
+                amt:winAmt,
+                time:new Date().toLocaleString()
+              }
+            ]
+          });
+
+        } else {
+
+          await updateDoc(userRef,{
+            history:[
+              ...(userData.history||[]),
+              {
+                type:"loss",
+                amt:data.amount,
+                time:new Date().toLocaleString()
+              }
+            ]
+          });
+
+        }
+
+        await updateDoc(doc(db,"bets",b.id),{
+          status:"done",
+          winner
+        });
+
+        count++;
+      }
+    }
+
+    let profitCalc = totalBet - totalPayout;
+
+    let today = new Date().toLocaleDateString();
+    let ref = doc(db,"admin","stats");
+    let snap = await getDoc(ref);
+
+    if(snap.exists()){
+      let d = snap.data();
+
+      await updateDoc(ref,{
+        profit:(d.profit||0)+profitCalc,
+        totalBets:(d.totalBets||0)+count,
+        todayProfit: d.date===today ? (d.todayProfit||0)+profitCalc : profitCalc,
+        date:today
+      });
+
+    } else {
+      await setDoc(ref,{
+        profit:profitCalc,
+        totalBets:count,
+        todayProfit:profitCalc,
+        date:today
+      });
+    }
+
+    alert("Result Done 😈🔥 Profit: ₹"+profitCalc);
+
+    loadStats();
+
+  }catch(err){
+    console.error(err);
+    alert("Error ❌");
+  }
+
+  declaring = false;
+};
+
+// 💰 WALLET (🔥 FIXED HISTORY)
+walletBtn.onclick = async ()=>{
+
+  let email = uemail.value.trim();
+  let amt = parseInt(amount.value);
+
+  if(!email || isNaN(amt)){
+    alert("Invalid input ❌");
     return;
   }
 
-  let betsSnap = await getDocs(collection(db,"bets"));
+  const ref = doc(db,"users",email);
+  const snap = await getDoc(ref);
 
-  let count = 0;
-  let totalBet = 0;
-  let totalPayout = 0;
-
-  for(let b of betsSnap.docs){
-
-    let data = b.data();
-
-    if(data.match === match && data.status !== "done"){
-
-      totalBet += data.amount;
-
-      let userRef = doc(db,"users",data.user);
-      let userSnap = await getDoc(userRef);
-
-      if(!userSnap.exists()) continue;
-
-      let userData = userSnap.data();
-      let balance = userData.balance || 0;
-
-      if(data.team === winner){
-
-        let winAmt = Math.floor(data.amount * data.multiplier);
-        totalPayout += winAmt;
-
-        await updateDoc(userRef,{
-          balance: balance + winAmt,
-          history:[
-            ...(userData.history||[]),
-            { type:"win", amt:winAmt, time:new Date().toLocaleString() }
-          ]
-        });
-
-      } else {
-
-        await updateDoc(userRef,{
-          history:[
-            ...(userData.history||[]),
-            { type:"loss", amt:data.amount, time:new Date().toLocaleString() }
-          ]
-        });
-
-      }
-
-      await updateDoc(doc(db,"bets",b.id),{
-        status:"done",
-        winner
-      });
-
-      count++;
-    }
-  }
-
-  let profit = totalBet - totalPayout;
-
-  let today = new Date().toLocaleDateString();
-  let ref = doc(db,"admin","stats");
-  let snap = await getDoc(ref);
+  let type = amt > 0 ? "deposit" : "withdraw";
 
   if(snap.exists()){
-    let d = snap.data();
+
+    let data = snap.data();
+    let newBal = (data.balance || 0) + amt;
+
+    if(newBal < 0) return alert("Low balance");
 
     await updateDoc(ref,{
-      profit:(d.profit||0)+profit,
-      totalBets:(d.totalBets||0)+count,
-      todayProfit: d.date===today ? (d.todayProfit||0)+profit : profit,
-      date:today
+      balance:newBal,
+      history:[
+        ...(data.history||[]),
+        {
+          type:type,
+          amt:Math.abs(amt),
+          time:new Date().toLocaleString()
+        }
+      ]
     });
+
   } else {
+
+    if(amt < 0) return alert("User not found");
+
     await setDoc(ref,{
-      profit,
-      totalBets:count,
-      todayProfit:profit,
-      date:today
+      balance:amt,
+      history:[
+        {
+          type:"deposit",
+          amt:amt,
+          time:new Date().toLocaleString()
+        }
+      ]
     });
-  }
-
-  alert("Result Done 😈🔥 Profit: ₹"+profit);
-
-  loadStats(); // refresh dashboard
-};
-
-// 💰 WALLET
-walletBtn.onclick = async ()=>{
-  let email=uemail.value.trim();
-  let amt=parseInt(amount.value);
-
-  const ref=doc(db,"users",email);
-  const snap=await getDoc(ref);
-
-  if(snap.exists()){
-    let newBal=(snap.data().balance||0)+amt;
-    if(newBal<0) return alert("Low balance");
-    await updateDoc(ref,{balance:newBal});
-  } else {
-    if(amt<0) return alert("User not found");
-    await setDoc(ref,{balance:amt});
   }
 
   alert("Wallet Updated 💰");
 };
 
 </script>
-
-</body>
-</html>
