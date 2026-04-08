@@ -55,32 +55,34 @@
   <div class="card">
     <h3>Update Matches (Max 10)</h3>
 
-    <input id="m1" placeholder="Match 1">
-    <input id="m2" placeholder="Match 2">
-    <input id="m3" placeholder="Match 3">
-    <input id="m4" placeholder="Match 4">
-    <input id="m5" placeholder="Match 5">
-    <input id="m6" placeholder="Match 6">
-    <input id="m7" placeholder="Match 7">
-    <input id="m8" placeholder="Match 8">
-    <input id="m9" placeholder="Match 9">
-    <input id="m10" placeholder="Match 10">
+    <input id="m1"><input id="m2"><input id="m3"><input id="m4"><input id="m5">
+    <input id="m6"><input id="m7"><input id="m8"><input id="m9"><input id="m10">
 
     <button onclick="saveMatches()">Save Matches</button>
   </div>
 
-  <!-- MATCH BET SETTINGS -->
+  <!-- BET SETTINGS -->
   <div class="card">
     <h3>Match Betting Settings</h3>
 
     <input id="bmatch" placeholder="Match Name (RCB vs CSK)">
     <input id="min" placeholder="Minimum Bet ₹">
-    <input id="multi" placeholder="Multiplier (1.5 / 2 / 3)">
+    <input id="multi" placeholder="Multiplier">
 
     <button onclick="saveBetSettings()">Save Bet Settings</button>
   </div>
 
-  <!-- WALLET (UNCHANGED ✅) -->
+  <!-- 🏆 RESULT + AUTO PAYOUT -->
+  <div class="card">
+    <h3>🏆 Declare Result (Auto Payout)</h3>
+
+    <input id="rmatch" placeholder="Match Name">
+    <input id="winner" placeholder="Winner Team">
+
+    <button onclick="declareResult()">Declare & Pay</button>
+  </div>
+
+  <!-- WALLET -->
   <div class="card">
     <h3>💰 Update User Wallet</h3>
 
@@ -93,23 +95,20 @@
 </div>
 
 <script>
-// 🔐 LOGIN
-document.getElementById("loginBtn").onclick = function(){
-  let u = document.getElementById("user").value.trim();
-  let p = document.getElementById("pass").value.trim();
-
-  if(u === "abhibababr" && p === "943188@."){
-    document.getElementById("loginBox").style.display = "none";
-    document.getElementById("panel").style.display = "block";
+// LOGIN
+loginBtn.onclick = function(){
+  if(user.value==="abhibababr" && pass.value==="943188@."){
+    loginBox.style.display="none";
+    panel.style.display="block";
   } else {
-    alert("Wrong ID/Password ❌");
+    alert("Wrong ID ❌");
   }
 };
 </script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
@@ -119,74 +118,106 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 
-// 🔥 SAVE 10 MATCHES
+// MATCH SAVE
 window.saveMatches = async ()=>{
   await setDoc(doc(db,"matches","today"),{
-    m1:m1.value,
-    m2:m2.value,
-    m3:m3.value,
-    m4:m4.value,
-    m5:m5.value,
-    m6:m6.value,
-    m7:m7.value,
-    m8:m8.value,
-    m9:m9.value,
-    m10:m10.value
+    m1:m1.value,m2:m2.value,m3:m3.value,m4:m4.value,m5:m5.value,
+    m6:m6.value,m7:m7.value,m8:m8.value,m9:m9.value,m10:m10.value
   });
-
-  alert("10 Matches Updated 🔥");
+  alert("Matches Updated 🔥");
 };
 
-// 🔥 SAVE BET SETTINGS
+// BET SETTINGS
 window.saveBetSettings = async ()=>{
-  let match = document.getElementById("bmatch").value;
-  let min = parseInt(document.getElementById("min").value);
-  let multi = parseFloat(document.getElementById("multi").value);
-
-  if(!match || !min || !multi){
-    alert("Fill all fields ❌");
-    return;
-  }
-
-  await setDoc(doc(db,"matches",match),{
-    minBet:min,
-    multiplier:multi
+  await setDoc(doc(db,"matches",bmatch.value),{
+    minBet:parseInt(min.value),
+    multiplier:parseFloat(multi.value)
   });
-
-  alert("Bet Settings Saved 😈🔥");
+  alert("Settings Saved 😈");
 };
 
-// 💰 WALLET (UNCHANGED)
-document.getElementById("walletBtn").onclick = async ()=>{
-  let email = document.getElementById("uemail").value.trim();
-  let amt = parseInt(document.getElementById("amount").value);
+// 🏆 AUTO PAYOUT SYSTEM
+window.declareResult = async ()=>{
 
-  if(!email || isNaN(amt)){
-    alert("Fill all fields");
+  let match = rmatch.value;
+  let winner = winnerInput.value || winner.value;
+
+  if(!match || !winner){
+    alert("Fill all ❌");
     return;
   }
 
-  const ref = doc(db,"users",email);
-  const snap = await getDoc(ref);
+  let bets = await getDocs(collection(db,"bets"));
+
+  let count = 0;
+
+  for(let b of bets.docs){
+
+    let d = b.data();
+
+    if(d.match === match){
+
+      let userRef = doc(db,"users",d.user);
+      let userSnap = await getDoc(userRef);
+
+      if(!userSnap.exists()) continue;
+
+      let udata = userSnap.data();
+      let bal = udata.balance || 0;
+
+      if(d.team === winner){
+
+        let winAmt = Math.floor(d.amount * d.multiplier);
+
+        await updateDoc(userRef,{
+          balance: bal + winAmt,
+          history:[
+            ...(udata.history||[]),
+            {
+              type:"deposit",
+              amt:winAmt,
+              time:new Date().toLocaleString()
+            }
+          ]
+        });
+
+      } else {
+
+        await updateDoc(userRef,{
+          history:[
+            ...(udata.history||[]),
+            {
+              type:"withdraw",
+              amt:d.amount,
+              time:new Date().toLocaleString()
+            }
+          ]
+        });
+
+      }
+
+      count++;
+    }
+  }
+
+  alert("Payout Done 😈🔥 Bets: "+count);
+};
+
+// WALLET (UNCHANGED)
+walletBtn.onclick = async ()=>{
+  let email=uemail.value.trim();
+  let amt=parseInt(amount.value);
+
+  const ref=doc(db,"users",email);
+  const snap=await getDoc(ref);
 
   if(snap.exists()){
-    let old = snap.data().balance || 0;
-    let newBalance = old + amt;
-
-    if(newBalance < 0){
-      alert("Insufficient Balance ❌");
-      return;
-    }
-
-    await updateDoc(ref,{ balance:newBalance });
-
+    let newBal=(snap.data().balance||0)+amt;
+    if(newBal<0) return alert("Low balance");
+    await updateDoc(ref,{balance:newBal});
   } else {
-    if(amt < 0){
-      alert("User not found ❌");
-      return;
-    }
-
-    await setDoc(ref,{ balance:amt });
+    if(amt<0) return alert("User not found");
+    await setDoc(ref,{balance:amt});
   }
 
   alert("Wallet Updated 💰");
