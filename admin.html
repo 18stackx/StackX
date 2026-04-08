@@ -40,14 +40,6 @@
 
 <body>
 
-<!-- LOGIN -->
-<div id="loginBox" class="card">
-  <h3>🔐 Admin Login</h3>
-  <input id="user" placeholder="User ID">
-  <input id="pass" type="password" placeholder="Password">
-  <button id="loginBtn">Login</button>
-</div>
-
 <!-- PANEL -->
 <div id="panel" style="display:none;">
 
@@ -94,21 +86,10 @@
 
 </div>
 
-<script>
-// LOGIN
-loginBtn.onclick = function(){
-  if(user.value==="abhibababr" && pass.value==="943188@."){
-    loginBox.style.display="none";
-    panel.style.display="block";
-  } else {
-    alert("Wrong ID ❌");
-  }
-};
-</script>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, updateDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
@@ -117,6 +98,27 @@ const app = initializeApp({
 });
 
 const db = getFirestore(app);
+const auth = getAuth(app);
+
+// 🔐 ADMIN AUTH (FINAL)
+onAuthStateChanged(auth, (user)=>{
+
+  if(!user){
+    alert("Login required ❌");
+    window.location.href="index.html";
+    return;
+  }
+
+  // 🔥 ONLY YOUR EMAIL ALLOWED
+  if(user.email !== "18stackx@gmail.com"){
+    alert("Access Denied ❌");
+    window.location.href="home.html";
+    return;
+  }
+
+  // ✅ SHOW PANEL
+  document.getElementById("panel").style.display="block";
+});
 
 // 🔥 SAVE MATCHES
 window.saveMatches = async ()=>{
@@ -136,11 +138,11 @@ window.saveBetSettings = async ()=>{
   alert("Settings Saved 😈");
 };
 
-// 🏆 FINAL AUTO PAYOUT (UPGRADED)
+// 🏆 AUTO PAYOUT
 window.declareResult = async function(){
 
-  let match = document.getElementById("rmatch").value.trim();
-  let winner = document.getElementById("winner").value.trim();
+  let match = rmatch.value.trim();
+  let winner = winner.value.trim();
 
   if(!match || !winner){
     alert("Fill all ❌");
@@ -155,7 +157,6 @@ window.declareResult = async function(){
 
     let data = b.data();
 
-    // ✅ ONLY PENDING BETS
     if(data.match === match && data.status !== "done"){
 
       let userRef = doc(db,"users",data.user);
@@ -166,7 +167,6 @@ window.declareResult = async function(){
       let userData = userSnap.data();
       let balance = userData.balance || 0;
 
-      // ✅ WIN
       if(data.team === winner){
 
         let winAmt = Math.floor(data.amount * data.multiplier);
@@ -185,7 +185,6 @@ window.declareResult = async function(){
 
       } else {
 
-        // ❌ LOSS
         await updateDoc(userRef,{
           history:[
             ...(userData.history || []),
@@ -199,7 +198,6 @@ window.declareResult = async function(){
 
       }
 
-      // 🔥 MARK DONE (MOST IMPORTANT)
       await updateDoc(doc(db,"bets",b.id),{
         status:"done"
       });
@@ -208,7 +206,7 @@ window.declareResult = async function(){
     }
   }
 
-  alert("Result Declared 😈🔥\nProcessed Bets: "+count);
+  alert("Result Declared 😈🔥 Bets: "+count);
 };
 
 // 💰 WALLET (UNCHANGED)
