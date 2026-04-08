@@ -7,12 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
   <style>
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-      font-family:'Poppins',sans-serif;
-    }
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
 
     body{
       background:#0f0f1a;
@@ -20,10 +15,7 @@
       padding-bottom:80px;
     }
 
-    h2{
-      text-align:center;
-      margin-top:15px;
-    }
+    h2{text-align:center;margin-top:15px;}
 
     .box{
       background:rgba(255,255,255,0.05);
@@ -68,11 +60,12 @@
   <div onclick="goHome()">🏠</div>
   <div onclick="goProfile()">👤</div>
   <div onclick="goWallet()">💰</div>
+  <div onclick="goBets()">📊</div> <!-- 🔥 ADDED -->
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const app = initializeApp({
@@ -91,17 +84,22 @@ onAuthStateChanged(auth, async (user)=>{
     return;
   }
 
-  const snap = await getDocs(collection(db,"bets"));
+  // 🔥 ONLY USER BETS (FAST QUERY)
+  const q = query(
+    collection(db,"bets"),
+    where("user","==",user.email)
+  );
+
+  const snap = await getDocs(q);
 
   let html = "";
-  let found = false;
 
-  snap.forEach(doc=>{
-    let d = doc.data();
+  if(snap.empty){
+    html = "No bets yet 😴";
+  } else {
 
-    if(d.user === user.email){
-
-      found = true;
+    snap.forEach(doc=>{
+      let d = doc.data();
 
       let statusClass = "pending";
       let statusText = "Pending ⏳";
@@ -125,11 +123,7 @@ onAuthStateChanged(auth, async (user)=>{
         Time: ${d.time}<br>
         <b class="${statusClass}">${statusText}</b>
       </div>`;
-    }
-  });
-
-  if(!found){
-    html = "No bets yet 😴";
+    });
   }
 
   document.getElementById("betsBox").innerHTML = html;
@@ -141,6 +135,7 @@ onAuthStateChanged(auth, async (user)=>{
 window.goHome = ()=> location.href="home.html";
 window.goProfile = ()=> location.href="profile.html";
 window.goWallet = ()=> location.href="wallet.html";
+window.goBets = ()=> location.href="bets.html"; // 🔥 IMPORTANT
 </script>
 
 </body>
