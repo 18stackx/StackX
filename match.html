@@ -147,7 +147,6 @@ let snap = await getDoc(doc(db,"matches",match));
 
 if(snap.exists()){
   let data = snap.data();
-
   min = data.minBet || 10;
   multiplier = data.multiplier || 1.5;
 }
@@ -187,8 +186,13 @@ window.placeBet = async function(){
       team:selected,
       amount:amt,
       multiplier,
-      user:user.email, // ✅ FIXED
-      time:new Date().toLocaleString() // ✅ FIXED
+      user:user.email,
+
+      // 🔥 NEW (IMPORTANT)
+      status:"pending",
+
+      // 🔥 TIME
+      time:new Date().toLocaleString()
     });
 
     alert("Bet Placed 😈🔥");
