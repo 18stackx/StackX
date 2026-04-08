@@ -1,1 +1,147 @@
-g
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Bets</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:'Poppins',sans-serif;
+    }
+
+    body{
+      background:#0f0f1a;
+      color:white;
+      padding-bottom:80px;
+    }
+
+    h2{
+      text-align:center;
+      margin-top:15px;
+    }
+
+    .box{
+      background:rgba(255,255,255,0.05);
+      margin:15px;
+      padding:15px;
+      border-radius:15px;
+    }
+
+    .bet{
+      background:#111827;
+      padding:12px;
+      border-radius:12px;
+      margin:10px 0;
+      font-size:14px;
+    }
+
+    .win{color:#22c55e;}
+    .loss{color:red;}
+    .pending{color:orange;}
+
+    .nav{
+      position:fixed;
+      bottom:0;
+      width:100%;
+      background:rgba(0,0,0,0.7);
+      display:flex;
+      justify-content:space-around;
+      padding:12px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>📊 My Bets</h2>
+
+<div class="box" id="betsBox">
+  Loading...
+</div>
+
+<div class="nav">
+  <div onclick="goHome()">🏠</div>
+  <div onclick="goProfile()">👤</div>
+  <div onclick="goWallet()">💰</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
+  authDomain:"stackx-9f92e.firebaseapp.com",
+  projectId:"stackx-9f92e"
+});
+
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, async (user)=>{
+
+  if(!user){
+    location.href="index.html";
+    return;
+  }
+
+  const snap = await getDocs(collection(db,"bets"));
+
+  let html = "";
+  let found = false;
+
+  snap.forEach(doc=>{
+    let d = doc.data();
+
+    if(d.user === user.email){
+
+      found = true;
+
+      let statusClass = "pending";
+      let statusText = "Pending ⏳";
+
+      if(d.status === "done"){
+        if(d.team === d.winner){
+          statusClass = "win";
+          statusText = "Win 🤑";
+        } else {
+          statusClass = "loss";
+          statusText = "Loss ❌";
+        }
+      }
+
+      html += `
+      <div class="bet">
+        <b>${d.match}</b><br>
+        Team: ${d.team}<br>
+        Amount: ₹${d.amount}<br>
+        Return: ${d.multiplier}x<br>
+        Time: ${d.time}<br>
+        <b class="${statusClass}">${statusText}</b>
+      </div>`;
+    }
+  });
+
+  if(!found){
+    html = "No bets yet 😴";
+  }
+
+  document.getElementById("betsBox").innerHTML = html;
+
+});
+</script>
+
+<script>
+window.goHome = ()=> location.href="home.html";
+window.goProfile = ()=> location.href="profile.html";
+window.goWallet = ()=> location.href="wallet.html";
+</script>
+
+</body>
+</html>
