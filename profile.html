@@ -24,30 +24,6 @@
       font-size:18px;
     }
 
-    body::before{
-      content:'';
-      position:fixed;
-      width:600px;
-      height:600px;
-      background:radial-gradient(circle, rgba(255,0,80,0.25), transparent 70%);
-      top:-200px;
-      left:-200px;
-      filter:blur(120px);
-      z-index:-1;
-    }
-
-    body::after{
-      content:'';
-      position:fixed;
-      width:600px;
-      height:600px;
-      background:radial-gradient(circle, rgba(0,150,255,0.25), transparent 70%);
-      bottom:-200px;
-      right:-200px;
-      filter:blur(120px);
-      z-index:-1;
-    }
-
     .header{
       display:flex;
       justify-content:center;
@@ -74,7 +50,7 @@
     .historyItem{
       display:flex;
       justify-content:space-between;
-      padding:8px 0;
+      padding:10px 0;
       border-bottom:1px solid rgba(255,255,255,0.1);
       font-size:13px;
     }
@@ -83,8 +59,9 @@
     .center{font-weight:600;}
     .right{font-weight:600;}
 
-    .deposit{color:#22c55e;}
-    .withdraw{color:red;}
+    .green{color:#22c55e;}
+    .red{color:#ff4d4d;}
+    .yellow{color:#facc15;}
 
     button{
       padding:12px;
@@ -145,11 +122,6 @@
   <p>Wallet: ₹<span id="bal">0</span></p>
 </div>
 
-<div class="box">
-  <h3>🎮 Joined Contests</h3>
-  <div id="contests">No contests</div>
-</div>
-
 <div class="box" onclick="toggleHistory()">
   <h3>📜 Wallet History ⬇️</h3>
   <div id="history" class="historyBox"></div>
@@ -172,6 +144,7 @@
   <div onclick="goHome()">🏠</div>
   <div onclick="goProfile()">👤</div>
   <div onclick="goWallet()">💰</div>
+  <div onclick="goBets()">📊</div>
 </div>
 
 <script type="module">
@@ -188,67 +161,85 @@ const app = initializeApp({
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 🔥 FINAL SAFE AUTH
 onAuthStateChanged(auth, async (user)=>{
 
   if(user){
 
-    document.getElementById("loader").style.display="none";
-    document.getElementById("main").style.display="block";
+    loader.style.display="none";
+    main.style.display="block";
 
     const userRef = doc(db,"users",user.email);
 
-    document.getElementById("email").innerText = user.email;
-    document.getElementById("name").innerText = user.displayName || "User";
+    email.innerText = user.email;
+    name.innerText = user.displayName || "User";
 
     const snap = await getDoc(userRef);
 
     if(snap.exists()){
       const data = snap.data();
 
-      document.getElementById("bal").innerText = data.balance || 0;
-
-      document.getElementById("contests").innerText =
-        (data.contests || []).join(", ") || "No contests";
+      bal.innerText = data.balance || 0;
 
       const refCode = data.ref || user.email.split("@")[0];
       const link = window.location.origin + "?ref=" + refCode;
 
-      document.getElementById("ref").innerText = refCode;
-      document.getElementById("link").innerText = link;
+      ref.innerText = refCode;
+      linkEl.innerText = link;
 
       window.refLink = link;
 
       const historyDiv = document.getElementById("history");
 
       if(data.history && data.history.length > 0){
-        historyDiv.innerHTML = data.history.map(h=>{
-          const sign = h.type==="deposit"?"+":"-";
-          const type = h.type==="deposit"?"Deposit":"Withdraw";
+
+        let reversed = [...data.history].reverse();
+
+        historyDiv.innerHTML = reversed.map(h=>{
+
+          let sign = "-";
+          let text = "Bet 🎯";
+          let color = "red";
+
+          if(h.type==="deposit"){
+            sign="+";
+            text="Deposit 💵";
+            color="green";
+          }
+          else if(h.type==="bet"){
+            sign="-";
+            text="Bet 🎯";
+          }
+          else if(h.type==="win"){
+            sign="+";
+            text="Win 🤑";
+            color="green";
+          }
+          else if(h.type==="loss"){
+            sign="-";
+            text="Loss ❌";
+          }
 
           return `
           <div class="historyItem">
             <div class="left">${h.time || "--"}</div>
-            <div class="center">${type}</div>
-            <div class="right ${h.type}">
+            <div class="center">${text}</div>
+            <div class="right ${color}">
               ${sign}₹${h.amt}
             </div>
           </div>`;
         }).join("");
+
       } else {
-        historyDiv.innerHTML="No history";
+        historyDiv.innerHTML="No history 😴";
       }
     }
 
   } else {
-
-    // 🔥 SAFE REDIRECT (NO BUG)
     setTimeout(()=>{
-      if(auth.currentUser === null){
-        window.location.href="index.html";
+      if(!auth.currentUser){
+        location.href="index.html";
       }
     },2000);
-
   }
 
 });
@@ -262,12 +253,13 @@ function toggleHistory(){
 
 function copyRef(){
   navigator.clipboard.writeText(window.refLink);
-  alert("Referral link copied 😈");
+  alert("Copied 😈");
 }
 
 window.goHome=()=>location.href="home.html";
 window.goProfile=()=>location.href="profile.html";
 window.goWallet=()=>location.href="wallet.html";
+window.goBets=()=>location.href="bets.html";
 </script>
 
 </body>
