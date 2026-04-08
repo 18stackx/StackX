@@ -15,7 +15,6 @@
       padding-bottom:80px;
     }
 
-    /* 🔥 GLOW BG SAME AS PROFILE */
     body::before{
       content:'';
       position:fixed;
@@ -52,6 +51,14 @@
     .trusted{font-size:12px;color:#22c55e;}
 
     h2{text-align:center;margin-top:10px;}
+
+    /* 🔥 LIVE USERS */
+    #onlineUsers{
+      text-align:center;
+      font-size:13px;
+      color:#22c55e;
+      margin-top:5px;
+    }
 
     .box{
       background:rgba(255,255,255,0.05);
@@ -123,6 +130,9 @@
 
 <h2>🏏 Cricket Fantasy</h2>
 
+<!-- 🔥 LIVE USERS -->
+<div id="onlineUsers">🔥 Loading users...</div>
+
 <div class="box">
   <h3>💰 Wallet: ₹<span id="balance">--</span></h3>
 </div>
@@ -156,11 +166,9 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 🔥 MATCH LOAD (FIXED)
+// 🔥 MATCH LOAD
 async function loadMatches(){
-
   let snap = await getDoc(doc(db,"matches","today"));
-
   let container = document.getElementById("matches");
   container.innerHTML = "";
 
@@ -168,9 +176,7 @@ async function loadMatches(){
     let data = snap.data();
 
     for(let i=1;i<=10;i++){
-
       let match = data["m"+i];
-
       if(!match) continue;
 
       let div = document.createElement("div");
@@ -200,6 +206,49 @@ loadMatches();
 </script>
 
 <script>
+
+// 🔥 SMART LIVE USERS SYSTEM
+function getUsers(){
+
+  let hour = new Date().getHours();
+  let users = 0;
+
+  if(hour >= 6 && hour < 12){
+    users = 300 + Math.random()*200;
+  }
+  else if(hour >= 12 && hour < 18){
+    users = 500 + Math.random()*100;
+  }
+  else if(hour >= 18 && hour < 22){
+    users = 800 + Math.random()*1200;
+  }
+  else{
+    if(hour >= 22){
+      users = 1000 + Math.random()*500;
+    }
+    else if(hour >= 0 && hour < 3){
+      users = 300 + Math.random()*200;
+    }
+    else{
+      users = 50 + Math.random()*100;
+    }
+  }
+
+  return Math.floor(users);
+}
+
+// 🔁 UPDATE EVERY 3 SEC
+setInterval(()=>{
+  document.getElementById("onlineUsers").innerText =
+    "🔥 " + getUsers() + " users online";
+},3000);
+
+// FIRST LOAD
+document.getElementById("onlineUsers").innerText =
+  "🔥 " + getUsers() + " users online";
+
+
+// NAV
 function openMatch(name){
   localStorage.setItem("matchName",name);
   window.location.href="match.html";
@@ -208,6 +257,7 @@ function openMatch(name){
 window.goHome=()=>location.href="home.html";
 window.goProfile=()=>location.href="profile.html";
 window.goWallet=()=>location.href="wallet.html";
+
 </script>
 
 </body>
