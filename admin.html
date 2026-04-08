@@ -86,10 +86,7 @@
     <input id="minBetInput" placeholder="Min Bet">
     <input id="t1odds" placeholder="Team1 Odds (max 3)">
     <input id="t2odds" placeholder="Team2 Odds (max 3)">
-
-    <!-- 🔥 NEW TIME LOCK -->
     <input id="lockTime" type="datetime-local">
-
     <button onclick="saveBetSettings()">Save</button>
   </div>
 
@@ -100,7 +97,6 @@
     <button onclick="declareResult()">Declare</button>
   </div>
 
-  <!-- 🔥 ADDED QUESTION SYSTEM -->
   <div class="card">
     <h3>🎯 Prediction System</h3>
 
@@ -151,18 +147,15 @@ const auth = getAuth(app);
 
 // LOGIN
 onAuthStateChanged(auth,(user)=>{
-
   if(!user || user.email !== "18stackx@gmail.com"){
     alert("Access Denied ❌");
     return;
   }
 
   document.getElementById("panel").style.display="block";
-  loadStats();
-  loadLiveMatches();
 });
 
-// 🔥 BET SETTINGS WITH TIME LOCK
+// 🔥 FIXED BET SETTINGS (AUTO ADD TO HOME)
 window.saveBetSettings = async ()=>{
 
   let match = document.getElementById("bmatch").value.trim();
@@ -176,6 +169,7 @@ window.saveBetSettings = async ()=>{
     return;
   }
 
+  // SAVE MATCH DATA
   await setDoc(doc(db,"matches",match),{
     minBet,
     rcbOdds:t1,
@@ -185,77 +179,21 @@ window.saveBetSettings = async ()=>{
     status:"live",
     winner:null,
     date:new Date().toLocaleDateString('en-IN'),
-    lockTime:lockTime // 🔥 ADDED
+    lockTime:lockTime
   },{merge:true});
 
-  alert("Saved 😈");
-};
+  // 🔥 ADD TO HOME LIST
+  let todayRef = doc(db,"matches","today");
+  let snap = await getDoc(todayRef);
 
-// 🔥 QUESTION SAVE
-window.savePrediction = async ()=>{
+  let data = snap.exists() ? snap.data() : {};
+  let index = Object.keys(data).length + 1;
 
-  let match = document.getElementById("pMatch").value.trim();
-  let question = document.getElementById("pQuestion").value.trim();
+  await setDoc(todayRef,{
+    ["m"+index]: match
+  },{merge:true});
 
-  let options = [
-    {name:opt1.value, return:Math.min(parseFloat(ret1.value),3), pool:0},
-    {name:opt2.value, return:Math.min(parseFloat(ret2.value),3), pool:0},
-    {name:opt3.value, return:Math.min(parseFloat(ret3.value),3), pool:0}
-  ];
-
-  let id = "pred_"+Date.now();
-
-  await setDoc(doc(db,"predictions",id),{
-    match,
-    question,
-    options,
-    status:"live",
-    correct:null
-  });
-
-  alert("Question Added 🔥 ID: "+id);
-};
-
-// 🔥 DECLARE RESULT
-window.declarePrediction = async ()=>{
-
-  let id = document.getElementById("predId").value.trim();
-  let correct = document.getElementById("correctOpt").value.trim();
-
-  let betsSnap = await getDocs(collection(db,"predBets"));
-
-  for(let b of betsSnap.docs){
-
-    let data = b.data();
-
-    if(data.predictionId === id && data.status !== "done"){
-
-      let userRef = doc(db,"users",data.user);
-      let userSnap = await getDoc(userRef);
-
-      if(!userSnap.exists()) continue;
-
-      let userData = userSnap.data();
-
-      if(data.option === correct){
-
-        let winAmt = Math.floor(data.amount * 2 * 0.9);
-
-        await updateDoc(userRef,{
-          balance:(userData.balance||0)+winAmt
-        });
-      }
-
-      await updateDoc(doc(db,"predBets",b.id),{status:"done"});
-    }
-  }
-
-  await updateDoc(doc(db,"predictions",id),{
-    status:"completed",
-    correct
-  });
-
-  alert("Prediction Done 😈");
+  alert("Saved 😈 (Now visible on Home)");
 };
 
 </script>
