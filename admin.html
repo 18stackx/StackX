@@ -96,7 +96,7 @@
     <button onclick="declareResult()">Declare</button>
   </div>
 
-  <!-- 🔥 NEW: QUESTION SYSTEM -->
+  <!-- 🔥 ADDED QUESTION SYSTEM -->
   <div class="card">
     <h3>🎯 Prediction System</h3>
 
@@ -147,20 +147,22 @@ const auth = getAuth(app);
 
 // LOGIN
 onAuthStateChanged(auth,(user)=>{
+
   if(!user || user.email !== "18stackx@gmail.com"){
     alert("Access Denied ❌");
     return;
   }
+
   document.getElementById("panel").style.display="block";
   loadStats();
   loadLiveMatches();
 });
 
-// 🔥 SAVE PREDICTION
+// 🔥 QUESTION SAVE
 window.savePrediction = async ()=>{
 
-  let match = pMatch.value.trim();
-  let question = pQuestion.value.trim();
+  let match = document.getElementById("pMatch").value.trim();
+  let question = document.getElementById("pQuestion").value.trim();
 
   let options = [
     {name:opt1.value, return:Math.min(parseFloat(ret1.value),3), pool:0},
@@ -181,11 +183,11 @@ window.savePrediction = async ()=>{
   alert("Question Added 🔥 ID: "+id);
 };
 
-// 🔥 DECLARE PREDICTION RESULT
+// 🔥 DECLARE RESULT
 window.declarePrediction = async ()=>{
 
-  let id = predId.value.trim();
-  let correct = correctOpt.value.trim();
+  let id = document.getElementById("predId").value.trim();
+  let correct = document.getElementById("correctOpt").value.trim();
 
   let betsSnap = await getDocs(collection(db,"predBets"));
 
