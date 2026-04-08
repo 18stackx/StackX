@@ -4,173 +4,92 @@
   <title>Match</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- 🔥 FONT -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
 
   <style>
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-      font-family:'Poppins',sans-serif;
-    }
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
 
     body{
       background:#0f0f1a;
       color:white;
-      overflow-x:hidden;
       padding-bottom:80px;
-    }
-
-    /* 🔥 GLOW BG */
-    body::before{
-      content:'';
-      position:fixed;
-      width:600px;
-      height:600px;
-      background:radial-gradient(circle, rgba(255,0,80,0.25), transparent 70%);
-      top:-200px;
-      left:-200px;
-      filter:blur(120px);
-      z-index:-1;
-    }
-
-    body::after{
-      content:'';
-      position:fixed;
-      width:600px;
-      height:600px;
-      background:radial-gradient(circle, rgba(0,150,255,0.25), transparent 70%);
-      bottom:-200px;
-      right:-200px;
-      filter:blur(120px);
-      z-index:-1;
-    }
-
-    /* 🔥 HEADER */
-    .header{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      margin-top:15px;
       text-align:center;
     }
 
-    .header img{
-      width:40px;
-      border-radius:10px;
-    }
-
-    .trusted{
-      font-size:12px;
-      color:#22c55e;
-    }
-
-    .matchTitle{
-      margin-top:10px;
-      text-align:center;
-      font-weight:600;
-    }
-
-    /* 🔥 PLAYER GRID */
-    .players{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-      gap:12px;
-      padding:15px;
-    }
-
-    /* 🔥 PLAYER CARD */
-    .player{
+    .box{
       background:rgba(255,255,255,0.05);
-      padding:15px;
-      border-radius:15px;
-      text-align:center;
-      cursor:pointer;
-      transition:0.3s;
-      border:1px solid transparent;
+      margin:15px;
+      padding:20px;
+      border-radius:20px;
     }
 
-    .player:hover{
-      transform:translateY(-5px);
-      background:rgba(255,255,255,0.08);
-    }
+    h2{margin-top:15px;}
 
-    /* 🔥 SELECTED */
-    .selected{
-      border:2px solid #22c55e;
-      box-shadow:0 0 10px #22c55e;
-    }
-
-    /* 🔥 CAPTAIN */
-    .captain{
-      border:2px solid gold;
-      box-shadow:0 0 10px gold;
-    }
-
-    /* 🔥 VICE */
-    .vice{
-      border:2px solid #00c3ff;
-      box-shadow:0 0 10px #00c3ff;
-    }
-
-    /* 🔥 BUTTON */
     button{
       width:90%;
-      margin:10px auto;
-      display:block;
       padding:12px;
+      margin:10px;
       border:none;
       border-radius:30px;
       background:#ff2a2a;
       color:white;
       font-weight:600;
-      transition:0.3s;
     }
 
-    button:hover{
-      transform:scale(1.05);
+    input{
+      width:85%;
+      padding:12px;
+      border-radius:10px;
+      border:none;
+      margin-top:10px;
     }
 
-    /* 🔥 NAV */
+    .teamBtn{
+      background:#111827;
+      margin:10px;
+      padding:15px;
+      border-radius:12px;
+      cursor:pointer;
+    }
+
+    .selected{
+      background:#22c55e;
+    }
+
     .nav{
       position:fixed;
       bottom:0;
       width:100%;
       background:rgba(0,0,0,0.7);
-      backdrop-filter:blur(10px);
       display:flex;
       justify-content:space-around;
       padding:12px;
-      z-index:999;
-    }
-
-    .nav div{
-      cursor:pointer;
     }
   </style>
 </head>
 
 <body>
 
-<!-- 🔥 HEADER -->
-<div class="header">
-  <img src="logo.png">
-  <div>
-    <div><b>StackX Fantasy</b></div>
-    <div class="trusted">✔ Trusted Site</div>
-  </div>
+<h2 id="matchTitle"></h2>
+
+<div class="box">
+  <h3>Select Winner</h3>
+
+  <div id="team1" class="teamBtn"></div>
+  <div id="team2" class="teamBtn"></div>
 </div>
 
-<h3 id="matchTitle" class="matchTitle"></h3>
+<div class="box">
+  <h3>💰 Bet Amount</h3>
 
-<div id="players" class="players"></div>
+  <input id="amt" placeholder="Enter Amount">
 
-<button onclick="saveTeam()">Save Team</button>
-<button onclick="goPreview()">Preview Team</button>
+  <p id="minBet"></p>
+  <p id="return"></p>
 
-<!-- NAV -->
+  <button onclick="placeBet()">Place Bet</button>
+</div>
+
 <div class="nav">
   <div onclick="goHome()">🏠</div>
   <div onclick="goProfile()">👤</div>
@@ -179,7 +98,8 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
@@ -188,77 +108,75 @@ const app = initializeApp({
 });
 
 const db = getFirestore(app);
+const auth = getAuth(app);
 
+// 🔥 LOAD MATCH
 let match = localStorage.getItem("matchName");
 document.getElementById("matchTitle").innerText = match;
 
 let [t1,t2] = match.split(" vs ");
 
-let snap1 = await getDoc(doc(db,"teams",t1.trim()));
-let snap2 = await getDoc(doc(db,"teams",t2.trim()));
+team1.innerText = t1;
+team2.innerText = t2;
 
-let allPlayers = [...snap1.data().players, ...snap2.data().players];
+let selected = null;
 
-let container = document.getElementById("players");
-
-let selected = [];
-let captain = null;
-let vice = null;
-
-allPlayers.forEach(p=>{
-  let div = document.createElement("div");
-  div.className = "player";
-  div.innerText = p;
-
-  div.onclick = ()=>{
-
-    if(!selected.includes(p)){
-      if(selected.length>=11){
-        alert("Max 11 players ❌");
-        return;
-      }
-      selected.push(p);
-      div.classList.add("selected");
-    }else{
-
-      if(!captain){
-        captain = p;
-        div.classList.add("captain");
-        alert("Captain selected ⭐");
-        return;
-      }
-
-      if(!vice && p!==captain){
-        vice = p;
-        div.classList.add("vice");
-        alert("Vice Captain selected ⚡");
-        return;
-      }
-
-      selected = selected.filter(x=>x!==p);
-      div.classList.remove("selected","captain","vice");
-
-      if(p===captain) captain=null;
-      if(p===vice) vice=null;
-    }
-  };
-
-  container.appendChild(div);
-});
-
-// SAVE
-window.saveTeam = ()=>{
-  localStorage.setItem("team", JSON.stringify({
-    players:selected,
-    captain,
-    vice
-  }));
-  alert("Team Saved 😈🔥");
+team1.onclick = ()=>{
+  selected = t1;
+  team1.classList.add("selected");
+  team2.classList.remove("selected");
 };
 
-// PREVIEW
-window.goPreview = ()=>{
-  window.location.href="preview.html";
+team2.onclick = ()=>{
+  selected = t2;
+  team2.classList.add("selected");
+  team1.classList.remove("selected");
+};
+
+// 🔥 ADMIN DATA LOAD
+let min = 0;
+let multiplier = 1;
+
+let snap = await getDoc(doc(db,"matches",match));
+
+if(snap.exists()){
+  let data = snap.data();
+
+  min = data.minBet || 10;
+  multiplier = data.multiplier || 1.5;
+
+  document.getElementById("minBet").innerText = "Min Bet: ₹"+min;
+  document.getElementById("return").innerText = "Return: "+multiplier+"x";
+}
+
+// 🔥 PLACE BET
+window.placeBet = async function(){
+
+  let amt = parseInt(document.getElementById("amt").value);
+
+  if(!selected){
+    alert("Select team ❌");
+    return;
+  }
+
+  if(!amt || amt < min){
+    alert("Minimum ₹"+min);
+    return;
+  }
+
+  const user = auth.currentUser;
+
+  let ref = doc(db,"bets",user.email+"_"+Date.now());
+
+  await setDoc(ref,{
+    match,
+    team:selected,
+    amount:amt,
+    multiplier,
+    time:new Date().toLocaleString()
+  });
+
+  alert("Bet Placed 😈🔥");
 };
 
 // NAV
