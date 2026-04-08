@@ -86,7 +86,6 @@
   <h3>💰 Bet Amount</h3>
 
   <input id="amt" placeholder="Enter Amount">
-
   <p id="minBet"></p>
 
   <button onclick="placeBet()">Place Bet</button>
@@ -166,18 +165,26 @@ document.getElementById("minBet").innerText = "Min Bet: ₹"+min;
 document.getElementById("odds1").innerText = "Odds: "+odds1+"x";
 document.getElementById("odds2").innerText = "Odds: "+odds2+"x";
 
+// 🔒 DOUBLE CLICK PROTECTION
+let loading = false;
+
 // 🔥 PLACE BET
 window.placeBet = async function(){
+
+  if(loading) return;
+  loading = true;
 
   let amt = parseInt(document.getElementById("amt").value);
 
   if(!selected){
     alert("Select team ❌");
+    loading = false;
     return;
   }
 
   if(!amt || amt < min){
     alert("Minimum ₹"+min);
+    loading = false;
     return;
   }
 
@@ -189,31 +196,31 @@ window.placeBet = async function(){
     return;
   }
 
-  // 🔥 USER DATA
   const userRef = doc(db,"users",user.email);
   const userSnap = await getDoc(userRef);
 
   if(!userSnap.exists()){
     alert("User not found ❌");
+    loading = false;
     return;
   }
 
   let userData = userSnap.data();
   let balance = userData.balance || 0;
 
-  // ❌ CHECK BALANCE
   if(balance < amt){
     alert("Insufficient Balance ❌");
+    loading = false;
     return;
   }
 
-  // ✅ CUT MONEY
+  // ✅ CUT MONEY + HISTORY FIX
   await updateDoc(userRef,{
     balance: balance - amt,
     history:[
       ...(userData.history || []),
       {
-        type:"withdraw",
+        type:"bet",   // 🔥 FIXED
         amt:amt,
         time:new Date().toLocaleString()
       }
@@ -222,14 +229,13 @@ window.placeBet = async function(){
 
   let multiplier = selected === t1 ? odds1 : odds2;
 
-  // 🔥 UPDATE POOL
+  // 🔥 POOL UPDATE
   if(selected === t1){
     pool1 += amt;
   } else {
     pool2 += amt;
   }
 
-  // 🔥 ODDS CHANGE
   let total = pool1 + pool2;
 
   if(total > 0){
