@@ -134,7 +134,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, getDocs, collection, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, getDocs, collection, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const app = initializeApp({
@@ -166,9 +166,8 @@ onAuthStateChanged(auth, async (user)=>{
   }
 });
 
-// 🔥 FIXED MATCH LOAD (CORRECT)
-async function loadMatches(){
-  let snap = await getDoc(doc(db,"matches","today"));
+// 🔥 REALTIME MATCH LOAD (FINAL FIX)
+onSnapshot(doc(db,"matches","today"), async (snap)=>{
   let container = document.getElementById("matches");
   container.innerHTML = "";
 
@@ -177,7 +176,7 @@ async function loadMatches(){
 
     for(let key in data){
 
-      let match = data[key]; // ✅ FIX
+      let match = data[key];
 
       let matchRef = await getDoc(doc(db,"matches",match));
       if(!matchRef.exists()) continue;
@@ -191,6 +190,7 @@ async function loadMatches(){
       if(d.lockTime){
         let now = new Date();
         let lock = new Date(d.lockTime);
+
         if(now >= lock){
           isLive = true;
         }
@@ -202,14 +202,14 @@ async function loadMatches(){
       div.innerHTML = `
         <b>${match}</b><br>
         📅 ${d.date || "Today"}<br>
-        ${isLive ? "<span style='color:red;'>🔴 LIVE</span><br>" : ""}
+        ${isLive ? "<span style='color:red;font-weight:bold;'>🔴 LIVE</span><br>" : ""}
         <button class="playBtn" onclick="openMatch('${match}')">Play</button>
       `;
 
       container.appendChild(div);
     }
   }
-}
+});
 
 // COMPLETED SAME
 async function loadCompleted(){
@@ -240,7 +240,6 @@ async function loadCompleted(){
   }
 }
 
-loadMatches();
 loadCompleted();
 </script>
 
