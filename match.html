@@ -126,7 +126,6 @@ const auth = getAuth(app);
 
 let currentUser = null;
 
-// AUTH
 onAuthStateChanged(auth,(user)=>{
   if(user){
     currentUser = user;
@@ -188,7 +187,7 @@ onSnapshot(refMatch,(snap)=>{
 
     if(d.lockTime){  
       let now = new Date();  
-      let lock = new Date(d.lockTime + ":00");  
+      let lock = new Date(d.lockTime);  
 
       if(now >= lock){  
         betLocked = true;  
@@ -203,7 +202,7 @@ onSnapshot(refMatch,(snap)=>{
   }  
 });  
 
-// PREDICTIONS
+// 🔥 PREDICTIONS LOCK FIX
 const predRef = collection(db,"predictions");
 
 onSnapshot(predRef,(snapshot)=>{
@@ -217,17 +216,32 @@ onSnapshot(predRef,(snapshot)=>{
       d.match?.trim().toLowerCase() === match.trim().toLowerCase() &&
       d.status === "live"
     ){
+
+      let now = new Date();
+      let locked = false;
+
+      if(d.lockTime){
+        let lock = new Date(d.lockTime);
+        if(now >= lock){
+          locked = true;
+        }
+      }
+
       let div = document.createElement("div");
       let html = `<b>${d.question}</b><br>`;
 
-      d.options.forEach(opt=>{
-        html += `
-          <div class="optionBtn"
-          onclick="placePrediction('${docSnap.id}','${opt.name}',${opt.return})">
-            ${opt.name} (${opt.return}x)
-          </div>
-        `;
-      });
+      if(locked){
+        html += `<div style="color:gray;">Prediction Locked 🔒</div>`;
+      }else{
+        d.options.forEach(opt=>{
+          html += `
+            <div class="optionBtn"
+            onclick="placePrediction('${docSnap.id}','${opt.name}',${opt.return})">
+              ${opt.name} (${opt.return}x)
+            </div>
+          `;
+        });
+      }
 
       div.innerHTML = html;
       container.appendChild(div);
@@ -235,8 +249,22 @@ onSnapshot(predRef,(snapshot)=>{
   });
 });
 
-// ✅ PREDICTION FIX (history added)
+// 🔥 DOUBLE SAFETY LOCK
 window.placePrediction = async (id,option,ret)=>{
+
+  let predRef = doc(db,"predictions",id);
+  let snapPred = await getDoc(predRef);
+  let pData = snapPred.data();
+
+  if(pData.lockTime){
+    let now = new Date();
+    let lock = new Date(pData.lockTime);
+    if(now >= lock){
+      alert("Prediction Locked 🔒");
+      return;
+    }
+  }
+
   let amt = parseInt(prompt("Enter amount"));
   if(!amt) return;
 
@@ -284,7 +312,7 @@ window.openHistory = ()=>{
   location.href = "prediction-history.html";
 };
 
-// BET (already correct)
+// BET
 let loading = false;
 
 window.placeBet = async function(){
