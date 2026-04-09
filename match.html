@@ -86,7 +86,6 @@
 
 <div class="box">  
   <h3>Select Winner</h3>  
-
   <div id="team1" class="teamBtn"></div>  
   <div id="team2" class="teamBtn"></div>  
 </div>  
@@ -142,14 +141,15 @@ team2.innerHTML = `${t2}<div id="odds2" class="odds"></div>`;
 
 let selected = null;  
 
+// ✅ FIX: normalize team
 team1.onclick = ()=>{  
-  selected = t1;  
+  selected = t1.trim().toLowerCase();  
   team1.classList.add("selected");  
   team2.classList.remove("selected");  
 };  
 
 team2.onclick = ()=>{  
-  selected = t2;  
+  selected = t2.trim().toLowerCase();  
   team2.classList.add("selected");  
   team1.classList.remove("selected");  
 };  
@@ -173,15 +173,14 @@ onSnapshot(refMatch,(snap)=>{
     odds1 = d.rcbOdds || 2;  
     odds2 = d.cskOdds || 2;  
 
-    // ✅ RESET (important fix)
-    betLocked = false;
-    betBtn.disabled = false;
-    betBtn.innerText = "Place Bet";
-    betBtn.style.background = "#ff2a2a";
+    betLocked = false;  
+    betBtn.disabled = false;  
+    betBtn.innerText = "Place Bet";  
+    betBtn.style.background = "#ff2a2a";  
 
     if(d.lockTime){  
       let now = new Date();  
-      let lock = new Date(d.lockTime + ":00"); // ✅ FIX  
+      let lock = new Date(d.lockTime + ":00");  
 
       if(now >= lock){  
         betLocked = true;  
@@ -197,99 +196,7 @@ onSnapshot(refMatch,(snap)=>{
   }  
 });  
 
-// 🔥 LIVE QUESTIONS  
-const predRef = collection(db,"predictions");  
-
-onSnapshot(predRef,(snapshot)=>{  
-  let container = document.getElementById("predictions");  
-  container.innerHTML = "";  
-
-  snapshot.forEach(docSnap=>{  
-    let d = docSnap.data();  
-
-    if(d.match === match && d.status === "live"){  
-
-      let div = document.createElement("div");  
-      let html = `<b>${d.question}</b><br>`;  
-
-      d.options.forEach(opt=>{  
-        html += `  
-          <div class="optionBtn" onclick="placePrediction('${docSnap.id}','${opt.name}',${opt.return})">  
-            ${opt.name} (${opt.return}x)  
-          </div>  
-        `;  
-      });  
-
-      div.innerHTML = html;  
-      container.appendChild(div);  
-    }  
-  });  
-});  
-
-// 🔥 PLACE PREDICTION (UPDATED)  
-window.placePrediction = async (id,option,ret)=>{  
-
-  let amt = parseInt(prompt("Enter amount"));  
-  if(!amt) return;  
-
-  const user = auth.currentUser;  
-  if(!user) return alert("Login required");  
-
-  let betsSnap = await getDocs(collection(db,"predBets"));  
-  let already = false;  
-
-  betsSnap.forEach(docSnap=>{  
-    let d = docSnap.data();  
-    if(d.user === user.email && d.predictionId === id){  
-      already = true;  
-    }  
-  });  
-
-  if(already){  
-    alert("Already bet placed ❌");  
-    return;  
-  }  
-
-  let userRef = doc(db,"users",user.email);  
-  let snap = await getDoc(userRef);  
-  let data = snap.data();  
-
-  if((data.balance||0) < amt){  
-    alert("Low balance ❌");  
-    return;  
-  }  
-
-  await updateDoc(userRef,{  
-    balance:(data.balance||0)-amt,  
-    history:[  
-      ...(data.history || []),  
-      {  
-        type:"bet",  
-        amt:amt,  
-        match:match,  
-        question:id,  
-        time:new Date().toLocaleString()  
-      }  
-    ]  
-  });  
-
-  await setDoc(doc(db,"predBets",user.email+"_"+Date.now()),{  
-    predictionId:id,  
-    option,  
-    amount:amt,  
-    return:ret,  
-    user:user.email,  
-    status:"pending",  
-    time:new Date().toLocaleString()  
-  });  
-
-  alert("Prediction placed 🔥");  
-};  
-
-window.openHistory = ()=>{  
-  location.href = "prediction-history.html";  
-};  
-
+// 🔥 PLACE BET FINAL FIX  
 let loading = false;  
 
 window.placeBet = async function(){  
@@ -341,17 +248,20 @@ window.placeBet = async function(){
       balance: balance - amt,  
       history:[  
         ...(userData.history || []),  
-        { type:"bet", amt:amt, time:new Date().toLocaleString() }  
+        { type:"bet", amt:amt, match:match, team:selected, time:new Date().toLocaleString() }  
       ]  
     });  
 
-    let multiplier = selected === t1 ? odds1 : odds2;  
+    let multiplier = selected === t1.trim().toLowerCase() ? odds1 : odds2;  
 
+    // ✅ FINAL FIX (IMPORTANT)
     await setDoc(doc(db,"bets",user.email+"_"+Date.now()),{  
       match,  
       team:selected,  
       amount:amt,  
-      multiplier:parseFloat(multiplier),  
+
+      return:parseFloat(multiplier),  
+
       user:user.email,  
       status:"pending",  
       time:new Date().toLocaleString()  
