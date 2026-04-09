@@ -1,277 +1,230 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Admin Panel</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!DOCTYPE html>  <html>    <head>        <title>Admin Panel</title>      
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">    <style>      
+    body{background:#0b0f1a;color:white;font-family:Arial;margin:0;}      
+    .card{background:#1f2937;padding:20px;margin:20px;border-radius:12px;max-width:400px;margin:auto;margin-top:20px;}      
+    input,select{width:100%;padding:10px;margin:8px 0;border:none;border-radius:8px;}      
+    button{width:100%;padding:12px;border:none;border-radius:8px;background:#22c55e;color:white;margin-top:10px;font-weight:bold;}      
+    .stat{display:flex;justify-content:space-between;margin:8px 0;}      
+    .liveMatch{background:#111;padding:10px;margin-top:10px;border-radius:10px;}      
+    label{font-size:12px;color:#9ca3af;}      
+  </style>  </head>  <body>  <div id="panel" style="display:none;">    <div class="card">      
+    <h3>📊 Admin Dashboard</h3>      
+    <div class="stat">💰 Profit <span id="profit">0</span></div>      
+    <div class="stat">📊 Bets <span id="totalBets">0</span></div>      
+    <div class="stat">🧑 Users <span id="totalUsers">0</span></div>      
+    <div class="stat">📅 Today <span id="todayProfit">0</span></div>      
+  </div>    <div class="card">      
+    <h3>🔥 Live Matches</h3>      
+    <div id="liveMatches"></div>      
+  </div>    <div class="card">      
+    <h3>📌 Add Matches (Home Page)</h3>      
+    <label>Example: RCB vs CSK</label>      
+    <input id="m1" placeholder="Match 1 (RCB vs CSK)">      
+    <input id="m2" placeholder="Match 2">      
+    <input id="m3" placeholder="Match 3">      
+    <input id="m4" placeholder="Match 4">      
+    <input id="m5" placeholder="Match 5">      
+    <input id="m6" placeholder="Match 6">      
+    <input id="m7" placeholder="Match 7">      
+    <input id="m8" placeholder="Match 8">      
+    <input id="m9" placeholder="Match 9">      
+    <input id="m10" placeholder="Match 10">      
+    <button onclick="saveMatches()">Save Matches</button>      
+  </div>    <div class="card">      
+    <h3>⚙️ Bet Settings</h3>  <label>Match Name (same as above)</label>      
+<input id="bmatch" placeholder="RCB vs CSK">    <label>Minimum Bet</label>  
+<input id="minBetInput" placeholder="10">  <label>Team 1 Odds</label>
+<input id="t1odds" placeholder="2">
 
-  <style>
-    body{background:#0b0f1a;color:white;font-family:Arial;margin:0;}
-    .card{background:#1f2937;padding:20px;margin:20px;border-radius:12px;max-width:400px;margin:auto;margin-top:20px;}
-    input,select{width:100%;padding:10px;margin:8px 0;border:none;border-radius:8px;}
-    button{width:100%;padding:12px;border:none;border-radius:8px;background:#22c55e;color:white;margin-top:10px;font-weight:bold;}
-    .stat{display:flex;justify-content:space-between;margin:8px 0;}
-    .liveMatch{background:#111;padding:10px;margin-top:10px;border-radius:10px;}
-    label{font-size:12px;color:#9ca3af;}
-  </style>
-</head>
+<label>Team 2 Odds</label>
+<input id="t2odds" placeholder="2">
 
-<body>
+<label>Lock Time (match start)</label>
+<input id="lockTime" type="datetime-local">
 
-<div id="panel" style="display:none;">
+<button onclick="saveBetSettings()">Start Match</button>
 
-  <div class="card">
-    <h3>📊 Admin Dashboard</h3>
-    <div class="stat">💰 Profit <span id="profit">0</span></div>
-    <div class="stat">📊 Bets <span id="totalBets">0</span></div>
-    <div class="stat">🧑 Users <span id="totalUsers">0</span></div>
-    <div class="stat">📅 Today <span id="todayProfit">0</span></div>
-  </div>
+  </div>    <div class="card">      
+    <h3>🏆 Declare Result</h3>  <label>Match Name</label>      
+<input id="rmatch" placeholder="RCB vs CSK">    <label>Winner</label>  
+<input id="winnerInput" placeholder="RCB">  <button onclick="declareResult()">Declare</button>
 
-  <div class="card">
-    <h3>🔥 Live Matches</h3>
-    <div id="liveMatches"></div>
-  </div>
+  </div>    <div class="card">      
+    <h3>🎯 Prediction System</h3>  <label>Match Name</label>      
+<input id="pMatch" placeholder="RCB vs CSK">    <label>Question</label>  
+<input id="pQuestion" placeholder="Who will hit first six?">  <label>Option 1</label>
+<input id="opt1" placeholder="Virat Kohli">
+<input id="ret1" placeholder="Return (2x)">
 
-  <div class="card">
-    <h3>📌 Add Matches (Home Page)</h3>
-    <label>Example: RCB vs CSK</label>
-    <input id="m1" placeholder="Match 1 (RCB vs CSK)">
-    <input id="m2" placeholder="Match 2">
-    <input id="m3" placeholder="Match 3">
-    <input id="m4" placeholder="Match 4">
-    <input id="m5" placeholder="Match 5">
-    <input id="m6" placeholder="Match 6">
-    <input id="m7" placeholder="Match 7">
-    <input id="m8" placeholder="Match 8">
-    <input id="m9" placeholder="Match 9">
-    <input id="m10" placeholder="Match 10">
-    <button onclick="saveMatches()">Save Matches</button>
-  </div>
+<label>Option 2</label>
+<input id="opt2" placeholder="Rohit Sharma">
+<input id="ret2" placeholder="Return">
 
-  <div class="card">
-    <h3>⚙️ Bet Settings</h3>
+<label>Option 3</label>
+<input id="opt3" placeholder="Other">
+<input id="ret3" placeholder="Return">
 
-    <label>Match Name (same as above)</label>
-    <input id="bmatch" placeholder="RCB vs CSK">
+<label>Question Lock Time</label>
+<input id="pLockTime" type="datetime-local">
 
-    <label>Minimum Bet</label>
-    <input id="minBetInput" placeholder="10">
+<button onclick="savePrediction()">Add Question</button>
 
-    <label>Team 1 Odds</label>
-    <input id="t1odds" placeholder="2">
+<hr>    <label>Select Question</label>  
+<select id="predDropdown"></select>  <label>Correct Option</label>
+<input id="correctOpt" placeholder="Virat Kohli">
 
-    <label>Team 2 Odds</label>
-    <input id="t2odds" placeholder="2">
+<button onclick="declarePrediction()">Declare</button>
 
-    <label>Lock Time (match start)</label>
-    <input id="lockTime" type="datetime-local">
+  </div>    <div class="card">      
+    <h3>💰 Wallet</h3>  <label>Email</label>      
+<input id="uemail" placeholder="user@gmail.com">    <label>Amount</label>  
+<input id="amount" placeholder="100">  <button id="walletBtn">Update</button>
 
-    <button onclick="saveBetSettings()">Start Match</button>
-
-  </div>
-
-  <div class="card">
-    <h3>🏆 Declare Result</h3>
-
-    <label>Match Name</label>
-    <input id="rmatch" placeholder="RCB vs CSK">
-
-    <label>Winner</label>
-    <input id="winnerInput" placeholder="RCB">
-
-    <button onclick="declareResult()">Declare</button>
-
-  </div>
-
-  <div class="card">
-    <h3>🎯 Prediction System</h3>
-
-    <label>Match Name</label>
-    <input id="pMatch" placeholder="RCB vs CSK">
-
-    <label>Question</label>
-    <input id="pQuestion" placeholder="Who will hit first six?">
-
-    <label>Option 1</label>
-    <input id="opt1" placeholder="Virat Kohli">
-    <input id="ret1" placeholder="Return (2x)">
-
-    <label>Option 2</label>
-    <input id="opt2" placeholder="Rohit Sharma">
-    <input id="ret2" placeholder="Return">
-
-    <label>Option 3</label>
-    <input id="opt3" placeholder="Other">
-    <input id="ret3" placeholder="Return">
-
-    <label>Question Lock Time</label>
-    <input id="pLockTime" type="datetime-local">
-
-    <button onclick="savePrediction()">Add Question</button>
-
-    <hr>
-
-    <label>Select Question</label>
-    <select id="predDropdown"></select>
-
-    <label>Correct Option</label>
-    <input id="correctOpt" placeholder="Virat Kohli">
-
-    <button onclick="declarePrediction()">Declare</button>
-
-  </div>
-
-  <div class="card">
-    <h3>💰 Wallet</h3>
-
-    <label>Email</label>
-    <input id="uemail" placeholder="user@gmail.com">
-
-    <label>Amount</label>
-    <input id="amount" placeholder="100">
-
-    <button id="walletBtn">Update</button>
-
-  </div>
-
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-const app = initializeApp({
-  apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",
-  authDomain:"stackx-9f92e.firebaseapp.com",
-  projectId:"stackx-9f92e"
-});
-
-const db = getFirestore(app);
+  </div>  </div>  <script type="module">      
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";      
+import { getFirestore, doc, setDoc, getDoc, updateDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";      
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";    const app = initializeApp({  
+apiKey:"AIzaSyCVCXmehov-9Circh5Mn6lUVQb4gUyufqg",  
+authDomain:"stackx-9f92e.firebaseapp.com",  
+projectId:"stackx-9f92e"  
+});  const db = getFirestore(app);
 const auth = getAuth(app);
 
 // LOGIN
 onAuthStateChanged(auth,(user)=>{
-  if(!user || user.email !== "18stackx@gmail.com"){
-    alert("Access Denied ❌");
-    return;
-  }
-  panel.style.display="block";
+if(!user || user.email !== "18stackx@gmail.com"){
+alert("Access Denied ❌");
+return;
+}
+panel.style.display="block";
 
-  loadStats();
-  loadLiveMatches();
-  loadPredictions();
+loadStats();
+loadLiveMatches();
+loadPredictions();
 });
 
 // DASHBOARD
 async function loadStats(){
-  let u = await getDocs(collection(db,"users"));
-  totalUsers.innerText = u.size;
+let u = await getDocs(collection(db,"users"));
+totalUsers.innerText = u.size;
 }
 
 // LIVE MATCHES
 async function loadLiveMatches(){
-  let container = document.getElementById("liveMatches");
-  container.innerHTML = "";
+let container = document.getElementById("liveMatches");
+container.innerHTML = "";
 
-  let snap = await getDocs(collection(db,"matches"));
+let snap = await getDocs(collection(db,"matches"));
 
-  snap.forEach(docSnap=>{
-    let d = docSnap.data();
-    if(d.status === "live"){
-      let div = document.createElement("div");
-      div.className="liveMatch";
-      div.innerHTML = docSnap.id;
-      container.appendChild(div);
-    }
-  });
+snap.forEach(docSnap=>{
+let d = docSnap.data();
+if(d.status === "live"){
+let div = document.createElement("div");
+div.className="liveMatch";
+div.innerHTML = docSnap.id;
+container.appendChild(div);
+}
+});
 }
 
 // DROPDOWN
 async function loadPredictions(){
-  let dropdown = document.getElementById("predDropdown");
-  dropdown.innerHTML = "";
+let dropdown = document.getElementById("predDropdown");
+dropdown.innerHTML = "";
 
-  let snap = await getDocs(collection(db,"predictions"));
+let snap = await getDocs(collection(db,"predictions"));
 
-  snap.forEach(docSnap=>{
-    let d = docSnap.data();
+snap.forEach(docSnap=>{
+let d = docSnap.data();
 
-    if(d.status === "live"){
-      let opt = document.createElement("option");
-      opt.value = docSnap.id;
-      opt.innerText = d.question + " ("+d.match+")";
-      dropdown.appendChild(opt);
-    }
-  });
+if(d.status === "live"){
+let opt = document.createElement("option");
+opt.value = docSnap.id;
+opt.innerText = d.question + " ("+d.match+")";
+dropdown.appendChild(opt);
+}
+
+});
 }
 
 // SAVE MATCHES
 window.saveMatches = async ()=>{
-  let data = {};
-  for(let i=1;i<=10;i++){
-    let val = document.getElementById("m"+i).value.trim();
-    if(val) data["m"+i] = val;
-  }
-  await setDoc(doc(db,"matches","today"),data);
-  alert("Saved 🔥");
+let data = {};
+for(let i=1;i<=10;i++){
+let val = document.getElementById("m"+i).value.trim();
+if(val) data["m"+i] = val;
+}
+await setDoc(doc(db,"matches","today"),data);
+alert("Saved 🔥");
 };
 
-// ✅ FIXED BET SETTINGS
+// BET SETTINGS
 window.saveBetSettings = async ()=>{
-  let matchName = bmatch.value.trim();
-  let team1 = matchName.split(" vs ")[0];
-  let team2 = matchName.split(" vs ")[1];
+await setDoc(doc(db,"matches",bmatch.value.trim()),{
+minBet:parseInt(minBetInput.value),
+rcbOdds:parseFloat(t1odds.value),
+cskOdds:parseFloat(t2odds.value),
+status:"live",
+lockTime:lockTime.value,
+date:new Date().toLocaleDateString('en-IN')
+},{merge:true});
+alert("Match Live 😈");
 
-  await setDoc(doc(db,"matches",matchName),{
-    minBet:parseInt(minBetInput.value),
-
-    team1,
-    team2,
-
-    odds1:parseFloat(t1odds.value),
-    odds2:parseFloat(t2odds.value),
-
-    status:"live",
-    lockTime:lockTime.value,
-    date:new Date().toLocaleDateString('en-IN')
-  },{merge:true});
-
-  alert("Match Live 😈");
-  loadLiveMatches();
+loadLiveMatches();
 };
 
-// ✅ FIXED RESULT
+// ✅ FINAL FIXED RESULT
 window.declareResult = async ()=>{
-  let match = rmatch.value.trim();
-  let winner = winnerInput.value.trim().toLowerCase();
+let match = rmatch.value.trim();
+let winner = winnerInput.value.trim().toLowerCase();
 
-  let betsSnap = await getDocs(collection(db,"bets"));
+let betsSnap = await getDocs(collection(db,"bets"));
 
-  for(let b of betsSnap.docs){
-    let data = b.data();
+for(let b of betsSnap.docs){
+let data = b.data();
 
-    if(data.match === match && data.status !== "done"){
-      let userRef = doc(db,"users",data.user);
-      let u = (await getDoc(userRef)).data();
+if(data.match === match && data.status !== "done"){
 
-      if(data.team.trim().toLowerCase() === winner){
-        let win = Math.floor(data.amount * data.multiplier * 0.9);
-        await updateDoc(userRef,{balance:(u.balance||0)+win});
-      }
+let userRef = doc(db,"users",data.user);
+let userSnap = await getDoc(userRef);
+if(!userSnap.exists()) continue;
 
-      await updateDoc(doc(db,"bets",b.id),{status:"done"});
-    }
-  }
+let u = userSnap.data();
 
-  await updateDoc(doc(db,"matches",match),{status:"completed",winner});
-  alert("Result Done 🔥");
+let betTeam = (data.team || "").trim().toLowerCase();
 
-  loadLiveMatches();
+if(betTeam === winner){
+
+let win = Math.floor(data.amount * data.multiplier * 0.9);
+
+await updateDoc(userRef,{
+balance:(u.balance||0)+win,
+history:[
+...(u.history||[]),
+{type:"win",amt:win,time:new Date().toLocaleString()}
+]
+});
+
+} else {
+
+await updateDoc(userRef,{
+history:[
+...(u.history||[]),
+{type:"loss",amt:data.amount,time:new Date().toLocaleString()}
+]
+});
+
+}
+
+await updateDoc(doc(db,"bets",b.id),{status:"done"});
+}
+
+}
+
+await updateDoc(doc(db,"matches",match),{status:"completed",winner});
+alert("Result Done 🔥");
+
+loadLiveMatches();
 };
-
-// बाकी सब SAME (unchanged)
-</script>
-
-</body>
+</script>  </body>
 </html>
