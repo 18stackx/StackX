@@ -159,12 +159,12 @@ await setDoc(doc(db,"matches","today"),data);
 alert("Saved 🔥");
 };
 
-// START MATCH
+// ✅ UPDATED (ONLY CHANGE HERE)
 window.saveBetSettings = async ()=>{
 await setDoc(doc(db,"matches",bmatch.value.trim()),{
 minBet:parseInt(minBetInput.value),
-rcbOdds:parseFloat(t1odds.value),
-cskOdds:parseFloat(t2odds.value),
+team1Odds:parseFloat(t1odds.value),
+team2Odds:parseFloat(t2odds.value),
 status:"live",
 lockTime:lockTime.value
 },{merge:true});
@@ -208,7 +208,7 @@ await updateDoc(doc(db,"matches",match),{status:"completed",winner});
 alert("Result Done");
 };
 
-// ✅ ADD PREDICTION (FIXED)
+// ADD PREDICTION
 window.savePrediction = async ()=>{
 let id = "pred_"+Date.now();
 
@@ -228,7 +228,7 @@ alert("Prediction Added 🔥");
 loadPredictions();
 };
 
-// ✅ DECLARE PREDICTION (FIXED)
+// DECLARE PREDICTION
 window.declarePrediction = async ()=>{
 let id = predDropdown.value;
 let correct = correctOpt.value.trim();
