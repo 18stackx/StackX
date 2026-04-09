@@ -112,11 +112,13 @@ loadLiveMatches();
 loadPredictions();
 });
 
+// USERS
 async function loadStats(){
 let u = await getDocs(collection(db,"users"));
 totalUsers.innerText = u.size;
 }
 
+// MATCH LIST
 async function loadLiveMatches(){
 let container = document.getElementById("liveMatches");
 container.innerHTML = "";
@@ -131,6 +133,7 @@ container.innerHTML += `<div class="liveMatch">${docSnap.id}</div>`;
 });
 }
 
+// PRED DROPDOWN
 async function loadPredictions(){
 let dropdown = document.getElementById("predDropdown");
 dropdown.innerHTML = "";
@@ -145,6 +148,7 @@ dropdown.innerHTML += `<option value="${docSnap.id}">${d.question}</option>`;
 });
 }
 
+// SAVE MATCH
 window.saveMatches = async ()=>{
 let data = {};
 for(let i=1;i<=5;i++){
@@ -155,6 +159,7 @@ await setDoc(doc(db,"matches","today"),data);
 alert("Saved 🔥");
 };
 
+// START MATCH
 window.saveBetSettings = async ()=>{
 await setDoc(doc(db,"matches",bmatch.value.trim()),{
 minBet:parseInt(minBetInput.value),
@@ -167,7 +172,7 @@ alert("Match Live");
 loadLiveMatches();
 };
 
-// ✅ BET RESULT (WIN + LOSS HISTORY)
+// RESULT
 window.declareResult = async ()=>{
 let match = rmatch.value.trim();
 let winner = winnerInput.value.trim().toLowerCase();
@@ -194,7 +199,7 @@ await updateDoc(userRef,{
 balance:(u.balance||0)+win,
 history:[
 ...(u.history || []),
-{type:"win",amt:win,match,team:betTeam,time:new Date().toLocaleString()}
+{type:"win",amt:win,match:match,team:betTeam,time:new Date().toLocaleString()}
 ]
 });
 
@@ -203,7 +208,7 @@ history:[
 await updateDoc(userRef,{
 history:[
 ...(u.history || []),
-{type:"loss",amt:data.amount,match,team:betTeam,time:new Date().toLocaleString()}
+{type:"loss",amt:data.amount,match:match,team:betTeam,time:new Date().toLocaleString()}
 ]
 });
 
@@ -224,9 +229,30 @@ date:new Date().toLocaleDateString()
 });
 
 alert("Result Done");
+loadLiveMatches();
 };
 
-// ✅ PREDICTION RESULT (WIN + LOSS HISTORY)
+// ADD PREDICTION
+window.savePrediction = async ()=>{
+let id = "pred_"+Date.now();
+
+await setDoc(doc(db,"predictions",id),{
+match:pMatch.value.trim(),
+question:pQuestion.value.trim(),
+options:[
+{name:opt1.value,return:parseFloat(ret1.value)},
+{name:opt2.value,return:parseFloat(ret2.value)},
+{name:opt3.value,return:parseFloat(ret3.value)}
+],
+lockTime:pLockTime.value,
+status:"live"
+});
+
+alert("Prediction Added 🔥");
+loadPredictions();
+};
+
+// DECLARE PREDICTION (FIX ADDED ONLY)
 window.declarePrediction = async ()=>{
 let id = predDropdown.value;
 let correct = correctOpt.value.trim();
@@ -250,7 +276,7 @@ await updateDoc(userRef,{
 balance:(u.balance||0)+win,
 history:[
 ...(u.history || []),
-{type:"win",amt:win,match:data.predictionId,time:new Date().toLocaleString()}
+{type:"win",amt:win,match:id,time:new Date().toLocaleString()}
 ]
 });
 
@@ -259,13 +285,15 @@ history:[
 await updateDoc(userRef,{
 history:[
 ...(u.history || []),
-{type:"loss",amt:data.amount,match:data.predictionId,time:new Date().toLocaleString()}
+{type:"loss",amt:data.amount,match:id,time:new Date().toLocaleString()}
 ]
 });
 
 }
 
-await updateDoc(doc(db,"predBets",b.id),{status:"done"});
+await updateDoc(doc(db,"predBets",b.id),{
+status:"done"
+});
 }
 }
 
@@ -275,8 +303,10 @@ correct
 });
 
 alert("Prediction Result Done");
+loadPredictions();
 };
 
+// WALLET
 walletBtn.onclick = async ()=>{
 let ref = doc(db,"users",uemail.value.trim());
 let snap = await getDoc(ref);
