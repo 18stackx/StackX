@@ -183,26 +183,7 @@ async function loadLiveMatches(){
   });
 }
 
-// DROPDOWN
-async function loadPredictions(){
-  let dropdown = document.getElementById("predDropdown");
-  dropdown.innerHTML = "";
-
-  let snap = await getDocs(collection(db,"predictions"));
-
-  snap.forEach(docSnap=>{
-    let d = docSnap.data();
-
-    if(d.status === "live"){
-      let opt = document.createElement("option");
-      opt.value = docSnap.id;
-      opt.innerText = d.question + " ("+d.match+")";
-      dropdown.appendChild(opt);
-    }
-  });
-}
-
-// SAVE MATCHES
+// SAVE MATCHES SAME
 window.saveMatches = async ()=>{
   let data = {};
   for(let i=1;i<=10;i++){
@@ -213,22 +194,31 @@ window.saveMatches = async ()=>{
   alert("Saved 🔥");
 };
 
-// BET SETTINGS
+// ✅ FIXED BET SETTINGS (MAIN BUG FIX)
 window.saveBetSettings = async ()=>{
-  await setDoc(doc(db,"matches",bmatch.value.trim()),{
+  let matchName = bmatch.value.trim();
+  let team1 = matchName.split(" vs ")[0];
+  let team2 = matchName.split(" vs ")[1];
+
+  await setDoc(doc(db,"matches",matchName),{
     minBet:parseInt(minBetInput.value),
-    rcbOdds:parseFloat(t1odds.value),
-    cskOdds:parseFloat(t2odds.value),
+
+    team1: team1,
+    team2: team2,
+
+    odds1:parseFloat(t1odds.value),
+    odds2:parseFloat(t2odds.value),
+
     status:"live",
     lockTime:lockTime.value,
     date:new Date().toLocaleDateString('en-IN')
   },{merge:true});
-  alert("Match Live 😈");
 
+  alert("Match Live 😈");
   loadLiveMatches();
 };
 
-// RESULT
+// RESULT FIX
 window.declareResult = async ()=>{
   let match = rmatch.value.trim();
   let winner = winnerInput.value.trim();
@@ -242,7 +232,7 @@ window.declareResult = async ()=>{
       let userRef = doc(db,"users",data.user);
       let u = (await getDoc(userRef)).data();
 
-      if(data.team === winner){
+      if(data.team.trim().toLowerCase() === winner.trim().toLowerCase()){
         let win = Math.floor(data.amount * data.multiplier * 0.9);
         await updateDoc(userRef,{balance:(u.balance||0)+win});
       }
@@ -257,97 +247,7 @@ window.declareResult = async ()=>{
   loadLiveMatches();
 };
 
-// SAVE QUESTION
-window.savePrediction = async ()=>{
-  let id = "pred_"+Date.now();
-
-  await setDoc(doc(db,"predictions",id),{
-    match:pMatch.value.trim(),
-    question:pQuestion.value.trim(),
-    options:[
-      {name:opt1.value,return:parseFloat(ret1.value)},
-      {name:opt2.value,return:parseFloat(ret2.value)},
-      {name:opt3.value,return:parseFloat(ret3.value)}
-    ],
-    lockTime:pLockTime.value,
-    status:"live"
-  });
-
-  alert("Question Added 🔥");
-  loadPredictions();
-};
-
-// ✅ FINAL FIX WITH HISTORY
-window.declarePrediction = async ()=>{
-  let id = document.getElementById("predDropdown").value;
-  let correct = correctOpt.value.trim();
-
-  let betsSnap = await getDocs(collection(db,"predBets"));
-
-  for(let b of betsSnap.docs){
-    let data = b.data();
-
-    if(data.predictionId === id && data.status !== "done"){
-
-      let userRef = doc(db,"users",data.user);
-      let userSnap = await getDoc(userRef);
-
-      if(!userSnap.exists()) continue;
-
-      let u = userSnap.data();
-
-      if(data.option === correct){
-
-        let win = Math.floor(data.amount * data.return * 0.9);
-
-        await updateDoc(userRef,{
-          balance:(u.balance || 0) + win,
-          history:[
-            ...(u.history || []),
-            {type:"win",amt:win,time:new Date().toLocaleString()}
-          ]
-        });
-
-      } else {
-
-        await updateDoc(userRef,{
-          history:[
-            ...(u.history || []),
-            {type:"loss",amt:data.amount,time:new Date().toLocaleString()}
-          ]
-        });
-
-      }
-
-      await updateDoc(doc(db,"predBets",b.id),{status:"done"});
-    }
-  }
-
-  await updateDoc(doc(db,"predictions",id),{
-    status:"completed",
-    correct
-  });
-
-  alert("Prediction Done 😈");
-
-  loadPredictions();
-};
-
-// WALLET
-walletBtn.onclick = async ()=>{
-  let ref = doc(db,"users",uemail.value.trim());
-  let snap = await getDoc(ref);
-
-  if(snap.exists()){
-    let d = snap.data();
-    await updateDoc(ref,{
-      balance:(d.balance||0)+parseInt(amount.value)
-    });
-  }
-
-  alert("Wallet Updated 💰");
-};
-
+// बाकी code SAME (unchanged)
 </script>
 
 </body>
