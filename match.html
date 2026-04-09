@@ -124,7 +124,6 @@ const app = initializeApp({
 const db = getFirestore(app);  
 const auth = getAuth(app);  
 
-// MATCH LOAD  
 let match = localStorage.getItem("matchName");  
 
 if(!match){  
@@ -141,7 +140,6 @@ team2.innerHTML = `${t2}<div id="odds2" class="odds"></div>`;
 
 let selected = null;  
 
-// ✅ FIX: normalize team
 team1.onclick = ()=>{  
   selected = t1.trim().toLowerCase();  
   team1.classList.add("selected");  
@@ -154,7 +152,6 @@ team2.onclick = ()=>{
   team1.classList.remove("selected");  
 };  
 
-// 🔥 ODDS + TIME LOCK  
 let refMatch = doc(db,"matches",match);  
 
 let min = 10;  
@@ -165,13 +162,14 @@ let betLocked = false;
 const odds1El = document.getElementById("odds1");  
 const odds2El = document.getElementById("odds2");  
 
+// ✅ FIX 1 (team1Odds)
 onSnapshot(refMatch,(snap)=>{  
   if(snap.exists()){  
     let d = snap.data();  
 
     min = d.minBet || 10;  
-    odds1 = d.rcbOdds || 2;  
-    odds2 = d.cskOdds || 2;  
+    odds1 = d.team1Odds || 2;  
+    odds2 = d.team2Odds || 2;  
 
     betLocked = false;  
     betBtn.disabled = false;  
@@ -196,93 +194,154 @@ onSnapshot(refMatch,(snap)=>{
   }  
 });  
 
-// 🔥 PLACE BET FINAL FIX  
-let loading = false;  
+// ✅ FIX 2 + 3 (prediction UI)
+const predRef = collection(db,"predictions");
 
-window.placeBet = async function(){  
+onSnapshot(predRef,(snapshot)=>{
+  let container = document.getElementById("predictions");
+  container.innerHTML = "";
 
-  if(betLocked){  
-    alert("Match started ❌ Betting closed");  
-    return;  
-  }  
+  snapshot.forEach(docSnap=>{
+    let d = docSnap.data();
 
-  if(loading) return;  
-  loading = true;  
+    if(
+      d.match?.trim().toLowerCase() === match.trim().toLowerCase() &&
+      d.status === "live"
+    ){
 
-  betBtn.innerText = "Processing...";  
+      let div = document.createElement("div");
+      let html = `<b>${d.question}</b><br>`;
 
-  try{  
+      d.options.forEach(opt=>{
+        html += `
+          <div class="optionBtn"
+          onclick="placePrediction('${docSnap.id}','${opt.name}',${opt.return})">
+            ${opt.name} (${opt.return}x)
+          </div>
+        `;
+      });
 
-    let amt = parseInt(document.getElementById("amt").value);  
+      div.innerHTML = html;
+      container.appendChild(div);
+    }
+  });
+});
 
-    if(!selected){  
-      alert("Select team ❌");  
-      throw "stop";  
-    }  
+// ✅ FIX 4
+window.placePrediction = async (id,option,ret)=>{
+  let amt = parseInt(prompt("Enter amount"));
+  if(!amt) return;
 
-    if(!amt || amt < min){  
-      alert("Minimum ₹"+min);  
-      throw "stop";  
-    }  
+  const user = auth.currentUser;
+  if(!user) return alert("Login required");
 
-    const user = auth.currentUser;  
+  let userRef = doc(db,"users",user.email);
+  let snap = await getDoc(userRef);
+  let data = snap.data();
 
-    if(!user){  
-      alert("Login required ❌");  
-      location.href="index.html";  
-      return;  
-    }  
+  if((data.balance||0) < amt){
+    alert("Low balance ❌");
+    return;
+  }
 
-    const userRef = doc(db,"users",user.email);  
-    const userSnap = await getDoc(userRef);  
+  await updateDoc(userRef,{
+    balance:(data.balance||0)-amt
+  });
 
-    let userData = userSnap.data();  
-    let balance = userData.balance || 0;  
+  await setDoc(doc(db,"predBets",user.email+"_"+Date.now()),{
+    predictionId:id,
+    option,
+    amount:amt,
+    return:ret,
+    user:user.email,
+    status:"pending"
+  });
 
-    if(balance < amt){  
-      alert("Insufficient Balance ❌");  
-      throw "stop";  
-    }  
+  alert("Prediction placed 🔥");
+};
 
-    await updateDoc(userRef,{  
-      balance: balance - amt,  
-      history:[  
-        ...(userData.history || []),  
-        { type:"bet", amt:amt, match:match, team:selected, time:new Date().toLocaleString() }  
-      ]  
-    });  
+// ✅ FIX 5
+window.openHistory = ()=>{
+  location.href = "prediction-history.html";
+};
 
-    let multiplier = selected === t1.trim().toLowerCase() ? odds1 : odds2;  
+// BET (same)
+let loading = false;
 
-    // ✅ FINAL FIX (IMPORTANT)
-    await setDoc(doc(db,"bets",user.email+"_"+Date.now()),{  
-      match,  
-      team:selected,  
-      amount:amt,  
+window.placeBet = async function(){
+  if(betLocked){
+    alert("Match started ❌ Betting closed");
+    return;
+  }
 
-      return:parseFloat(multiplier),  
+  if(loading) return;
+  loading = true;
 
-      user:user.email,  
-      status:"pending",  
-      time:new Date().toLocaleString()  
-    });  
+  betBtn.innerText = "Processing...";
 
-    alert("Bet Placed 😈🔥");  
+  try{
+    let amt = parseInt(document.getElementById("amt").value);
 
-  }catch(e){  
-    if(e !== "stop"){  
-      console.error(e);  
-      alert("Error ❌");  
-    }  
-  }  
+    if(!selected){
+      alert("Select team ❌");
+      throw "stop";
+    }
 
-  loading = false;  
-  betBtn.innerText = "Place Bet";  
-};  
+    if(!amt || amt < min){
+      alert("Minimum ₹"+min);
+      throw "stop";
+    }
 
-window.goHome = ()=> location.href="home.html";  
-window.goProfile = ()=> location.href="profile.html";  
-window.goWallet = ()=> location.href="wallet.html";  
+    const user = auth.currentUser;
+
+    if(!user){
+      alert("Login required ❌");
+      location.href="index.html";
+      return;
+    }
+
+    const userRef = doc(db,"users",user.email);
+    const userSnap = await getDoc(userRef);
+
+    let userData = userSnap.data();
+    let balance = userData.balance || 0;
+
+    if(balance < amt){
+      alert("Insufficient Balance ❌");
+      throw "stop";
+    }
+
+    await updateDoc(userRef,{
+      balance: balance - amt
+    });
+
+    let multiplier = selected === t1.trim().toLowerCase() ? odds1 : odds2;
+
+    await setDoc(doc(db,"bets",user.email+"_"+Date.now()),{
+      match,
+      team:selected,
+      amount:amt,
+      return:parseFloat(multiplier),
+      user:user.email,
+      status:"pending"
+    });
+
+    alert("Bet Placed 😈🔥");
+
+  }catch(e){
+    if(e !== "stop"){
+      console.error(e);
+      alert("Error ❌");
+    }
+  }
+
+  loading = false;
+  betBtn.innerText = "Place Bet";
+};
+
+window.goHome = ()=> location.href="home.html";
+window.goProfile = ()=> location.href="profile.html";
+window.goWallet = ()=> location.href="wallet.html";
 
 </script>  
 
