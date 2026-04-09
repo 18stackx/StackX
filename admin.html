@@ -19,6 +19,7 @@ label{font-size:12px;color:#9ca3af;}
 
 <div id="panel" style="display:none;">
 
+<!-- DASHBOARD -->
 <div class="card">
 <h3>📊 Admin Dashboard</h3>
 <div class="stat">💰 Profit <span id="profit">0</span></div>
@@ -27,63 +28,110 @@ label{font-size:12px;color:#9ca3af;}
 <div class="stat">📅 Today <span id="todayProfit">0</span></div>
 </div>
 
+<!-- LIVE MATCH -->
 <div class="card">
 <h3>🔥 Live Matches</h3>
 <div id="liveMatches"></div>
 </div>
 
+<!-- ADD MATCH -->
 <div class="card">
-<h3>📌 Add Matches (Home Page)</h3>
-<label>Example: RCB vs CSK</label>
-<input id="m1"><input id="m2"><input id="m3"><input id="m4"><input id="m5">
+<h3>📌 Add Matches</h3>
+
+<label>Match Name (Example: RCB vs CSK)</label>
+<input id="m1" placeholder="RCB vs CSK">
+
+<label>Extra Matches (optional)</label>
+<input id="m2"><input id="m3"><input id="m4"><input id="m5">
 <input id="m6"><input id="m7"><input id="m8"><input id="m9"><input id="m10">
+
 <button onclick="saveMatches()">Save Matches</button>
 </div>
 
+<!-- BET SETTINGS -->
 <div class="card">
 <h3>⚙️ Bet Settings</h3>
+
+<label>Match Name (same as above)</label>
 <input id="bmatch" placeholder="RCB vs CSK">
-<input id="minBetInput" placeholder="Min Bet">
-<input id="t1odds" placeholder="Team1 Odds">
-<input id="t2odds" placeholder="Team2 Odds">
+
+<label>Minimum Bet (₹)</label>
+<input id="minBetInput" placeholder="10">
+
+<label>Team 1 Odds (RCB)</label>
+<input id="t1odds" placeholder="2">
+
+<label>Team 2 Odds (CSK)</label>
+<input id="t2odds" placeholder="1.8">
+
+<label>Match Start Time (Lock)</label>
 <input id="lockTime" type="datetime-local">
+
 <button onclick="saveBetSettings()">Start Match</button>
 </div>
 
+<!-- RESULT -->
 <div class="card">
 <h3>🏆 Declare Result</h3>
-<input id="rmatch" placeholder="Match">
-<input id="winnerInput" placeholder="Winner (RCB)">
+
+<label>Match Name</label>
+<input id="rmatch" placeholder="RCB vs CSK">
+
+<label>Winner (exact team name)</label>
+<input id="winnerInput" placeholder="RCB">
+
 <button onclick="declareResult()">Declare</button>
 </div>
 
+<!-- PREDICTION -->
 <div class="card">
 <h3>🎯 Prediction System</h3>
 
-<input id="pMatch">
-<input id="pQuestion">
+<label>Match Name</label>
+<input id="pMatch" placeholder="RCB vs CSK">
 
-<input id="opt1"><input id="ret1">
-<input id="opt2"><input id="ret2">
-<input id="opt3"><input id="ret3">
+<label>Question</label>
+<input id="pQuestion" placeholder="Who will hit first six?">
 
+<label>Option 1 + Return</label>
+<input id="opt1" placeholder="Virat Kohli">
+<input id="ret1" placeholder="2">
+
+<label>Option 2 + Return</label>
+<input id="opt2" placeholder="Rohit Sharma">
+<input id="ret2" placeholder="3">
+
+<label>Option 3 + Return</label>
+<input id="opt3" placeholder="Other">
+<input id="ret3" placeholder="1.5">
+
+<label>Lock Time</label>
 <input id="pLockTime" type="datetime-local">
 
 <button onclick="savePrediction()">Add Question</button>
 
 <hr>
 
+<label>Select Question</label>
 <select id="predDropdown"></select>
 
-<input id="correctOpt">
+<label>Correct Answer</label>
+<input id="correctOpt" placeholder="Virat Kohli">
+
 <button onclick="declarePrediction()">Declare</button>
 
 </div>
 
+<!-- WALLET -->
 <div class="card">
 <h3>💰 Wallet</h3>
-<input id="uemail">
-<input id="amount">
+
+<label>User Email</label>
+<input id="uemail" placeholder="user@gmail.com">
+
+<label>Amount Add</label>
+<input id="amount" placeholder="100">
+
 <button id="walletBtn">Update</button>
 </div>
 
@@ -154,7 +202,18 @@ dropdown.appendChild(opt);
 });
 }
 
-// ✅ FIX: same field names as match.html
+// SAVE MATCH
+window.saveMatches = async ()=>{
+let data = {};
+for(let i=1;i<=10;i++){
+let val = document.getElementById("m"+i).value.trim();
+if(val) data["m"+i] = val;
+}
+await setDoc(doc(db,"matches","today"),data);
+alert("Saved 🔥");
+};
+
+// BET SETTINGS
 window.saveBetSettings = async ()=>{
 await setDoc(doc(db,"matches",bmatch.value.trim()),{
 minBet:parseInt(minBetInput.value),
@@ -167,7 +226,7 @@ alert("Match Live 😈");
 loadLiveMatches();
 };
 
-// ✅ FINAL RESULT FIX
+// RESULT
 window.declareResult = async ()=>{
 let match = rmatch.value.trim();
 let winner = winnerInput.value.trim().toLowerCase();
@@ -186,18 +245,14 @@ if(!userSnap.exists()) continue;
 let u = userSnap.data();
 
 let betTeam = (data.team || "").trim().toLowerCase();
-
-// ✅ return safe
 let userReturn = parseFloat(data.return || data.multiplier || 1);
 
 if(betTeam === winner){
-
 let win = Math.floor(data.amount * userReturn);
 
 await updateDoc(userRef,{
 balance:(u.balance||0)+win
 });
-
 }
 
 await updateDoc(doc(db,"bets",b.id),{
@@ -212,6 +267,7 @@ alert("Result Done 🔥");
 loadLiveMatches();
 };
 
+// WALLET
 walletBtn.onclick = async ()=>{
 let ref = doc(db,"users",uemail.value.trim());
 let snap = await getDoc(ref);
