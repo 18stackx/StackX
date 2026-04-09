@@ -159,13 +159,13 @@ onAuthStateChanged(auth,(user)=>{
   loadPredictions();
 });
 
-// 🔥 DASHBOARD FIX
+// DASHBOARD
 async function loadStats(){
   let u = await getDocs(collection(db,"users"));
   totalUsers.innerText = u.size;
 }
 
-// 🔥 LIVE MATCHES FIX
+// LIVE MATCHES
 async function loadLiveMatches(){
   let container = document.getElementById("liveMatches");
   container.innerHTML = "";
@@ -183,7 +183,7 @@ async function loadLiveMatches(){
   });
 }
 
-// 🔥 DROPDOWN LOAD
+// DROPDOWN
 async function loadPredictions(){
   let dropdown = document.getElementById("predDropdown");
   dropdown.innerHTML = "";
@@ -277,7 +277,7 @@ window.savePrediction = async ()=>{
   loadPredictions();
 };
 
-// DECLARE PREDICTION
+// ✅ FIXED DECLARE PREDICTION
 window.declarePrediction = async ()=>{
   let id = document.getElementById("predDropdown").value;
   let correct = correctOpt.value.trim();
@@ -290,11 +290,18 @@ window.declarePrediction = async ()=>{
     if(data.predictionId === id && data.status !== "done"){
 
       let userRef = doc(db,"users",data.user);
-      let u = (await getDoc(userRef)).data();
+      let userSnap = await getDoc(userRef);
+
+      if(!userSnap.exists()) continue;
+
+      let u = userSnap.data();
 
       if(data.option === correct){
         let win = Math.floor(data.amount * data.return * 0.9);
-        await updateDoc(userRef,{balance:(u.balance||0)+win});
+
+        await updateDoc(userRef,{
+          balance:(u.balance || 0) + win
+        });
       }
 
       await updateDoc(doc(db,"predBets",b.id),{status:"done"});
