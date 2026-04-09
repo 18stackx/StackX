@@ -67,6 +67,7 @@
     <input id="lockTime" type="datetime-local">
 
     <button onclick="saveBetSettings()">Start Match</button>
+
   </div>
 
   <div class="card">
@@ -79,6 +80,7 @@
     <input id="winnerInput" placeholder="RCB">
 
     <button onclick="declareResult()">Declare</button>
+
   </div>
 
   <div class="card">
@@ -116,6 +118,7 @@
     <input id="correctOpt" placeholder="Virat Kohli">
 
     <button onclick="declarePrediction()">Declare</button>
+
   </div>
 
   <div class="card">
@@ -128,6 +131,7 @@
     <input id="amount" placeholder="100">
 
     <button id="walletBtn">Update</button>
+
   </div>
 
 </div>
@@ -183,7 +187,26 @@ async function loadLiveMatches(){
   });
 }
 
-// SAVE MATCHES SAME
+// DROPDOWN
+async function loadPredictions(){
+  let dropdown = document.getElementById("predDropdown");
+  dropdown.innerHTML = "";
+
+  let snap = await getDocs(collection(db,"predictions"));
+
+  snap.forEach(docSnap=>{
+    let d = docSnap.data();
+
+    if(d.status === "live"){
+      let opt = document.createElement("option");
+      opt.value = docSnap.id;
+      opt.innerText = d.question + " ("+d.match+")";
+      dropdown.appendChild(opt);
+    }
+  });
+}
+
+// SAVE MATCHES
 window.saveMatches = async ()=>{
   let data = {};
   for(let i=1;i<=10;i++){
@@ -194,7 +217,7 @@ window.saveMatches = async ()=>{
   alert("Saved 🔥");
 };
 
-// ✅ FIXED BET SETTINGS (MAIN BUG FIX)
+// ✅ FIXED BET SETTINGS
 window.saveBetSettings = async ()=>{
   let matchName = bmatch.value.trim();
   let team1 = matchName.split(" vs ")[0];
@@ -203,8 +226,8 @@ window.saveBetSettings = async ()=>{
   await setDoc(doc(db,"matches",matchName),{
     minBet:parseInt(minBetInput.value),
 
-    team1: team1,
-    team2: team2,
+    team1,
+    team2,
 
     odds1:parseFloat(t1odds.value),
     odds2:parseFloat(t2odds.value),
@@ -218,10 +241,10 @@ window.saveBetSettings = async ()=>{
   loadLiveMatches();
 };
 
-// RESULT FIX
+// ✅ FIXED RESULT
 window.declareResult = async ()=>{
   let match = rmatch.value.trim();
-  let winner = winnerInput.value.trim();
+  let winner = winnerInput.value.trim().toLowerCase();
 
   let betsSnap = await getDocs(collection(db,"bets"));
 
@@ -232,7 +255,7 @@ window.declareResult = async ()=>{
       let userRef = doc(db,"users",data.user);
       let u = (await getDoc(userRef)).data();
 
-      if(data.team.trim().toLowerCase() === winner.trim().toLowerCase()){
+      if(data.team.trim().toLowerCase() === winner){
         let win = Math.floor(data.amount * data.multiplier * 0.9);
         await updateDoc(userRef,{balance:(u.balance||0)+win});
       }
@@ -247,7 +270,7 @@ window.declareResult = async ()=>{
   loadLiveMatches();
 };
 
-// बाकी code SAME (unchanged)
+// बाकी सब SAME (unchanged)
 </script>
 
 </body>
