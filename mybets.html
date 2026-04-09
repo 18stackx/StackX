@@ -60,12 +60,12 @@
   <div onclick="goHome()">🏠</div>
   <div onclick="goProfile()">👤</div>
   <div onclick="goWallet()">💰</div>
-  <div onclick="goBets()">📊</div> <!-- 🔥 ADDED -->
+  <div onclick="goBets()">📊</div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const app = initializeApp({
@@ -84,7 +84,6 @@ onAuthStateChanged(auth, async (user)=>{
     return;
   }
 
-  // 🔥 ONLY USER BETS (FAST QUERY)
   const q = query(
     collection(db,"bets"),
     where("user","==",user.email)
@@ -98,14 +97,25 @@ onAuthStateChanged(auth, async (user)=>{
     html = "No bets yet 😴";
   } else {
 
-    snap.forEach(doc=>{
-      let d = doc.data();
+    for(const docSnap of snap.docs){
+      let d = docSnap.data();
 
       let statusClass = "pending";
       let statusText = "Pending ⏳";
 
+      // 🔥 MATCH WINNER FETCH (MAIN FIX)
+      let matchRef = doc(db,"matches",d.match);
+      let matchSnap = await getDoc(matchRef);
+
+      let winner = "";
+      if(matchSnap.exists()){
+        winner = (matchSnap.data().winner || "").toLowerCase();
+      }
+
+      let betTeam = (d.team || "").toLowerCase();
+
       if(d.status === "done"){
-        if(d.team === d.winner){
+        if(betTeam === winner){
           statusClass = "win";
           statusText = "Win 🤑";
         } else {
@@ -119,11 +129,11 @@ onAuthStateChanged(auth, async (user)=>{
         <b>${d.match}</b><br>
         Team: ${d.team}<br>
         Amount: ₹${d.amount}<br>
-        Return: ${d.multiplier}x<br>
-        Time: ${d.time}<br>
+        Return: ${(d.return || d.multiplier || 1)}x<br>
+        Time: ${d.time || "N/A"}<br>
         <b class="${statusClass}">${statusText}</b>
       </div>`;
-    });
+    }
   }
 
   document.getElementById("betsBox").innerHTML = html;
@@ -135,7 +145,7 @@ onAuthStateChanged(auth, async (user)=>{
 window.goHome = ()=> location.href="home.html";
 window.goProfile = ()=> location.href="profile.html";
 window.goWallet = ()=> location.href="wallet.html";
-window.goBets = ()=> location.href="bets.html"; // 🔥 IMPORTANT
+window.goBets = ()=> location.href="bets.html";
 </script>
 
 </body>
