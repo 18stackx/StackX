@@ -159,7 +159,7 @@ await setDoc(doc(db,"matches","today"),data);
 alert("Saved 🔥");
 };
 
-// ✅ UPDATED (ONLY CHANGE HERE)
+// START MATCH
 window.saveBetSettings = async ()=>{
 await setDoc(doc(db,"matches",bmatch.value.trim()),{
 minBet:parseInt(minBetInput.value),
@@ -172,7 +172,7 @@ alert("Match Live");
 loadLiveMatches();
 };
 
-// RESULT
+// ✅ FINAL RESULT FIX
 window.declareResult = async ()=>{
 let match = rmatch.value.trim();
 let winner = winnerInput.value.trim().toLowerCase();
@@ -188,24 +188,49 @@ let userRef = doc(db,"users",data.user);
 let userSnap = await getDoc(userRef);
 let u = userSnap.data();
 
-let betTeam = data.team.toLowerCase();
-let mult = parseFloat(data.multiplier || 1);
+let betTeam = (data.team || "").toLowerCase();
+
+// ✅ FIX multiplier/return issue
+let mult = parseFloat(data.return || data.multiplier || 1);
 
 if(betTeam === winner){
+
+let win = Math.floor(data.amount * mult);
+
+// ✅ ADD HISTORY (IMPORTANT)
 await updateDoc(userRef,{
-balance:(u.balance||0)+(data.amount * mult)
+balance:(u.balance||0)+win,
+history:[
+...(u.history || []),
+{
+type:"win",
+amt:win,
+match:match,
+team:betTeam,
+time:new Date().toLocaleString()
+}
+]
 });
+
 }
 
 await updateDoc(doc(db,"bets",b.id),{
 status:"done",
-result: betTeam === winner ? "win" : "loss"
+result: betTeam === winner ? "win" : "loss",
+winner
 });
 }
 }
 
-await updateDoc(doc(db,"matches",match),{status:"completed",winner});
+// ✅ ADD DATE
+await updateDoc(doc(db,"matches",match),{
+status:"completed",
+winner,
+date:new Date().toLocaleDateString()
+});
+
 alert("Result Done");
+loadLiveMatches();
 };
 
 // ADD PREDICTION
