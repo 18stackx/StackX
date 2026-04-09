@@ -126,7 +126,7 @@ const auth = getAuth(app);
 
 let currentUser = null;
 
-// ✅ AUTH FIX
+// AUTH
 onAuthStateChanged(auth,(user)=>{
   if(user){
     currentUser = user;
@@ -185,7 +185,6 @@ onSnapshot(refMatch,(snap)=>{
     betLocked = false;  
     betBtn.disabled = false;  
     betBtn.innerText = "Place Bet";  
-    betBtn.style.background = "#ff2a2a";  
 
     if(d.lockTime){  
       let now = new Date();  
@@ -195,7 +194,6 @@ onSnapshot(refMatch,(snap)=>{
         betLocked = true;  
         betBtn.innerText = "Bet Locked 🔒";  
         betBtn.disabled = true;  
-        betBtn.style.background = "gray";  
       }  
     }  
 
@@ -205,7 +203,7 @@ onSnapshot(refMatch,(snap)=>{
   }  
 });  
 
-// ✅ PREDICTION SHOW FIX
+// PREDICTIONS
 const predRef = collection(db,"predictions");
 
 onSnapshot(predRef,(snapshot)=>{
@@ -237,7 +235,7 @@ onSnapshot(predRef,(snapshot)=>{
   });
 });
 
-// PLACE PREDICTION
+// ✅ PREDICTION FIX (history added)
 window.placePrediction = async (id,option,ret)=>{
   let amt = parseInt(prompt("Enter amount"));
   if(!amt) return;
@@ -248,8 +246,6 @@ window.placePrediction = async (id,option,ret)=>{
   let userRef = doc(db,"users",user.email);
   let snap = await getDoc(userRef);
 
-  if(!snap.exists()) return;
-
   let data = snap.data();
 
   if((data.balance||0) < amt){
@@ -258,7 +254,17 @@ window.placePrediction = async (id,option,ret)=>{
   }
 
   await updateDoc(userRef,{
-    balance:(data.balance||0)-amt
+    balance:(data.balance||0)-amt,
+    history:[
+      ...(data.history || []),
+      {
+        type:"prediction",
+        amt:amt,
+        match:match,
+        option:option,
+        time:new Date().toLocaleString()
+      }
+    ]
   });
 
   await setDoc(doc(db,"predBets",user.email+"_"+Date.now()),{
@@ -278,7 +284,7 @@ window.openHistory = ()=>{
   location.href = "prediction-history.html";
 };
 
-// BET FINAL FIX
+// BET (already correct)
 let loading = false;
 
 window.placeBet = async function(){
@@ -306,12 +312,9 @@ window.placeBet = async function(){
     }
 
     const user = currentUser;
-    if(!user) return;
 
     const userRef = doc(db,"users",user.email);
     const userSnap = await getDoc(userRef);
-
-    if(!userSnap.exists()) throw "stop";
 
     let userData = userSnap.data();
     let balance = userData.balance || 0;
