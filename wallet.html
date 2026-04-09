@@ -127,8 +127,6 @@
 
   <button onclick="submitWithdraw()">Withdraw</button>
 
-  <!-- 🔥 ADDED NOTE -->
-  <p class="note">⚠️ Minimum 3 bets required before withdrawal</p>
 </div>
 
 <a href="https://t.me/stackx_admin" target="_blank" class="tg">
@@ -206,7 +204,7 @@ window.submitAdd = async function(){
   alert("Submitted ✅\nMessage Telegram");
 };
 
-// 🔥 WITHDRAW (3 BET LOCK)
+// 🔥 WITHDRAW (NO BET LIMIT)
 window.submitWithdraw = async function(){
 
   let upi = document.getElementById("upi").value;
@@ -227,12 +225,6 @@ window.submitWithdraw = async function(){
 
   let snap = await getDoc(ref);
   let data = snap.data();
-
-  // 🔒 3 BET CONDITION
-  if((data.betsCount || 0) < 3){
-    alert("⚠️ Minimum 3 bets required before withdrawal");
-    return;
-  }
 
   let bal = data.balance || 0;
 
