@@ -277,7 +277,7 @@ window.savePrediction = async ()=>{
   loadPredictions();
 };
 
-// ✅ FIXED DECLARE PREDICTION
+// ✅ FINAL FIX WITH HISTORY
 window.declarePrediction = async ()=>{
   let id = document.getElementById("predDropdown").value;
   let correct = correctOpt.value.trim();
@@ -297,11 +297,26 @@ window.declarePrediction = async ()=>{
       let u = userSnap.data();
 
       if(data.option === correct){
+
         let win = Math.floor(data.amount * data.return * 0.9);
 
         await updateDoc(userRef,{
-          balance:(u.balance || 0) + win
+          balance:(u.balance || 0) + win,
+          history:[
+            ...(u.history || []),
+            {type:"win",amt:win,time:new Date().toLocaleString()}
+          ]
         });
+
+      } else {
+
+        await updateDoc(userRef,{
+          history:[
+            ...(u.history || []),
+            {type:"loss",amt:data.amount,time:new Date().toLocaleString()}
+          ]
+        });
+
       }
 
       await updateDoc(doc(db,"predBets",b.id),{status:"done"});
