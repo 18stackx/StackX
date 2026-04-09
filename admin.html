@@ -42,18 +42,18 @@ label{font-size:12px;color:#9ca3af;}
 
 <div class="card">
 <h3>⚙️ Bet Settings</h3>
-<input id="bmatch">
-<input id="minBetInput">
-<input id="t1odds">
-<input id="t2odds">
+<input id="bmatch" placeholder="RCB vs CSK">
+<input id="minBetInput" placeholder="Min Bet">
+<input id="t1odds" placeholder="Team1 Odds">
+<input id="t2odds" placeholder="Team2 Odds">
 <input id="lockTime" type="datetime-local">
 <button onclick="saveBetSettings()">Start Match</button>
 </div>
 
 <div class="card">
 <h3>🏆 Declare Result</h3>
-<input id="rmatch">
-<input id="winnerInput">
+<input id="rmatch" placeholder="Match">
+<input id="winnerInput" placeholder="Winner (RCB)">
 <button onclick="declareResult()">Declare</button>
 </div>
 
@@ -154,21 +154,12 @@ dropdown.appendChild(opt);
 });
 }
 
-window.saveMatches = async ()=>{
-let data = {};
-for(let i=1;i<=10;i++){
-let val = document.getElementById("m"+i).value.trim();
-if(val) data["m"+i] = val;
-}
-await setDoc(doc(db,"matches","today"),data);
-alert("Saved 🔥");
-};
-
+// ✅ FIX: same field names as match.html
 window.saveBetSettings = async ()=>{
 await setDoc(doc(db,"matches",bmatch.value.trim()),{
 minBet:parseInt(minBetInput.value),
-t1:parseFloat(t1odds.value),
-t2:parseFloat(t2odds.value),
+rcbOdds:parseFloat(t1odds.value),
+cskOdds:parseFloat(t2odds.value),
 status:"live",
 lockTime:lockTime.value
 },{merge:true});
@@ -176,7 +167,7 @@ alert("Match Live 😈");
 loadLiveMatches();
 };
 
-// 🔥 FINAL FIX
+// ✅ FINAL RESULT FIX
 window.declareResult = async ()=>{
 let match = rmatch.value.trim();
 let winner = winnerInput.value.trim().toLowerCase();
@@ -196,8 +187,8 @@ let u = userSnap.data();
 
 let betTeam = (data.team || "").trim().toLowerCase();
 
-// 🔥 MAIN FIX
-let userReturn = data.return || data.multiplier || 1;
+// ✅ return safe
+let userReturn = parseFloat(data.return || data.multiplier || 1);
 
 if(betTeam === winner){
 
@@ -207,9 +198,12 @@ await updateDoc(userRef,{
 balance:(u.balance||0)+win
 });
 
-} 
+}
 
-await updateDoc(doc(db,"bets",b.id),{status:"done"});
+await updateDoc(doc(db,"bets",b.id),{
+status:"done",
+result: betTeam === winner ? "win" : "loss"
+});
 }
 }
 
