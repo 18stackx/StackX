@@ -152,10 +152,34 @@
       padding:30px;
       opacity:0.6;
     }
+
+    /* 🔥 LIVE TOP TEXT (ONLY ADD) */
+    .liveText{
+      position:fixed;
+      top:20px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:9999;
+      font-size:17px;
+      font-weight:600;
+      color:white;
+      white-space:nowrap;
+      animation:fadeText 2s ease;
+    }
+
+    @keyframes fadeText{
+      0%{opacity:0; transform:translate(-50%,-10px);}
+      20%{opacity:1;}
+      80%{opacity:1;}
+      100%{opacity:0; transform:translate(-50%,-10px);}
+    }
   </style>
 </head>
 
 <body>
+
+<!-- 🔥 LIVE TEXT CONTAINER (ONLY ADD) -->
+<div id="liveTextContainer"></div>
 
 <!-- 🔥 NAVBAR ADD -->
 <header id="navbar">
@@ -360,6 +384,46 @@ window.addEventListener("scroll",function(){
   nav.classList.toggle("scrolled",window.scrollY>50);
 });
 document.getElementById("year").innerText=new Date().getFullYear();
+
+/* 🔥 LIVE TEXT SCRIPT (ONLY ADD) */
+const actions = [
+  "placed a bet",
+  "joined the game",
+  "made a prediction",
+  "started playing",
+  "completed a payout"
+];
+
+function randomBet(){
+  return Math.floor(50 + Math.random()*500);
+}
+
+function randomWithdraw(){
+  return Math.floor(700 + Math.random()*4300);
+}
+
+function showLiveText(){
+  const container = document.getElementById("liveTextContainer");
+
+  let div = document.createElement("div");
+  div.className = "liveText";
+
+  let action = actions[Math.floor(Math.random()*actions.length)];
+
+  if(action === "completed a payout"){
+    div.innerText = "🔥 Someone just " + action + " ₹" + randomWithdraw();
+  } else {
+    div.innerText = "User just " + action + " ₹" + randomBet();
+  }
+
+  container.appendChild(div);
+
+  setTimeout(()=>{
+    div.remove();
+  },2000);
+}
+
+setInterval(showLiveText,2000);
 </script>
 
 </body>
