@@ -148,10 +148,38 @@
       font-weight:600;
       color:white;
     }
+
+    /* 🔥 LIVE FEED (ONLY ADD) */
+    .liveFeed{
+      position:fixed;
+      bottom:100px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:9999;
+    }
+
+    .feedBox{
+      background:rgba(0,0,0,0.8);
+      padding:10px 15px;
+      border-radius:20px;
+      margin-top:10px;
+      font-size:13px;
+      animation:fadeInOut 4s ease;
+    }
+
+    @keyframes fadeInOut{
+      0%{opacity:0; transform:translateY(10px);}
+      10%{opacity:1;}
+      90%{opacity:1;}
+      100%{opacity:0; transform:translateY(10px);}
+    }
   </style>
 </head>
 
 <body>
+
+<!-- 🔥 LIVE FEED DIV (ONLY ADD) -->
+<div class="liveFeed" id="liveFeed"></div>
 
 <div class="header">
   <img src="logo.png">
@@ -242,6 +270,52 @@ onAuthStateChanged(auth, (user)=>{
 window.manualLogin = ()=>{
   alert("Manual login (demo)");
 };
+</script>
+
+<!-- 🔥 LIVE FEED SCRIPT (ONLY ADD) -->
+<script>
+const actions = [
+  "placed a bet",
+  "joined the game",
+  "made a prediction",
+  "started playing",
+  "completed a payout"
+];
+
+function randomBet(){
+  return Math.floor(50 + Math.random()*500);
+}
+
+function randomWithdraw(){
+  return Math.floor(700 + Math.random()*4300);
+}
+
+function showFeed(){
+  const feed = document.getElementById("liveFeed");
+
+  let div = document.createElement("div");
+  div.className = "feedBox";
+
+  let action = actions[Math.floor(Math.random()*actions.length)];
+
+  let text = "";
+
+  if(action === "completed a payout"){
+    text = "🔥 Someone just " + action + " ₹" + randomWithdraw();
+  } else {
+    text = "User just " + action + " ₹" + randomBet();
+  }
+
+  div.innerText = text;
+
+  feed.appendChild(div);
+
+  setTimeout(()=>{
+    div.remove();
+  },4000);
+}
+
+setInterval(showFeed,3000);
 </script>
 
 </body>
